@@ -1,0 +1,474 @@
+{
+  "id": "w3nNKIxnKqzJHaPB",
+  "name": "Automate Email Filtering & AI Summarization. 100% free & effective, works 7/24 ",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:20.613Z",
+  "updatedAt": "2026-08-01T12:13:02.000Z",
+  "isArchived": true,
+  "versionId": "34566bfd-527d-468e-aad2-0a0316f25ce5",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🧪 TEST BEFORE DEPLOYING\n1. Send test email\n2. Check Sheets output\n3. Verify summary quality\n4. Adjust filters/prompt as needed",
+        "height": 220,
+        "width": 300,
+        "color": 6
+      },
+      "id": "39b2d4bd-b29b-4e52-864e-0090e8f8e56f",
+      "name": "Test Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2416,
+        320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "YOUR_GOOGLE_SHEETS_DOCUMENT_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "YOUR_GOOGLE_SHEETS_URL",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "Date": "={{ $('info1').item.json.Date }}",
+            "summary": "={{ $json.output }}",
+            "subject ": "={{ $('info1').item.json.Subject }}",
+            "sender name": "={{ $('info1').item.json[\"Sender Name\"] }}",
+            "sender email": "={{ $('info1').item.json[\"Sender Email\"] }}"
+          },
+          "schema": [
+            {
+              "id": "sender name",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "sender name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sender email",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "sender email",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject ",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "subject ",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "sender name"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "75cc1f51-da2d-411a-bd64-7c574c5d5d11",
+      "name": "Log to Google Sheets1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2032,
+        432
+      ],
+      "typeVersion": 4,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LpCi7N8GD93Ey1OM",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# N8N AI Agent — Vendor Invoice Email Handler\n\n## Role\n\nYou are an automation agent that reviews a **single email** and determines whether it contains a **vendor invoice sent to me** (i.e., a bill I must pay).\nIf **yes**, you will:\n\n1. Save the invoice attachment(s) to the provided Google Drive folder, and\n2. Append a row to the provided Google Sheet with invoice metadata.\n   If **no**, you will do nothing with Drive/Sheets and return a structured “not_applicable” result.\n\n## Inputs (from upstream n8n nodes)\n\n* `email` object:\n\n  * `id`, `threadId`, `fromName`, `fromEmail`, `to`, `cc`, `subject`, `snippet`, `bodyText`, `bodyHtml`, `date`,\n  * `attachments[]` (each: `filename`, `mimeType`, `size`, `content` or `downloadUrl`)\n* `tools`:\n\n  * `drive` (Google Drive)\n  * `sheets` (Google Sheets)\n* Config:\n\n  * `driveFolderId`: `{{YOUR_GOOGLE_DRIVE_FOLDER_ID}}`\n  * `sheetId`: `{{YOUR_GOOGLE_SHEET_ID}}`\n  * `sheetName`: `{{YOUR_SHEET_TAB_NAME}}`\n\n## Positive Class — “Vendor Invoice Sent to Me”\n\nEmail indicates the sender is **billing me** and attaches an **invoice document** related to goods/services **I purchased**. Typical cues (EN/TR; include variants, typos, polite forms):\n\n* EN subjects/bodies: “invoice attached”, “your invoice from ACME”, “invoice for your order #…”, “bill attached”, “statement / tax invoice attached”, “payment due”, “Amount due”, “Invoice #: …”\n* TR subjects/bodies: “faturanızı ekte bulabilirsiniz”, “e-fatura / e-Arşiv faturanız ektedir”, “tarafınıza kesilen fatura”, “ödeme vadesi”, “tutar”\n  Attachment clues:\n* Filenames like `invoice_12345.pdf`, `fatura_2025-09.pdf`, `e-arsiv_…pdf`, `TaxInvoice_…pdf`\n* MIME types typically `application/pdf` (preferred), `image/*`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, `application/xml` (UBL/e-fatura), `application/zip` (containing XML/PDF)\n\n## Negative Class — Do NOT Process\n\n* Someone **asking me to send/issue my invoice** (request for my invoice).\n* Quotes/proposals, proforma invoices (unless explicitly stated as final invoice due for payment).\n* Receipts only (already paid), shipping notices, newsletters, general payment reminders **without** an attached invoice, or internal threads.\n* Spam/malware, executable attachments, unrelated documents.\n\n## Attachment Handling (Positive only)\n\n* Save **invoice-relevant** files: `.pdf`, `.xml` (UBL/e-fatura), `.png/.jpg` (scans), `.xlsx/.csv`.\n* Skip risky/irrelevant types (e.g., `.exe`, `.js`, `.bat`, macros).\n* If a `.zip` is attached, save the zip **and** (if tool supports) also extract & save contained invoice PDFs/XMLs.\n* **Deduplicate**: if a file with the same `email.id + filename` was already stored in the target folder, skip re-upload and mark as duplicate.\n\n## Google Sheets Row (Positive only)\n\nAppend one row with:\n\n1. Timestamp (ISO 8601, now)\n2. Vendor Name (best guess from `fromName`/document)\n3. Vendor Email (`fromEmail`)\n4. Subject\n5. Email Date\n6. Decision (`vendor_invoice`)\n7. Invoice Number (if extractable; else empty)\n8. Invoice Date (if extractable; else empty)\n9. Amount (numeric, main currency; if extractable)\n10. Currency (if extractable)\n11. Due Date (if extractable)\n12. Drive File Links (comma-separated)\n13. Email ID\n14. Thread ID\n\n> Note: Extraction is best-effort via text patterns; leave blank if uncertain.\n\n## Field Extraction Heuristics (best-effort)\n\nWork in this order (bodyText → bodyHtml text-stripped → PDF/XML text if supplied as text; do **not** execute external fetches):\n\n* **Invoice Number**: patterns like `Invoice #?[:\\s]*([A-Za-z0-9\\-_/]+)`, `Fatura No[:\\s]*([A-Za-z0-9\\-_/]+)`.\n* **Invoice Date**: look for `Invoice Date`, `Issue Date`, `Fatura Tarihi`, common date formats (YYYY-MM-DD, DD.MM.YYYY, DD/MM/YYYY).\n* **Due Date**: `Due Date`, `Vade Tarihi`.\n* **Amount/Currency**: pick the **Total** / **Grand Total** line: `(Total|Amount Due|Genel Toplam|Toplam Tutar)\\s*[:\\-]?\\s*([€$₺£]?\\s?\\d[\\d., ]*)\\s*([A-Z]{3})?`. Normalize separators (`,` vs `.`). If multiple amounts, prefer “Amount Due” > “Total”.\n* **Vendor Name**: prefer explicit header `Supplier/Vendor`, else `fromName`, else domain from `fromEmail`.\n\n## Steps\n\n1. **Classify**\n   Decide: `vendor_invoice` vs `not_applicable` using subject/body + attachment cues above.\n2. **If Positive (`vendor_invoice`)**\n   a. Save all **relevant** invoice attachments to Drive folder `{{driveFolderId}}`.\n   b. Collect each resulting file’s URL.\n   c. Attempt metadata extraction (number, dates, amount, currency, vendor).\n   d. Append one row to Google Sheets (`{{sheetId}}`, `{{sheetName}}`) with the schema above.\n3. **If Negative**\n\n   * Do **not** save or append.\n4. **Return Structured Result** (see Output).\n\n## Output (JSON)\n\nReturn **one** JSON object:\n\n```json\n{\n  \"decision\": \"vendor_invoice\" | \"not_applicable\",\n  \"confidence\": 0.0,\n  \"reason\": \"short plain text rationale\",\n  \"invoice\": {\n    \"number\": \"string|null\",\n    \"date\": \"YYYY-MM-DD|null\",\n    \"dueDate\": \"YYYY-MM-DD|null\",\n    \"amount\": \"number|null\",\n    \"currency\": \"string|null\",\n    \"vendorName\": \"string|null\",\n    \"vendorEmail\": \"string|null\"\n  },\n  \"savedFiles\": [\n    {\n      \"filename\": \"string\",\n      \"driveFileId\": \"string\",\n      \"driveFileUrl\": \"string\",\n      \"size\": 12345,\n      \"mimeType\": \"string\",\n      \"duplicate\": false\n    }\n  ],\n  \"sheetAppend\": {\n    \"done\": true,\n    \"range\": \"Sheet1!A1:N1\"\n  },\n  \"emailRef\": {\n    \"id\": \"string\",\n    \"threadId\": \"string\"\n  }\n}\n```\n\n## Edge Cases\n\n* **Multiple attachments**: save all invoice-relevant (PDF/XML/images); include all links in the sheet.\n* **Proforma**: mark **not_applicable** unless clearly stated as the final invoice to be paid.\n* **Receipts**: not applicable (payment proof, not an invoice).\n* **Language**: Handle English and Turkish; ignore signatures/legal footers.\n* **Low confidence**: If signals are weak but likely an invoice (e.g., “See attached” + `invoice_*.pdf`), classify as positive with **lower confidence** and explain in `reason`.\n\n## File Naming on Drive (optional but preferred)\n\nIf allowed, rename on upload to:\n\n```\n{invoiceDate or emailDate}_{vendorNameOrDomain}_{invoiceNumberOrEmailId}_{originalFilename}\n```\n\n(unsafe chars replaced with `_`).\n\n## Safety & Limits\n\n* Never execute attachments.\n* Skip dangerous extensions.\n* Don’t follow external links.\n* On any tool error (Drive/Sheets), continue and report partial results + error in `reason`.\n\n## Idempotency\n\n* Use `email.id + attachment.filename` to prevent duplicate uploads within the same folder.\n* If duplicate detected, mark `duplicate: true` and still log the link to the existing file if retrievable.\n\n## Few-Shot Examples\n\n### Positive (EN)\n\n* Subject: “Your invoice from ACME (INV-0925)”\n* Body: “Please find attached your invoice for September. Payment due within 14 days.”\n* Attachment: `invoice_INV-0925.pdf`\n  → `decision = vendor_invoice`, reason: “explicit invoice to pay + PDF attached”\n\n### Positive (TR)\n\n* Subject: “E-Arşiv Faturanız Ektedir”\n* Body: “Ağustos ayı hizmet bedeline ait e-faturanızı ekte iletiyoruz.”\n* Attachment: `e-arsiv_2025-08.pdf`\n  → `decision = vendor_invoice`\n\n### Negative (EN)\n\n* Subject: “Please send your invoice for August hours”\n  → `not_applicable` (this is a request for my invoice)\n\n### Negative (TR)\n\n* Subject: “Ödeme hatırlatma”\n* Body: “Geciken ödemenizi hatırlatırız.” (no invoice attached)\n  → `not_applicable`\n\n---\n\n**n8n wiring tip**\n\n* Fetch one email (Gmail/IMAP) → pass to this AI Agent.\n* If `decision = vendor_invoice`, loop over attachments → Google Drive Upload → collect URLs → Google Sheets Append with row schema.\n* Return the JSON result from the agent.\n",
+        "options": {}
+      },
+      "id": "b5d3d06e-116f-4c40-bbd0-c22cd622af96",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1456,
+        368
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": []
+        },
+        "options": {
+          "downloadAttachments": false
+        }
+      },
+      "id": "a69f2251-947b-444c-b314-d510870b6583",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        448,
+        464
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4SypyfIgEvTrNaZq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 1,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1d2e3f4-g5h6-i7j8-k9l0-m1n2o3p4q5r6",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json[\"Sender Name\"] }}",
+              "rightValue": "YOUR_SENDER_NAME_FILTER"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a7024314-9303-42f3-a854-dcb385c991f7",
+      "name": "Check Valid Email",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1120,
+        464
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\n\nfor (const item of $input.all()) {\n  const emailData = item.json;\n  \n  // Handle sender information (unchanged)\n  let senderEmail = '';\n  let senderName = '';\n\n  if (emailData.from?.value?.[0]) {\n    senderEmail = emailData.from.value[0].address || '';\n    senderName = emailData.from.value[0].name || senderEmail;\n  } else if (emailData.from?.text) {\n    const emailMatch = emailData.from.text.match(/<([^>]+)>/) || \n                      emailData.from.text.match(/([^\\s]+@[^\\s]+)/);\n    senderEmail = emailMatch ? emailMatch[1] : emailData.from.text;\n    \n    const nameMatch = emailData.from.text.match(/^([^<]+)/);\n    senderName = nameMatch ? nameMatch[1].trim().replace(/\\\"/g, '') : senderEmail;\n  }\n\n  // Format date (unchanged)\n  const receivedDate = new Date(emailData.date || emailData.receivedTime);\n  const formattedDate = receivedDate.toLocaleString('en-US', {\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: true\n  });\n\n  // FIXED CONTENT EXTRACTION\n  let emailContent = '';\n  \n  // 1. First priority: Plain text version\n  if (emailData.text) {\n    emailContent = emailData.text;\n  } \n  // 2. Second priority: HTML version (convert to plain text)\n  else if (emailData.html) {\n    emailContent = emailData.html\n      .replace(/<style[^>]*>.*?<\\/style>/gs, '')  // Remove CSS\n      .replace(/<[^>]*>/g, ' ')                   // Strip HTML tags\n      .replace(/\\s+/g, ' ')                       // Collapse whitespace\n      .trim();\n  }\n  // 3. Fallback to other possible fields\n  else if (emailData.body || emailData.textPlain || emailData.textHtml) {\n    emailContent = emailData.body || emailData.textPlain || emailData.textHtml;\n  }\n\n  // Truncate content if too long\n  const maxContentLength = 5000;\n  if (emailContent.length > maxContentLength) {\n    emailContent = emailContent.substring(0, maxContentLength) + '... [truncated]';\n  }\n\n  // Process attachments\n  let attachmentInfo = 'None';\n  if (emailData.attachments && emailData.attachments.length > 0) {\n    const attachmentDetails = emailData.attachments.map(attachment => {\n      return {\n        filename: attachment.filename || 'Unknown',\n        contentType: attachment.contentType || 'Unknown',\n        size: attachment.size || 0\n      };\n    });\n    attachmentInfo = JSON.stringify(attachmentDetails);\n  }\n\n  // Create row data\n  const rowData = {\n    'Date': formattedDate,\n    'Sender Name': senderName,\n    'Sender Email': senderEmail,\n    'Subject': emailData.subject || 'No Subject',\n    'Content': emailContent,\n    //'Message ID': emailData.messageId || '',\n    'Has Attachments': emailData.attachments?.length > 0 ? 'Yes' : 'No',\n    'Attachments': attachmentInfo\n  };\n  \n  items.push({ json: rowData });\n}\n\nreturn items;"
+      },
+      "id": "d408d58f-c818-4601-8109-f90bb152e381",
+      "name": "info1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        800,
+        464
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## 🔑 Step 1: Add Gmail Credentials 👇",
+        "height": 400,
+        "width": 260,
+        "color": 5
+      },
+      "id": "2bb19466-2a13-48d1-8f9c-be3db440c061",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 📧 Step 2: Email Processing Node\n",
+        "height": 400,
+        "width": 260,
+        "color": 5
+      },
+      "id": "5fef7b17-cca7-4f06-99c0-efe6944b6a48",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ Step 3: Sender Filter\n• Replace 'YOUR_SENDER_NAME_FILTER'\n• Only emails from this sender will proceed\n• Supports multiple conditions",
+        "height": 400,
+        "width": 260,
+        "color": 5
+      },
+      "id": "bf269863-ccaa-4a22-aff2-a98305d8c354",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1040,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## ✍️ Step 4: Customize AI Prompt\n• Default: Short email summary\n• Change tone/formality as needed",
+        "height": 420,
+        "width": 360,
+        "color": 5
+      },
+      "id": "2ea54fa1-fd79-48ca-854c-14b706cf3315",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1408,
+        224
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 Step 5: AI Configuration\n1. Add Groq API key\n2. Or replace with other AI model\n",
+        "height": 316,
+        "width": 420,
+        "color": 5
+      },
+      "id": "92c18c6f-3c83-41e0-8757-67455aff44da",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1280,
+        768
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Step 6: Google Sheets Setup\n1. Add Google credentials\n2. Paste Sheet URL\n3. Select target sheet\n4. Columns auto-map to email data",
+        "height": 400,
+        "width": 500,
+        "color": 4
+      },
+      "id": "56894a8f-5340-43a3-a852-7d4dadbdd376",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1856,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## ✅ Expected Output Format\nColumns: Sender | Date | Email | Subject | Summary\n\n![Example Table](https://cdn.ablebits.com/_img-blog/google-sheets-create-table/table-format.webp)",
+        "height": 420,
+        "width": 700,
+        "color": 4
+      },
+      "id": "bb07639e-3edb-4be1-8554-cd6df8ebb22c",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1840,
+        -256
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1456,
+        928
+      ],
+      "id": "d59114c5-2830-4bcd-89f7-1284f22fad66",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "CiWwAov7MTT66m7E",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1RKKwtbZ8_0PrmvpwsE_RvSwPDT9tdF4B",
+          "mode": "list",
+          "cachedResultName": "test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1RKKwtbZ8_0PrmvpwsE_RvSwPDT9tdF4B"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        2080,
+        880
+      ],
+      "id": "51d7822b-4535-444a-b0fe-d65194cf9b67",
+      "name": "Upload file in Google Drive1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "mvGAKEQ35l6bxjmm",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "info1": {
+      "main": [
+        [
+          {
+            "node": "Check Valid Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "info1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Valid Email": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file in Google Drive1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "w3nNKIxnKqzJHaPB",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:20.616Z",
+      "updatedAt": "2026-04-25T13:12:20.616Z"
+    }
+  ],
+  "activeVersion": null
+}

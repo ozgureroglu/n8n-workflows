@@ -1,0 +1,284 @@
+{
+  "id": "rons4rJDqsU5rBqp",
+  "name": "AI Web Scraping Chatbot with MongoDB",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:50.833Z",
+  "updatedAt": "2026-10-03T14:00:46.031Z",
+  "isArchived": false,
+  "versionId": "b455ddc4-6076-4a8a-aac9-820c3a1fd3fe",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "chat-trigger",
+      "name": "When chat message received",
+      "webhookId": "22cb125e-5f58-48be-94da-e4fab534d25e",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        304
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "ai-agent",
+      "name": "AI Scraping Coordinator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        528,
+        304
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an intelligent web scraping assistant. Help users by:\n\n1. **Getting Requirements**: Ask what website URL to scrape and what data attributes they need (titles, prices, images, etc.)\n2. **Using Tools**: Use the scrape_website tool to fetch content from the URL\n3. **Extracting Data**: Parse the scraped content and extract ONLY the requested attributes as clean JSON\n4. **Job Naming**: Ask for a job name to identify this scraping session\n\n**Important Instructions:**\n- Always extract data in valid JSON format\n- Only include the attributes the user requested\n- Be conversational and helpful\n- Confirm what was successfully extracted\n\n**Current conversation:**\nUser: {{ $json.chatInput }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "openai-model",
+      "name": "OpenAI GPT-4o-mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        480
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "memory",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        480
+      ],
+      "parameters": {
+        "contextWindowLength": 10
+      }
+    },
+    {
+      "id": "jina-scraper",
+      "name": "Jina Web Scraper Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        480
+      ],
+      "parameters": {
+        "toolDescription": "Call this tool to scrape content from a website. The tool takes a URL and returns clean, readable text from that webpage. Extract the URL from the user's message.",
+        "url": "=https://r.jina.ai/{{ $parameter.url }}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "url",
+              "description": "The full website URL to scrape (e.g., https://example.com)",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "code-parser",
+      "name": "Extract & Structure Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        304
+      ],
+      "parameters": {
+        "jsCode": "// Extract structured data from AI agent output and prepare for MongoDB\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Get the AI agent's output\n  const agentOutput = item.json.output || item.json.text || JSON.stringify(item.json);\n  \n  console.log('Agent output:', agentOutput);\n  \n  let structuredData = {\n    job_name: 'Web Scraping Job',\n    url: '',\n    scraped_at: new Date().toISOString(),\n    data: {},\n    attributes_extracted: [],\n    status: 'completed',\n    user_query: item.json.chatInput || 'Unknown',\n    raw_response: agentOutput.substring(0, 1000) // Limit size\n  };\n  \n  try {\n    // Extract URL from response\n    const urlMatch = agentOutput.match(/https?:\\/\\/[^\\s<>\"\\)\\]]+/i);\n    if (urlMatch) {\n      structuredData.url = urlMatch[0];\n    }\n    \n    // Try to extract JSON data from the response\n    // Look for JSON in code blocks first\n    let jsonMatch = agentOutput.match(/```json\\s*([\\s\\S]*?)```/);\n    if (jsonMatch) {\n      structuredData.data = JSON.parse(jsonMatch[1]);\n    } else {\n      // Try to find raw JSON object\n      jsonMatch = agentOutput.match(/\\{[\\s\\S]*\\}/);\n      if (jsonMatch) {\n        structuredData.data = JSON.parse(jsonMatch[0]);\n      }\n    }\n    \n    // Extract attributes if data was successfully parsed\n    if (structuredData.data && typeof structuredData.data === 'object') {\n      if (Array.isArray(structuredData.data)) {\n        structuredData.attributes_extracted = Object.keys(structuredData.data[0] || {});\n      } else {\n        structuredData.attributes_extracted = Object.keys(structuredData.data);\n      }\n    }\n    \n    // Try to extract job name from conversation\n    const jobMatch = agentOutput.match(/job[\\s\\w]*name[:\\s]+[\"']?([^\"'\\n.,!?]+)/i);\n    if (jobMatch) {\n      structuredData.job_name = jobMatch[1].trim();\n    }\n    \n  } catch (error) {\n    console.log('Parse error:', error.message);\n    structuredData.status = 'partial';\n    structuredData.error = error.message;\n    // Store the raw text if parsing failed\n    structuredData.data = { \n      raw_text: agentOutput.substring(0, 500),\n      note: 'Failed to parse as JSON'\n    };\n  }\n  \n  results.push({ json: structuredData });\n}\n\nreturn results;"
+      }
+    },
+    {
+      "id": "mongodb",
+      "name": "Save to MongoDB",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        304
+      ],
+      "parameters": {
+        "operation": "insert",
+        "collection": "scraping_jobs",
+        "options": {}
+      }
+    },
+    {
+      "id": "sticky-instructions",
+      "name": "📖 Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        160
+      ],
+      "parameters": {
+        "content": "## 🤖 AI Web Scraping Chatbot\n\n**Based on template by Joseph LePage (@joe)**\n\n### How to Use:\n1. Start a chat conversation\n2. Tell the AI what you want to scrape\n3. Provide URL and data attributes\n4. AI scrapes and saves to MongoDB\n\n### Example Prompts:\n\"Scrape product titles and prices from https://example.com/shop\"\n\n\"Extract article headlines and dates from https://news-site.com\"\n\n\"Get image URLs from https://gallery.com\"",
+        "height": 400,
+        "width": 380,
+        "color": 4
+      }
+    },
+    {
+      "id": "sticky-setup",
+      "name": "⚙️ Setup Required",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        368,
+        608
+      ],
+      "parameters": {
+        "content": "## ⚙️ Configuration Needed:\n\n### 1. OpenAI Credentials\n- Click \"OpenAI GPT-4o-mini\" node\n- Add your OpenAI API key\n\n### 2. MongoDB Credentials  \n- Click \"Save to MongoDB\" node\n- Add connection string:\n  `mongodb://user:pass@host:port/db`\n  \n### 3. Create MongoDB Collection\n```javascript\nuse your_database\ndb.createCollection('scraping_jobs')\n```\n\n### 4. Activate Workflow\n- Toggle \"Active\" switch\n- Start chatting!",
+        "height": 380,
+        "width": 520,
+        "color": 5
+      }
+    },
+    {
+      "id": "sticky-flow",
+      "name": "🔄 Data Flow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        480,
+        48
+      ],
+      "parameters": {
+        "content": "## 🔄 Pipeline Flow:\n\n**Chat** → **AI Agent** → **Parse Data** → **MongoDB**\n           ↓ uses tools:\n    • Jina Scraper (fetches content)\n    • Memory (maintains context)",
+        "height": 140,
+        "width": 520,
+        "color": 7
+      }
+    },
+    {
+      "id": "05ee952e-14ac-43b8-bd51-384767c85453",
+      "name": "Read URL content in Jina AI",
+      "type": "n8n-nodes-base.jinaAiTool",
+      "typeVersion": 1,
+      "position": [
+        672,
+        688
+      ],
+      "parameters": {
+        "options": {},
+        "requestOptions": {}
+      },
+      "credentials": {
+        "jinaAiApi": {
+          "id": "XGGktlsCzNm0c6Ml",
+          "name": "Jina AI account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Scraping Coordinator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Scraping Coordinator": {
+      "main": [
+        [
+          {
+            "node": "Extract & Structure Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Structure Data": {
+      "main": [
+        [
+          {
+            "node": "Save to MongoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Scraping Coordinator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Scraping Coordinator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jina Web Scraper Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Scraping Coordinator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {},
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "rons4rJDqsU5rBqp",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:50.835Z",
+      "updatedAt": "2026-04-25T13:12:50.835Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,285 @@
+{
+  "id": "t6iFSA4GP0cvHMNT",
+  "name": "Tool_Consult_DEVOPS_Doug",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:35.049Z",
+  "updatedAt": "2026-10-03T14:00:48.922Z",
+  "isArchived": false,
+  "versionId": "1d0aa0b7-becb-41a5-a6c0-e89705fd4952",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        608
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "task"
+            },
+            {
+              "name": "sessionId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b5942df6-0160-4ef7-965d-57583acdc8aa",
+      "name": "Replace me with your logic",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        528,
+        352
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d24c705e-68a0-4553-91d0-426787522467",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        768,
+        624
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1-codex-max",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1-codex-max"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "ed04f5fd-7b81-4a96-a413-3d26edb6f87d",
+      "name": "Senior DevOps",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        768,
+        352
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of your task are as following: \n\nUse the following input fields:\n    - task: {{ $json.task }}\n",
+        "options": {
+          "systemMessage": "SYSTEM PROMPT: DOUG (SENIOR DEVOPS ENGINEER)\n\nROLE:\nYou are Doug, the Senior DevOps Engineer and Cloud Engineer. You build the factory that builds the software. You make sure the servers stay up, the deployments happen automatically, and the cloud bills don't bankrupt the client.\n\nSHARED COMPANY CONTEXT:\n\nCompany: A 15-person Agency building MVPs.\nThe Team Roster: CEO, Marcus (CTO), Priya (Product), Alex (Design), Liam (Frontend), Ben (Backend), Doug (You), Sam (QA).\n\nRESPONSIBILITIES AND CAPABILITIES:\nYou will have tools to accomplish the following tasks:\n\n- Infrastructure as Code (IaC): Writing Terraform or CloudFormation to provision servers. We never click buttons in the AWS console manually.\n- CI/CD Pipelines: Setting up GitHub repos, GitHub Actions, or GitLab CI so Ben and Liam can deploy code just by pushing a commit.\n- Containerization: Dockerizing applications and managing orchestration (ECS, Kubernetes).\n- Monitoring and Logging: Setting up Datadog, Prometheus, or ELK stacks so we know when the site is slow before the client calls us.\n- FinOps: Optimizing cloud costs. You spot unused instances and kill them to save money.\n\nDELEGATIONS AND INTERACTIONS:\n\n- From Marcus (CTO): He decides the cloud provider (e.g., \"Use Azure\"). You actually build the VPCs and Subnets.\n- From Ben and Liam (Devs): They ask you for environment variables or database connections. You provide the secure credentials.\n- o Sam (QA): You maintain the Staging Environment. If Staging is down, Sam cannot test, so you prioritize this.\n- To CEO: You report on infrastructure costs. \"The client's AWS bill will be $500/month.\"\n\nCORE PHILOSOPHIES:\n\n- Automate Everything: If you have to do it twice, write a script.\n- Cattle, Not Pets: Servers should be disposable. If one breaks, delete it and spin up a new one. Do not fix it manually.\n- It Works on My Machine is an Invalid Excuse: That is why we use Docker. Environments must be identical.\n\nPERSONALITY AND TONE:\n- Calm: When the site is down, you are the calmest person in the room.\n- Cynical: You assume developers will write bad code that crashes servers, so you build guardrails.\n- Efficient: You prefer command-line interfaces over GUIs.\n\nINPUT HANDLING & ACTION MODES:\nYou must classify the user's request into one of three Action Modes to determine your tool usage and output style.\n\nMODE A: SCAFFOLDING (The \"Builder\" Mode)\n\n- Trigger: \"Setup,\" \"Initialize,\" \"Create new repo,\" \"Provision\", \"Configure\", \"Create pipeline\" \n- Behavior: You act as an Architect. You need specifics (Region, Tech Stack, Naming Convention).\n- Required Params: project_name, cloud_provider, stack_type (e.g., Node/React vs Python).\n- Output: Terraform files, Dockerfiles, and GitHub Actions YAML.\n\nMODE B: OPS & SUPPORT (The \"Fixer\" Mode)\n\n- Trigger: \"Deploy failed,\" \"Staging is down,\" \"Add env var,\" \"Update pipeline.\"\n- Behavior: You act as a Surgeon. You need error logs or specific symptoms.\n- Required Params: repo_name, environment (dev/staging/prod), error_log (optional).\n- Output: Debug analysis, specific CLI commands to run, or a patch file.\n\nMODE C: AUDIT (The \"Accountant\" Mode)\n\n- Trigger: \"Why is the bill high?\", \"Check security,\" \"Optimize.\"\n- Behavior: You act as an Auditor. You look for waste and vulnerabilities.\n- Output: A bulleted report with \"Critical\" and \"Warning\" flags, followed by cost-saving commands.\n\nOUTPUT PROTOCOLS:\n\nIf the request involves CODE/CONFIG (Terraform, YAML, Docker):\n\n- Do not explain the history of Docker. Just give the file.\n- Use standard code blocks with filenames on top:\nhcl\n# main.tf\nresource \"aws_s3_bucket\" \"b\" { ... }\n- Validation: Always run a mental lint check. Do not output invalid YAML.\n\nIf the request involves TOOLS (Creating Folders/Repos):\n\nOutput the specific JSON structure required by your tool execution engine (if integrated) OR a bash script if running locally.\n\nIf the request is VAGUE:\n\n- Doug's Personality Check: If a developer says, \"My code works locally but not on staging,\" you reply, \"That's because you didn't dockerize it properly. Send me the Dockerfile.\" (Be cynical but helpful).\n"
+        }
+      }
+    },
+    {
+      "id": "f9862e55-86bd-4a4a-a056-be71ec09ef56",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        784
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d81e7397-fcf4-4ce6-8e21-4f9e421ad69e",
+      "name": "Webhook",
+      "webhookId": "25b69d58-117c-4140-afe1-ece331268e63",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        352
+      ],
+      "parameters": {
+        "path": "25b69d58-117c-4140-afe1-ece331268e63",
+        "options": {}
+      }
+    },
+    {
+      "id": "b4866fe8-e2f7-474e-b53f-4a1568d384f4",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        80,
+        112
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8aa97aab-3340-4a7e-9c77-b93b5d42f3ab",
+      "name": "Github-Create-Repo",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        992,
+        608
+      ],
+      "parameters": {
+        "toolDescription": "Makes an HTTP request to create a Github Repo and returns the response data",
+        "method": "POST",
+        "url": "https://hooks.zapier.com/hooks/catch/7420669/uan2nwt/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "repo_name",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            },
+            {
+              "name": "repo_description",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dd315a7f-2690-4476-bafd-d77d2ed7d8a7",
+      "name": "Code Tool",
+      "notesInFlow": false,
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        1200,
+        608
+      ],
+      "parameters": {
+        "description": "Call this tool to create a GitHub repository and a GitHub project.",
+        "jsCode": "// In the newest n8n Code Tool versions, inputs ARE passed in a global 'properties' object.\n// We use this specific structure to ensure it runs.\n\nasync function execute() {\n  // 1. SAFE VARIABLE EXTRACTION\n  // If n8n passes them as globals (older versions), use them. \n  // If passed as 'properties' object (newer versions), use that.\n  const props = (typeof properties !== 'undefined') ? properties : {};\n  \n  // Fallback check for variables if they are global\n  const repoName = props.repo_name || (typeof repo_name !== 'undefined' ? repo_name : null);\n  const token = props.github_token || (typeof github_token !== 'undefined' ? github_token : null);\n\n  if (!repoName) return \"Error: repo_name parameter is missing\";\n  if (!token) return \"Error: github_token parameter is missing\";\n\n  const projectTitle = repoName;\n\n  // 2. HELPER FUNCTIONS\n  const rest = async (url, method, body) => {\n    const opts = {\n      method,\n      headers: {\n        'Authorization': `Bearer ${token}`,\n        'Accept': 'application/vnd.github.v3+json',\n        'User-Agent': 'n8n-tool'\n      }\n    };\n    if (body) opts.body = JSON.stringify(body);\n    const res = await fetch(`https://api.github.com${url}`, opts);\n    if (!res.ok) throw new Error(`REST Error: ${await res.text()}`);\n    return await res.json();\n  };\n\n  const gql = async (query, vars) => {\n    const res = await fetch('https://api.github.com/graphql', {\n      method: 'POST',\n      headers: {\n        'Authorization': `Bearer ${token}`,\n        'Content-Type': 'application/json',\n        'User-Agent': 'n8n-tool'\n      },\n      body: JSON.stringify({ query, variables: vars })\n    });\n    const json = await res.json();\n    if (json.errors) throw new Error(`GraphQL Error: ${JSON.stringify(json.errors)}`);\n    return json.data;\n  };\n\n  try {\n    // 3. EXECUTION\n    // Get User ID\n    const user = await gql(`query { viewer { login id } }`);\n    const ownerId = user.viewer.id;\n    const username = user.viewer.login;\n\n    // Create Repo\n    const repo = await rest('/user/repos', 'POST', {\n      name: repoName,\n      private: true,\n      has_issues: true,\n      has_projects: true\n    });\n\n    // Create Project\n    const projData = await gql(`\n      mutation($ownerId: ID!, $title: String!) {\n        createProjectV2(input: { ownerId: $ownerId, title: $title }) {\n          projectV2 { id url }\n        }\n      }\n    `, { ownerId, title: projectTitle });\n    \n    const projectId = projData.createProjectV2.projectV2.id;\n\n    // Create Issue\n    const issue = await rest(`/repos/${username}/${repoName}/issues`, 'POST', {\n      title: 'Setup',\n      body: 'Automated setup'\n    });\n\n    // Link Issue to Project\n    await gql(`\n      mutation($pid: ID!, $cid: ID!) {\n        addProjectV2ItemById(input: { projectId: $pid, contentId: $cid }) {\n          item { id }\n        }\n      }\n    `, { pid: projectId, cid: issue.node_id });\n\n    // Link Repo to Project (Try/Catch as it's optional/finicky)\n    try {\n       await gql(`\n        mutation($pid: ID!, $rid: ID!) {\n          linkProjectV2ToRepository(input: { projectId: $pid, repositoryId: $rid }) {\n            repository { name }\n          }\n        }\n       `, { pid: projectId, rid: repo.node_id });\n    } catch(e) {}\n\n    return JSON.stringify({\n      status: \"success\",\n      repo: repo.html_url,\n      project: projData.createProjectV2.projectV2.url\n    });\n\n  } catch (err) {\n    return `Error: ${err.message}`;\n  }\n}\n\nreturn execute();",
+        "specifyInputSchema": true
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Senior DevOps",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace me with your logic": {
+      "main": [
+        [
+          {
+            "node": "Senior DevOps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Senior DevOps": {
+      "main": [
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Github-Create-Repo": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Code Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Senior DevOps",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "task": "Create a repo named o1"
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "t6iFSA4GP0cvHMNT",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:35.051Z",
+      "updatedAt": "2026-04-25T13:12:35.051Z"
+    }
+  ],
+  "activeVersion": null
+}

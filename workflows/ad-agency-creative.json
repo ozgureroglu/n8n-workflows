@@ -1,0 +1,373 @@
+{
+  "id": "pVG0umiUq8L88IHz",
+  "name": "ad-agency-creative",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:49.609Z",
+  "updatedAt": "2026-10-03T14:00:45.838Z",
+  "isArchived": false,
+  "versionId": "e0d1d7f2-1251-480c-8dfa-44bd8fe8e77a",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "webhook-1",
+      "name": "Webhook Creative",
+      "webhookId": "cdd38588-da06-4850-b0c1-e61690aa36ef",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "path": "ad-agency-creative",
+        "options": {},
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "sheets-campaign",
+      "name": "Get Campaign",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "options": {},
+        "filtersUI": {
+          "values": [
+            {
+              "lookupValue": "={{ $json.campaign_id }}",
+              "lookupColumn": "campaign_id"
+            }
+          ]
+        },
+        "operation": "read",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Campaigns"
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        }
+      }
+    },
+    {
+      "id": "sheets-client",
+      "name": "Get Client",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "options": {},
+        "filtersUI": {
+          "values": [
+            {
+              "lookupValue": "={{ $json.client_id }}",
+              "lookupColumn": "client_id"
+            }
+          ]
+        },
+        "operation": "read",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Clients"
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        }
+      }
+    },
+    {
+      "id": "ai-agent",
+      "name": "AI Creative Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        850,
+        300
+      ],
+      "parameters": {
+        "text": "Generate ad copy variations for:\n\nCampaign: {{ $('Get Campaign').item.json.campaign_name }}\nObjective: {{ $('Get Campaign').item.json.objective }}\nClient: {{ $json.company_name }}\nTone: {{ $json.tone_of_voice }}\n\nReturn JSON:\n{\"assets\": [{\"headline\": \"\", \"body_copy\": \"\", \"cta_text\": \"\", \"predicted_score\": 0-100}]}\n\nGenerate 15 variations with different angles.",
+        "agent": "conversationalAgent",
+        "options": {
+          "systemMessage": "You are an expert copywriter generating high-converting ad variations."
+        },
+        "promptType": "define"
+      }
+    },
+    {
+      "id": "claude-model",
+      "name": "Claude Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [
+        850,
+        500
+      ],
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "options": {
+          "maxTokensToSample": 8192
+        }
+      }
+    },
+    {
+      "id": "code-parse",
+      "name": "Parse Assets",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output;\nlet assets = [];\ntry {\n  const m = output.match(/\\{[\\s\\S]*\\}/);\n  if (m) {\n    const parsed = JSON.parse(m[0]);\n    assets = parsed.assets || [];\n  }\n} catch(e) { assets = []; }\nconst campaign_id = $('Get Campaign').item.json.campaign_id;\nreturn assets.map((a, i) => ({json: {...a, campaign_id, asset_id: campaign_id + '-' + (i+1), asset_type: 'copy', status: 'draft', created_at: new Date().toISOString()}}));"
+      }
+    },
+    {
+      "id": "loop-1",
+      "name": "Loop Assets",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1250,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "sheets-asset",
+      "name": "Save Asset Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1450,
+        200
+      ],
+      "parameters": {
+        "columns": {
+          "value": {
+            "status": "={{ $json.status }}",
+            "cta_text": "={{ $json.cta_text }}",
+            "headline": "={{ $json.headline }}",
+            "asset_id": "={{ $json.asset_id }}",
+            "body_copy": "={{ $json.body_copy }}",
+            "asset_type": "={{ $json.asset_type }}",
+            "created_at": "={{ $json.created_at }}",
+            "campaign_id": "={{ $json.campaign_id }}",
+            "predicted_score": "={{ $json.predicted_score }}"
+          },
+          "mappingMode": "defineBelow"
+        },
+        "options": {},
+        "operation": "append",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Assets"
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        }
+      }
+    },
+    {
+      "id": "sheets-update",
+      "name": "Update Campaign",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1450,
+        400
+      ],
+      "parameters": {
+        "options": {},
+        "columns": {
+          "value": {
+            "status": "assets_ready",
+            "updated_at": "={{ $now.toISO() }}"
+          },
+          "mappingMode": "defineBelow"
+        },
+        "operation": "update",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Campaigns"
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupValue": "={{ $('Get Campaign').item.json.campaign_id }}",
+              "lookupColumn": "campaign_id"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond-1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1650,
+        400
+      ],
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"success\",\"campaign_id\":\"{{ $('Get Campaign').item.json.campaign_id }}\",\"assets_created\":15}"
+      }
+    }
+  ],
+  "connections": {
+    "Claude Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Creative Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Campaign": {
+      "main": [
+        [
+          {
+            "node": "Get Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client": {
+      "main": [
+        [
+          {
+            "node": "AI Creative Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Assets": {
+      "main": [
+        [
+          {
+            "node": "Loop Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Assets": {
+      "main": [
+        [
+          {
+            "node": "Save Asset Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Creative": {
+      "main": [
+        [
+          {
+            "node": "Get Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Creative Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Asset Row": {
+      "main": [
+        [
+          {
+            "node": "Loop Assets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Campaign": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "pVG0umiUq8L88IHz",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:49.611Z",
+      "updatedAt": "2026-04-25T13:12:49.611Z"
+    }
+  ],
+  "activeVersion": null
+}

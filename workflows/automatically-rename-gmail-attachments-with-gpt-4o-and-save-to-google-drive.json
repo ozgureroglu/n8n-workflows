@@ -1,0 +1,496 @@
+{
+  "id": "lyvC24LQQu0NXyqv",
+  "name": "Automatically Rename Gmail Attachments with GPT-4o and Save to Google Drive",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:53.534Z",
+  "updatedAt": "2026-10-03T14:00:46.332Z",
+  "isArchived": false,
+  "versionId": "60ce35fd-fa53-40eb-a862-14069fe9f256",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "cbc1b04b-b48b-42ce-b4ef-d7f54912bebf",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -16,
+        240
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "436a5f8f-8f56-432d-ba7b-78d5f9ba97dc",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1536,
+        -48
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert content analyser and file naming assistant...\ntext: {{ $json.text }}\ndate: {{ $json.info.CreationDate }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a41271e4-5765-436b-b2d7-ca036ebccfaf",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1552,
+        192
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "e6d0b3a0-c86f-4ea2-a393-83397e8b0c21",
+      "name": "Upload file",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2048,
+        384
+      ],
+      "parameters": {
+        "inputDataFieldName": "attachment_1",
+        "name": "={{ $json.output }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1RKKwtbZ8_0PrmvpwsE_RvSwPDT9tdF4B",
+          "mode": "list",
+          "cachedResultName": "test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1RKKwtbZ8_0PrmvpwsE_RvSwPDT9tdF4B"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "s7mMTpeHJoz4FgHb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "id": "e3861877-abdd-4f39-b170-40420fb61eef",
+      "name": "Mark message as read",
+      "webhookId": "42131e96-60f3-4053-9a5d-0574c03fd61b",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2288,
+        384
+      ],
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Set Required Fields').item.json.id }}"
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4SypyfIgEvTrNaZq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "id": "bcc0fa74-df17-4f18-88b0-f547734c6bab",
+      "name": "Merge Data for Upload",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1824,
+        384
+      ],
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      }
+    },
+    {
+      "id": "b4b6c213-073d-46a3-ae07-712a6d6536fb",
+      "name": "Get Unread Messages with Attachments",
+      "webhookId": "b1269018-eb8e-4c02-949a-1a0c4a52076d",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        240
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "limit": 10,
+        "simple": false,
+        "filters": {
+          "q": "=has:attachment",
+          "readStatus": "=unread",
+          "receivedAfter": "=2025-09-01"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4SypyfIgEvTrNaZq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "id": "d3bc56bc-d246-4eee-b117-a4504d002140",
+      "name": "Set Required Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        240
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "id",
+              "type": "string",
+              "value": "={{ $json.id }}",
+              "id": "800e1ee8-f9f8-42ba-bead-4a419d75464a"
+            },
+            {
+              "name": "threadId",
+              "type": "string",
+              "value": "={{ $json.threadId }}",
+              "id": "6d6c31df-20a3-489c-a99b-258e35e7d0af"
+            },
+            {
+              "name": "from.value[0].name",
+              "type": "string",
+              "value": "={{ $json.from.value[0].name }}",
+              "id": "25b254cb-0df7-48a4-a03d-7e9ba7c1e1e2"
+            },
+            {
+              "name": "date",
+              "type": "string",
+              "value": "={{ $json.date }}",
+              "id": "0aa8b257-c37e-4a65-8754-bb71c3f5d11b"
+            },
+            {
+              "id": "696c805e-8b29-4558-8fc1-3d77a18ffc43",
+              "name": "Subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "1088ac51-b574-4cf5-97fb-d1e71ec9b89f",
+              "name": "From",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "5730a347-1bec-4501-adb6-3f9995b67765",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e9478f22-7154-4ea1-9ede-6a89e660fbda",
+      "name": "Download Attachments",
+      "webhookId": "26228da1-9d8e-4c29-afe2-484016394456",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        240
+      ],
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4SypyfIgEvTrNaZq",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "id": "38c55213-7304-4255-b077-06d98a47e494",
+      "name": "Extract from Attachments",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        224
+      ],
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "=attachment_0",
+        "options": {}
+      }
+    },
+    {
+      "id": "e2c2fe86-9ff5-4da7-8dc0-9342f38e5536",
+      "name": "Check if the attachment is PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        256
+      ],
+      "parameters": {
+        "jsCode": "const items = [];\n\nfor (const item of $input.all()) {\n  const binaryData = item.binary;\n  \n  // Check if this item has binary data\n  if (!binaryData) {\n    continue; // Skip items without binary data\n  }\n  \n  // Get the first binary property (assuming single file per item)\n  const binaryKey = Object.keys(binaryData)[0];\n  if (!binaryKey) {\n    continue; // Skip if no binary key found\n  }\n  \n  const fileData = binaryData[binaryKey];\n  \n  // Check if the file has a filename or content type\n  let isPdf = false;\n  \n  // Method 1: Check filename extension\n  if (fileData.fileName) {\n    const extension = fileData.fileName.toLowerCase().split('.').pop();\n    isPdf = extension === 'pdf';\n  }\n  \n  // Method 2: Check content type if filename check didn't work\n  if (!isPdf && fileData.mimeType) {\n    isPdf = fileData.mimeType.toLowerCase() === 'application/pdf';\n  }\n  \n  // Method 3: Check file signature (magic bytes) for PDF\n  if (!isPdf && fileData.data) {\n    try {\n      // PDF files start with %PDF\n      const buffer = Buffer.from(fileData.data, 'base64');\n      const header = buffer.toString('ascii', 0, 4);\n      isPdf = header === '%PDF';\n    } catch (error) {\n      // If we can't read the data, skip this method\n    }\n  }\n  \n  // Only include items that are PDFs\n  if (isPdf) {\n    items.push(item);\n  }\n}\n\nreturn items;\n"
+      }
+    },
+    {
+      "id": "859e515d-e61e-4460-9f27-ee05b140f116",
+      "name": "Filter Invoices",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1d4092c-2fe0-4721-b461-6643750c2c8e",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "=invoice",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "99af541a-594f-43e2-800b-541fc7f820b2",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "Invoice",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "86d501f6-4576-42c4-ad1b-ea3bba327d21",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "receipt",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "76b1dedd-333c-429b-be16-63582605c67e",
+              "leftValue": "={{ $json.text }}",
+              "rightValue": "invoice",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "7ab5e54e-6dab-4f5e-9e40-b8a33422cc47",
+              "leftValue": "={{ $json.text }}",
+              "rightValue": "receipt",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge Data for Upload",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Mark message as read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Unread Messages with Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Required Fields": {
+      "main": [
+        [
+          {
+            "node": "Filter Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Attachments": {
+      "main": [
+        [
+          {
+            "node": "Check if the attachment is PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Data for Upload": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from Attachments": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Data for Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Unread Messages with Attachments": {
+      "main": [
+        [
+          {
+            "node": "Set Required Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if the attachment is PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract from Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Invoices": {
+      "main": [
+        [
+          {
+            "node": "Download Attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {},
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "lyvC24LQQu0NXyqv",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:53.536Z",
+      "updatedAt": "2026-04-25T13:12:53.536Z"
+    }
+  ],
+  "activeVersion": null
+}

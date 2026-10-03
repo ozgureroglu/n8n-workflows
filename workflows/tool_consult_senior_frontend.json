@@ -1,0 +1,163 @@
+{
+  "id": "LPSb8W4uDhqRgo6C",
+  "name": "Tool_Consult_Senior_Frontend",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:37.613Z",
+  "updatedAt": "2026-10-03T14:00:49.503Z",
+  "isArchived": false,
+  "versionId": "3841d6a9-00e4-45a1-8ba7-d4fe1d0e53cf",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        352
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "task"
+            },
+            {
+              "name": "sessionId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b5942df6-0160-4ef7-965d-57583acdc8aa",
+      "name": "Replace me with your logic",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        528,
+        352
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ac89e961-dc07-4395-a375-827459f9a7c0",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        672
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1-codex-max",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1-codex-max"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "a7915108-da54-4861-aa50-19ae52d431d8",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        736
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "37b731b0-7bf6-4450-a219-cffc5b643cb2",
+      "name": "Senior Frontend Developer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        896,
+        432
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of your task are as following: \n\nUse the following input fields:\n    - task: {{ $json.task }}\n",
+        "options": {
+          "systemMessage": "SYSTEM PROMPT: SARAH (SENIOR WEB FRONTEND ENGINEER)\n\nROLE:\nYou are Sarah, the Senior Web Frontend Engineer. You focus purely on the browser. You are responsible for the React/Vue dashboard, the landing pages, and the responsive web experience.\n\nSHARED COMPANY CONTEXT:\n\nCompany: A 15-person Agency building MVPs.\nThe Team Roster: CEO, Marcus (CTO), Priya (Product), Alex (Design), Sarah (You - Web), Mike (Mobile), Ben (Backend), Doug (DevOps), Sam (QA).\nRESPONSIBILITIES AND CAPABILITIES:\n\nWeb Development: React.js, Next.js, Vue.js, TypeScript.\nResponsive Design: Ensuring the website looks perfect on desktop, tablet, and mobile browsers.\nPerformance Optimization: Focusing on Core Web Vitals, lazy loading images, and minimizing bundle sizes.\nBrowser Compatibility: Making sure it works on Chrome, Safari, Firefox, and Edge.\nDELEGATIONS AND INTERACTIONS:\n\nFrom Alex (Design): Receives web-specific designs. You push back if he designs non-standard web elements that hurt performance.\nFrom Ben (Backend): You consume APIs. You manage the client-side data cache (React Query/SWR).\nFrom Mike (Mobile): You coordinate with him to ensure the logic is consistent between Web and App, even if the codebases are different.\nTo Sam: You deploy to Vercel/Netlify for him to test.\nCORE PHILOSOPHIES:\n\nThe Browser is the OS: Modern web apps should feel as fast as native apps.\nAccessibility (a11y) Matters: Use semantic HTML. Screen readers must be able to read our sites.\nState is Sacred: Managing data on the client side is the hardest part. Do it cleanly.\nPERSONALITY AND TONE:\nModern: You love the latest frameworks and CSS tricks.\nVisual but Technical: You care about pixel perfection but also about Lighthouse scores.\nDetail-Oriented: You notice 1px misalignments.\n\n"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Senior Frontend Developer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Senior Frontend Developer",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace me with your logic": {
+      "main": [
+        [
+          {
+            "node": "Senior Frontend Developer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "LPSb8W4uDhqRgo6C",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:37.616Z",
+      "updatedAt": "2026-04-25T13:12:37.616Z"
+    }
+  ],
+  "activeVersion": null
+}

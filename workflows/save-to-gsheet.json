@@ -1,0 +1,211 @@
+{
+  "id": "GAKLiADowsy9Ojd8",
+  "name": "Save to gsheet",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:32.481Z",
+  "updatedAt": "2026-10-03T14:00:48.060Z",
+  "isArchived": false,
+  "versionId": "8d51e087-f493-47ee-b64b-f4e179c48a6d",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "7c6b816c-7483-4a3c-9a73-2640f1266890",
+      "name": "Webhook",
+      "webhookId": "6fd42e31-26db-4d61-a451-284777fda228",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        400,
+        384
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "newsletter",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qryedbGcEAYx3Pym",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "id": "4c0f8600-424b-43f7-91c0-8006b1f5abd8",
+      "name": "Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        384,
+        240
+      ],
+      "parameters": {
+        "content": "## Create a simple API endpoint\n\nIn this workflow we show how to create a simple API endpoint with `Webhook` and `Respond to Webhook` nodes\n\n",
+        "height": 280,
+        "width": 600
+      }
+    },
+    {
+      "id": "637e03a3-6316-4c36-bdbf-59d1244b7eda",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        848,
+        384
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=The URL of the Google search query for the term \"{{$node[\"Webhook\"].json[\"query\"][\"first_name\"]}} {{$node[\"Webhook\"].json[\"query\"][\"last_name\"]}}\" is: {{$json[\"product\"]}}",
+        "options": {}
+      }
+    },
+    {
+      "id": "cda1637a-a3bf-43f4-9d38-8d73a3f6010c",
+      "name": "Create URL string",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        624,
+        384
+      ],
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "email",
+              "value": "={{ $json.body.email }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "46674e82-0ff4-4839-b4da-85d3f3701038",
+      "name": "Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        384,
+        608
+      ],
+      "parameters": {
+        "content": "### How to use it\n1. Execute the workflow so that the webhook starts listening\n2. Make a test request by pasting, **in a new browser tab**, the test URL from the `Webhook` node and appending the following test at the end `?first_name=bob&last_name=dylan`\n\nYou will receive the following output in the new tab `The URL of the Google search query for the term \"bob dylan\" is: https://www.google.com/search?q=bob+dylan`\n\n",
+        "height": 220,
+        "width": 600
+      }
+    },
+    {
+      "id": "7b6a910d-cf30-42dc-9d00-957f3ccb00c5",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        544
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ",
+          "mode": "list",
+          "cachedResultName": "newsletter_emails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.email }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create URL string",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create URL string": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "GAKLiADowsy9Ojd8",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:32.483Z",
+      "updatedAt": "2026-04-25T13:12:32.483Z"
+    }
+  ],
+  "activeVersion": null
+}

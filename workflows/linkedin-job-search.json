@@ -1,0 +1,1340 @@
+{
+  "id": "zrVnvFyniKLXXNGI",
+  "name": "Linkedin Job Search",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-07-30T16:22:05.176Z",
+  "updatedAt": "2026-10-03T14:00:47.575Z",
+  "isArchived": false,
+  "versionId": "dff784bb-47ac-47b9-8a59-c6caf2feef06",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "id": "72f329ce-e4f9-4a30-ba34-0930b9176d0a",
+      "name": "Dedupe Links",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        -96
+      ],
+      "parameters": {
+        "jsCode": "// Merge links from all search pages, de-dup within run by job id,\n// and skip jobs already recorded in the results sheet (previous runs).\nconst seen = new Set();\n\n// Seed with job ids already stored in the Result sheet.\ntry {\n  for (const r of $('Get existing jobs').all()) {\n    const j = r.json || {};\n    const col = String(j.jobid ?? '').replace(/\\D/g, '');\n    if (col) seen.add(col);\n    const link = String(j.link ?? j.applyLink ?? '');\n    const m = link.split('?')[0].replace(/\\/+$/, '').match(/(\\d{5,})$/);\n    if (m) seen.add(m[1]);\n  }\n} catch (e) { /* read node may be empty; ignore */ }\n\nconst out = [];\nconst inputItems = $input.all();\nfor (let idx = 0; idx < inputItems.length; idx++) {\n  const links = inputItems[idx].json.links;\n  const arr = Array.isArray(links) ? links : (links ? [links] : []);\n  for (const raw of arr) {\n    const link = String(raw).split('?')[0].replace(/\\/+$/, '').trim();\n    if (!link) continue;\n    const m = link.match(/(\\d{5,})$/);\n    const jobid = m ? m[1] : '';\n    const key = jobid || link;\n    if (seen.has(key)) continue; // already processed this run or a previous run\n    seen.add(key);\n    out.push({ json: { links: link, jobid }, pairedItem: { item: idx } });\n  }\n}\n\nreturn out;\n"
+      }
+    },
+    {
+      "id": "52e85d48-19f1-431d-9b93-ee2679739a50",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -3840,
+        480
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "6e2f13c1-8055-4030-baf6-67357ec905f1",
+      "name": "Wait",
+      "webhookId": "c9cb4878-ae4d-4b8e-bd37-5395011f7761",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -3584,
+        240
+      ],
+      "parameters": {
+        "amount": 6
+      }
+    },
+    {
+      "id": "e4acdeb0-b180-4e00-8be4-f5237bf85aad",
+      "name": "Score Filter",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -848,
+        240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1499f1ac-a7ae-4983-85c7-aa7b8445b2e2",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 50
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "a78b6e5c-8bb3-43c3-92ff-67b29954df18",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -1808,
+        240
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Hi, you are a helpful job matcher, you read my resume then analyze the given resume and job description and provide a job matching score. also write a cover letter based on my resume and the job description. cover letter must be at least 2 paragraph and ignore the name, address and signiture part from start and end.\nAlso extract the salary / compensation from the job description if it is stated (include the currency and period, e.g. \"60,000-75,000 EUR per year\" or \"$120k per year\"). If no salary is mentioned, set salary to \"Not specified\".\nAlso extract the cloud providers mentioned in the job description as a comma separated string using their common names (e.g. \"AWS, Azure, GCP\"). If none are mentioned, set cloudProviders to \"\".\nAlso extract the technical stack mentioned in the job description (programming languages, frameworks, databases, and tools such as Docker, Kubernetes, Terraform) as a comma separated string (e.g. \"Python, Go, React, PostgreSQL, Kubernetes\"). If none are mentioned, set techStack to \"\".\nif you are using special character like \" use \\ to escape it. output must be parse in json without error. \n\nfor example your response should be like: {\"score\": 80, \"coverLetter\": \"sample cover letter\", \"salary\": \"Not specified\", \"cloudProviders\": \"AWS, GCP\", \"techStack\": \"Python, React, PostgreSQL\" }\n\njob_description: {{ $json.description }}\nmy_resume: {{ $('Extract from File').first().json.text }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "c9dff959-3810-493f-9d63-fe1c0e12f7f9",
+      "name": "Ollama Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -1808,
+        432
+      ],
+      "parameters": {
+        "model": "qwen2.5-14b-16k:latest",
+        "options": {
+          "temperature": 0.3,
+          "numCtx": 16384
+        }
+      },
+      "credentials": {
+        "ollamaApi": {
+          "id": "WnUpgL9UJ1zBYJra",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "id": "d35fb839-5cc5-47c2-9c36-dce09347d11e",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -2432,
+        -96
+      ],
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      }
+    },
+    {
+      "id": "3e382420-8797-45fe-99df-8a91623c74d6",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2688,
+        -96
+      ],
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "16fhrmfEq5SMSoUxli5_6V_y_k8MCA6fC",
+          "mode": "list",
+          "cachedResultName": "ozgur_eroglu_cv.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/16fhrmfEq5SMSoUxli5_6V_y_k8MCA6fC/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PJP8DhDpLGKCl737",
+          "name": "Google Drive account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "758d8199-e32b-4361-b645-6ac04e83e8d4",
+      "name": "Append or update row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -1120,
+        240
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE",
+          "mode": "list",
+          "cachedResultName": "job_search_2026",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1501487018,
+          "mode": "list",
+          "cachedResultName": "Result",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE/edit#gid=1501487018"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Cover Letter": "={{ $json.coverLetter }}",
+            "score": "={{ $json.score }}",
+            "Title": "={{ $json.title }}",
+            "Company": "={{ $json.company }}",
+            "Location": "={{ $json.location }}",
+            "link": "={{ $json.applyLink }}",
+            "description": "={{ $json.description }}",
+            "jobid": "={{ $json.jobid }}",
+            "salary": "={{ $json.salary }}",
+            "externalApply": "={{ $json.externalApply }}",
+            "website": "={{ $json.website }}",
+            "hrContactInfo": "={{ $json.hrContactInfo }}",
+            "companyDescription": "={{ $json.companyDescription }}",
+            "companySize": "={{ $json.companySize }}",
+            "companyEmployees": "={{ $json.companyEmployees }}",
+            "cloudProviders": "={{ $json.cloudProviders }}",
+            "techStack": "={{ $json.techStack }}"
+          },
+          "matchingColumns": [
+            "link"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cover Letter",
+              "displayName": "Cover Letter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "jobid",
+              "displayName": "jobid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "salary",
+              "displayName": "salary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "externalApply",
+              "displayName": "externalApply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hrContactInfo",
+              "displayName": "hrContactInfo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "companyDescription",
+              "displayName": "companyDescription",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "companySize",
+              "displayName": "companySize",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "companyEmployees",
+              "displayName": "companyEmployees",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cloudProviders",
+              "displayName": "cloudProviders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "techStack",
+              "displayName": "techStack",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I2QkkAZolEbEmZwx",
+          "name": "Google Sheets account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "40b7a645-8568-44fa-a5a1-7d49617d6fe0",
+      "name": "Send a text message",
+      "webhookId": "17b9ebe8-c8d4-4bd9-ad20-45842ddc2c00",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -608,
+        528
+      ],
+      "parameters": {
+        "chatId": "-5494197597",
+        "text": "=Title: {{ $('Parse AI Output').last().json.title }}\nCompany: {{ $('Parse AI Output').last().json.company }}\nLocation: {{ $('Parse AI Output').last().json.location }}\nJob Score: {{ $('Parse AI Output').last().json.score }}\nSalary: {{ $('Parse AI Output').last().json.salary }}\nExternal apply: {{ $('Parse AI Output').last().json.externalApply }}\nWebsite: {{ $('Parse AI Output').last().json.website }}\nCompany size: {{ $('Parse AI Output').last().json.companySize }}\nCloud: {{ $('Parse AI Output').last().json.cloudProviders }}\nTech stack: {{ $('Parse AI Output').last().json.techStack }}\nHR contact: {{ $('Parse AI Output').last().json.hrContactInfo }}\nApply: {{ $('Parse AI Output').last().json.applyLink }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "C92Q2iPaHSGZhSmD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "186ea595-1160-48f2-87cf-2ffb824ae6fc",
+      "name": "Get row(s) in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -2064,
+        -96
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE",
+          "mode": "list",
+          "cachedResultName": "job_search_2026",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Filter",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE/edit#gid=0"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I2QkkAZolEbEmZwx",
+          "name": "Google Sheets account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "37a4fe7e-ec70-4153-a6de-93ea352f5b0a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3040,
+        -192
+      ],
+      "parameters": {
+        "content": "Worklofw executes daily at 5pm, you can change the interval and time of execution.\n",
+        "height": 260
+      }
+    },
+    {
+      "id": "193a3655-4c9c-4119-ade0-440919e22a0e",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2768,
+        -192
+      ],
+      "parameters": {
+        "content": "Read user resume from google drive, you need to upload your resume in pdf format and select in **From List** section.",
+        "height": 260,
+        "color": 4
+      }
+    },
+    {
+      "id": "65908fa7-8167-4a2c-a218-c9e292b0cb19",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2480,
+        -192
+      ],
+      "parameters": {
+        "content": "Convert pdf file into text to AI can read content.",
+        "height": 260,
+        "color": 5
+      }
+    },
+    {
+      "id": "6629e4d8-219a-49f1-94ed-2d355d72c56b",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        -240
+      ],
+      "parameters": {
+        "content": "Read search filter consiste of keywords, location, experience level, workplace type, employment type and easy apply from google sheet.\n\nYou can download [this Template](https://docs.google.com/spreadsheets/d/1mtKVxj_z_QCLGXMx0mJVihWSgS41SzHfU1Rv4r_mRY0) and copy in your personal space.",
+        "height": 300,
+        "width": 400,
+        "color": 4
+      }
+    },
+    {
+      "id": "140fab5c-16d0-418e-9fdb-0b99b9447c46",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        -192
+      ],
+      "parameters": {
+        "content": "Create Linkedin search url from filter params.",
+        "height": 260,
+        "width": 180
+      }
+    },
+    {
+      "id": "bc0605a4-332e-4bf7-a375-f1bcb5a4369a",
+      "name": "Fetch Jobs from Linkedin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "position": [
+        -1520,
+        -96
+      ],
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 12000
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "6e51efb4-6644-4eb4-b18b-fcbbfe6d866d",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        -256
+      ],
+      "parameters": {
+        "content": "Extrat Job links from Linkdin search result",
+        "height": 320,
+        "width": 220
+      }
+    },
+    {
+      "id": "3123f452-ef13-43ad-95db-ba8a329233c3",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1088,
+        -240
+      ],
+      "parameters": {
+        "content": "fetch jobs one by one",
+        "height": 300,
+        "width": 180,
+        "color": 6
+      }
+    },
+    {
+      "id": "060486e5-b89a-4c20-8b1a-c96e957c3a4d",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3616,
+        128
+      ],
+      "parameters": {
+        "content": "Wait 3 sec between each job fetch.",
+        "height": 260,
+        "width": 180,
+        "color": 3
+      }
+    },
+    {
+      "id": "2e1cf48f-f932-4d9a-bc9e-73de8dcafc3e",
+      "name": "Fetch Job Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "position": [
+        -3376,
+        240
+      ],
+      "parameters": {
+        "url": "={{ $json.links }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.9"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "5fcbb12e-267a-4be2-8bc1-9ebf13db725d",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3216,
+        112
+      ],
+      "parameters": {
+        "content": "Parse job HTML page, extract **title**, **company**, **location**, **jobDescription** and **applyLink** from it",
+        "height": 300,
+        "width": 380,
+        "color": 6
+      }
+    },
+    {
+      "id": "dd5df526-bfe9-4886-b610-a9ee899df65b",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1984,
+        112
+      ],
+      "parameters": {
+        "content": "AI model compare your resume and job description and rate your resume from 0-100, (0 does not match, 100 fully match) and also AI will write a sample cover letter based on your resume and your expriences and job description.\nI used Gemini model here, you can use othe AI model like OpenAI (chat GPT)",
+        "height": 440,
+        "width": 540,
+        "color": 7
+      }
+    },
+    {
+      "id": "44509fff-5417-42be-a372-e42580609ca2",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1424,
+        112
+      ],
+      "parameters": {
+        "content": "Convert AI output to JSON.",
+        "height": 300,
+        "width": 180,
+        "color": 6
+      }
+    },
+    {
+      "id": "9a1d4cca-4684-479e-ba3d-2f5901ff89ad",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        112
+      ],
+      "parameters": {
+        "content": "Add new job with score in google sheet.\n\nYou can download [this Template](https://docs.google.com/spreadsheets/d/1mtKVxj_z_QCLGXMx0mJVihWSgS41SzHfU1Rv4r_mRY0) and copy in your personal space.",
+        "height": 300,
+        "width": 260,
+        "color": 4
+      }
+    },
+    {
+      "id": "6a7cf1ae-6f48-46d3-8aba-c7a1b83422ae",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        432
+      ],
+      "parameters": {
+        "content": "Send telegram message if matching score is greater than criteria defined in previuos step.",
+        "height": 300,
+        "width": 260,
+        "color": 5
+      }
+    },
+    {
+      "id": "3275bcc0-35eb-4f5c-8c41-3fa23c565450",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        112
+      ],
+      "parameters": {
+        "content": "Filter job that has score higher than 50. you can change filter criteria in this node.",
+        "height": 300,
+        "width": 260,
+        "color": 4
+      }
+    },
+    {
+      "id": "a79aa879-694c-4710-86b9-c515d63a867b",
+      "name": "Parse AI Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        240
+      ],
+      "parameters": {
+        "jsCode": "let raw = String($input.first().json.output ?? '').replace(/```(?:json)?/gi, '').trim();\n\n// Keep only the JSON object, dropping any prose the model added around it.\nconst first = raw.indexOf('{');\nconst last = raw.lastIndexOf('}');\nif (first !== -1 && last !== -1 && last > first) raw = raw.slice(first, last + 1);\n\n// Escape raw control chars that appear INSIDE string literals. Local models\n// often emit a cover letter with real newlines/tabs, which is invalid JSON.\nconst sanitizeJson = (s) => {\n  let out = '';\n  let inStr = false;\n  for (let i = 0; i < s.length; i++) {\n    const c = s[i];\n    if (inStr) {\n      if (c === '\\\\') { out += c + (s[i + 1] ?? ''); i++; continue; }\n      if (c === '\"') { inStr = false; out += c; continue; }\n      if (c === '\\n') { out += '\\\\n'; continue; }\n      if (c === '\\r') { out += '\\\\r'; continue; }\n      if (c === '\\t') { out += '\\\\t'; continue; }\n      out += c;\n    } else {\n      if (c === '\"') inStr = true;\n      out += c;\n    }\n  }\n  return out;\n};\n\nconst toList = (v) => Array.isArray(v) ? v.filter(Boolean).join(', ') : String(v ?? '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e1) {\n  try {\n    parsed = JSON.parse(sanitizeJson(raw));\n  } catch (e2) {\n    // Last resort: extract fields directly so one malformed response is not fatal.\n    const grab = (key) => {\n      const m = raw.match(new RegExp('\"' + key + '\"\\\\s*:\\\\s*\"([\\\\s\\\\S]*?)\"\\\\s*(?:,\\\\s*\"\\\\w|\\\\})'));\n      return m ? m[1].replace(/\\\\\"/g, '\"').replace(/\\\\n/g, '\\n').trim() : '';\n    };\n    const scoreM = raw.match(/\"score\"\\s*:\\s*(\\d+)/i);\n    if (!scoreM && !/\"coverLetter\"/.test(raw)) {\n      throw new Error('AI output is not valid JSON: ' + raw.slice(0, 300));\n    }\n    parsed = {\n      score: scoreM ? Number(scoreM[1]) : 0,\n      coverLetter: grab('coverLetter'),\n      salary: grab('salary') || 'Not specified',\n      cloudProviders: grab('cloudProviders'),\n      techStack: grab('techStack'),\n    };\n  }\n}\n\nconst job = $('Modify Job Attributes').last().json;\nreturn [{\n  json: {\n    score: Number(parsed.score) || 0,\n    coverLetter: parsed.coverLetter ?? '',\n    salary: parsed.salary ?? 'Not specified',\n    cloudProviders: toList(parsed.cloudProviders),\n    techStack: toList(parsed.techStack),\n    title: job.title ?? '',\n    company: job.company ?? '',\n    location: job.location ?? '',\n    applyLink: String(job.applyLink ?? '').trim(),\n    description: job.description ?? '',\n    jobid: job.jobid ?? '',\n    employmentType: job.employmentType ?? '',\n    externalApply: job.externalApply ?? '',\n    website: job.website ?? '',\n    companyDescription: job.companyDescription ?? '',\n    companySize: job.companySize ?? '',\n    companyEmployees: job.companyEmployees ?? '',\n    hrContactInfo: job.hrContactInfo ?? '',\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "277c5215-7099-4261-979a-1bc9867af9fb",
+      "name": "Parse Job Attributes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3168,
+        240
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst html = typeof input === 'string' ? input : (input.data || input.body || '');\nif (!html || typeof html !== 'string') {\n  throw new Error('Fetch Job Page did not return HTML');\n}\n\n// Collapse to a single trimmed line (used for short fields like title/company).\nconst decode = (s = '') =>\n  String(s)\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n// Convert an HTML fragment to readable plain text: keep paragraph breaks and\n// turn list items into bullets instead of flattening everything onto one line.\nconst htmlToText = (s = '') => {\n  let t = String(s);\n  // Some sources (JSON-LD) ship the markup entity-encoded; unescape first.\n  t = t.replace(/&lt;/g, '<').replace(/&gt;/g, '>');\n  t = t.replace(/<\\s*br\\s*\\/?\\s*>/gi, '\\n');\n  t = t.replace(/<\\s*li[^>]*>/gi, '\\n\\u2022 ');\n  t = t.replace(/<\\s*\\/\\s*(p|div|ul|ol|li|h[1-6]|tr|section|article|header|footer)\\s*>/gi, '\\n');\n  t = t.replace(/<\\s*\\/\\s*(td|th)\\s*>/gi, ' ');\n  t = t.replace(/<[^>]+>/g, '');\n  t = t\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&rsquo;/g, \"'\")\n    .replace(/&lsquo;/g, \"'\")\n    .replace(/&rdquo;/g, '\"')\n    .replace(/&ldquo;/g, '\"')\n    .replace(/&hellip;/g, '...')\n    .replace(/&ndash;/g, '-')\n    .replace(/&mdash;/g, '-')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>');\n  t = t\n    .replace(/[ \\t\\f\\v]+/g, ' ')\n    .replace(/ *\\n */g, '\\n')\n    .replace(/\\u2022 *(?=\\n|$)/g, '')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n  return t;\n};\n\nconst pickJsonLd = () => {\n  const blocks = [...html.matchAll(/<script[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi)];\n  for (const b of blocks) {\n    try {\n      const data = JSON.parse(b[1]);\n      const items = Array.isArray(data) ? data : [data];\n      for (const item of items) {\n        const t = item['@type'];\n        const isJob = t === 'JobPosting' || (Array.isArray(t) && t.includes('JobPosting'));\n        if (!isJob) continue;\n        const org = item.hiringOrganization || {};\n        const loc = item.jobLocation;\n        let location = '';\n        const addr = Array.isArray(loc) ? loc[0]?.address : loc?.address;\n        if (addr) {\n          location = [addr.addressLocality, addr.addressRegion, addr.addressCountry].filter(Boolean).join(', ');\n        } else if (typeof item.jobLocation === 'string') {\n          location = item.jobLocation;\n        }\n        return {\n          title: decode(item.title || ''),\n          company: decode(typeof org === 'string' ? org : (org.name || '')),\n          location: decode(location),\n          descriptionRaw: item.description || '',\n          jobid: String(item.jobId || item.identifier?.value || '').replace(/\\D/g, '') || '',\n        };\n      }\n    } catch (e) {}\n  }\n  return null;\n};\n\nconst meta = (prop) => {\n  const m = html.match(new RegExp(`<meta[^>]+property=[\"']${prop}[\"'][^>]+content=[\"']([^\"']+)[\"']`, 'i'))\n    || html.match(new RegExp(`<meta[^>]+content=[\"']([^\"']+)[\"'][^>]+property=[\"']${prop}[\"']`, 'i'));\n  return m ? decode(m[1]) : '';\n};\n\nconst byRegex = (re) => {\n  const m = html.match(re);\n  return m ? decode(m[1]) : '';\n};\n\nconst byRegexRaw = (re) => {\n  const m = html.match(re);\n  return m ? m[1] : '';\n};\n\nlet job = pickJsonLd() || {};\nif (!job.title) job.title = byRegex(/<h1[^>]*class=[\"'][^\"']*top-card-layout__title[^\"']*[\"'][^>]*>([\\s\\S]*?)<\\/h1>/i) || byRegex(/<h1[^>]*>([\\s\\S]*?)<\\/h1>/i) || meta('og:title');\nif (!job.company) job.company = byRegex(/topcard__org-name-link[^>]*>([\\s\\S]*?)<\\//i) || meta('og:site_name');\nif (!job.location) job.location = byRegex(/topcard__flavor--bullet[^>]*>([\\s\\S]*?)<\\//i);\n\n// Keep the raw description markup so it can be turned into readable text below.\nlet descriptionRaw = job.descriptionRaw || '';\nif (!descriptionRaw) {\n  descriptionRaw = byRegexRaw(/show-more-less-html__markup[^>]*>([\\s\\S]*?)<\\/div>/i)\n    || byRegexRaw(/description__text[^>]*>([\\s\\S]*?)<\\/div>/i)\n    || meta('og:description');\n}\nconst description = htmlToText(descriptionRaw);\n\nif (!job.jobid) {\n  const urn = byRegex(/data-semaphore-content-urn=[\"']urn:li:jobPosting:(\\d+)[\"']/i)\n    || byRegex(/urn:li:jobPosting:(\\d+)/i);\n  job.jobid = urn;\n}\n\n// Prefer the URL from the loop item; fall back to constructed job view URL.\nconst loopLink = $('Loop Over Items').last()?.json?.links\n  || $('Wait').last()?.json?.links\n  || '';\nconst applyLink = String(loopLink || (job.jobid ? `https://www.linkedin.com/jobs/view/${job.jobid}` : '')).split('?')[0].trim();\nconst jobid = job.jobid || (applyLink.match(/\\/jobs\\/view\\/(\\d+)/) || [])[1] || '';\n\n// Parse the guest-page criteria list (Seniority level, Employment type, Job function, Industries).\nconst criteria = {};\nconst critRe = /description__job-criteria-subheader[^>]*>([\\s\\S]*?)<\\/h3>[\\s\\S]*?description__job-criteria-text[^>]*>([\\s\\S]*?)<\\/span>/gi;\nlet cm;\nwhile ((cm = critRe.exec(html)) !== null) {\n  const key = decode(cm[1]).toLowerCase();\n  const val = decode(cm[2]);\n  if (key && !criteria[key]) criteria[key] = val;\n}\nconst employmentType = criteria['employment type'] || '';\nconst seniority = criteria['seniority level'] || '';\n\n// Apply method: LinkedIn names the guest sign-in modal after the apply type.\n// \"apply-link-offsite\" => you can apply on an external site (application allowed\n// from other places); \"apply-link-onsite\" => Easy Apply on LinkedIn only.\nconst hasOffsite = /apply-link-offsite/i.test(html);\nconst hasOnsite = /apply-link-onsite/i.test(html);\nconst externalApply = hasOffsite ? 'Yes' : (hasOnsite ? 'No' : '');\n\n// Company LinkedIn page link (from the top card) — followed later to fetch the\n// company website, description and size.\nlet companyUrl = byRegexRaw(/topcard__org-name-link[^>]*href=[\"']([^\"']+)[\"']/i) || '';\nif (!companyUrl) companyUrl = byRegexRaw(/href=[\"'](https:\\/\\/[a-z]{2,3}\\.linkedin\\.com\\/company\\/[^\"']+)[\"']/i) || '';\ncompanyUrl = companyUrl.replace(/&amp;/g, '&').split('?')[0].trim();\n\n// Email address(es) in the ad (typically HR/recruiter contact).\nconst emailRe = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}/g;\nconst emailSet = new Set();\nfor (const m of (descriptionRaw.match(emailRe) || [])) emailSet.add(m.toLowerCase());\nfor (const m of (description.match(emailRe) || [])) emailSet.add(m.toLowerCase());\nfor (const m of descriptionRaw.matchAll(/mailto:([^\"'?>\\s]+)/gi)) emailSet.add(m[1].toLowerCase());\nconst hrContactInfo = [...emailSet]\n  .filter((e) => !/\\.(png|jpe?g|gif|svg|webp)$/i.test(e))\n  .join(', ');\n\nif (!job.title && !description) {\n  throw new Error('Could not parse job fields from LinkedIn HTML (possible authwall/block page)');\n}\n\nreturn [{\n  json: {\n    title: job.title || '',\n    company: job.company || '',\n    location: job.location || '',\n    description,\n    jobid,\n    applyLink,\n    employmentType,\n    seniority,\n    externalApply,\n    companyUrl,\n    hrContactInfo,\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "f746483b-9104-4a32-9ea5-0eb4688e4504",
+      "name": "Modify Job Attributes",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2976,
+        240
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t1",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "id": "t2",
+              "name": "company",
+              "type": "string",
+              "value": "={{ $json.company }}"
+            },
+            {
+              "id": "t3",
+              "name": "location",
+              "type": "string",
+              "value": "={{ $json.location }}"
+            },
+            {
+              "id": "t4",
+              "name": "description",
+              "type": "string",
+              "value": "={{ $json.description }}"
+            },
+            {
+              "id": "t5",
+              "name": "jobid",
+              "type": "string",
+              "value": "={{ $json.jobid }}"
+            },
+            {
+              "id": "t6",
+              "name": "applyLink",
+              "type": "string",
+              "value": "={{ $json.applyLink }}"
+            },
+            {
+              "id": "t7",
+              "name": "employmentType",
+              "type": "string",
+              "value": "={{ $json.employmentType }}"
+            },
+            {
+              "id": "t8",
+              "name": "seniority",
+              "type": "string",
+              "value": "={{ $json.seniority }}"
+            },
+            {
+              "id": "t9",
+              "name": "externalApply",
+              "type": "string",
+              "value": "={{ $json.externalApply }}"
+            },
+            {
+              "id": "t10",
+              "name": "website",
+              "type": "string",
+              "value": "={{ $json.website }}"
+            },
+            {
+              "id": "t11",
+              "name": "hrContactInfo",
+              "type": "string",
+              "value": "={{ $json.hrContactInfo }}"
+            },
+            {
+              "id": "t12",
+              "name": "companyDescription",
+              "type": "string",
+              "value": "={{ $json.companyDescription }}"
+            },
+            {
+              "id": "t13",
+              "name": "companySize",
+              "type": "string",
+              "value": "={{ $json.companySize }}"
+            },
+            {
+              "id": "t14",
+              "name": "companyEmployees",
+              "type": "string",
+              "value": "={{ $json.companyEmployees }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "636ff05a-4382-4875-8da2-e1f467fd262b",
+      "name": "Extract Job Links",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -1312,
+        -96
+      ],
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "links",
+              "cssSelector": "ul.jobs-search__results-list li div a[class*=\"base-card\"]",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e52d7fb6-ce2b-46ac-8a47-b2a192106665",
+      "name": "Schedule Trigger1",
+      "notesInFlow": false,
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2992,
+        -96
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4614ea60-1c25-4644-92a5-115861956bee",
+      "name": "Create search URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1744,
+        -96
+      ],
+      "parameters": {
+        "jsCode": "// Build one LinkedIn search per row and per location.\nconst rows = $input.all();\n\nconst str = (v) => String(v ?? '').trim();\nconst isTrue = (v) =>\n  typeof v === 'boolean'\n    ? v\n    : ['true', 'yes', 'y', '1', 'on', 'checked', 'x'].includes(str(v).toLowerCase());\n\n// Region/country name -> LinkedIn geoId. Regions (EMEA, Europe, EU...) do not\n// resolve via free-text &location=, so map them to &geoId=. Countries/cities not\n// listed here fall back to &location= text, which LinkedIn geocodes fine.\nconst GEO = {\n  'worldwide': '92000000', 'global': '92000000', 'anywhere': '92000000',\n  'europe': '91000002', 'european economic area': '91000002', 'eea': '91000002',\n  'european union': '91000000', 'eu': '91000000',\n  'emea': '91000007',\n  'dach': '91000006',\n  'benelux': '91000005',\n  'germany': '101282230', 'deutschland': '101282230',\n  'netherlands': '102890719', 'spain': '105646813',\n  'united kingdom': '101165590', 'uk': '101165590', 'england': '102299470',\n  'switzerland': '106693272', 'belgium': '100565514',\n  'portugal': '100364837', 'france': '105015875', 'italy': '103350119',\n  'united states': '103644278', 'usa': '103644278', 'us': '103644278',\n  'canada': '101174742',\n};\n\nconst results = [];\n\nfor (const item of rows) {\n  const row = item.json;\n  const get = (name) => {\n    const key = Object.keys(row).find(\n      (k) => k.trim().toLowerCase() === name.trim().toLowerCase()\n    );\n    return key === undefined ? '' : row[key];\n  };\n\n  const keyword = str(get('Keyword'));\n  const locationRaw = str(get('Location'));\n  const experienceLevel = str(get('Experience Level'));\n  const workplaceRaw = str(get('Workplace Type'));\n  const employmentRaw = str(get('Employment Type'));\n  const easyApplyRaw = get('Easy Apply');\n\n  // Skip empty rows (need at least a keyword or a location).\n  if (!keyword && !locationRaw) continue;\n\n  // One search per location: split on comma / semicolon / newline.\n  const locations = locationRaw\n    ? locationRaw.split(/[,;\\n]+/).map((s) => s.trim()).filter(Boolean)\n    : [''];\n\n  for (const location of locations) {\n    let url = 'https://www.linkedin.com/jobs/search/?f_TPR=r86400';\n\n    if (keyword) url += `&keywords=${encodeURIComponent(keyword)}`;\n\n    // Resolve location: raw numeric geoId -> geoId; known name -> geoId; else text.\n    let geoId = '';\n    if (location) {\n      const key = location.toLowerCase();\n      if (/^\\d{5,}$/.test(location)) {\n        geoId = location;\n      } else if (GEO[key]) {\n        geoId = GEO[key];\n      }\n      if (geoId) url += `&geoId=${geoId}`;\n      else url += `&location=${encodeURIComponent(location)}`;\n    }\n\n    // Experience level -> f_E. Comma/semicolon-separated, e.g. \"Mid-Senior level, Director\".\n    if (experienceLevel) {\n      const map = {\n        'internship': '1', 'intern': '1',\n        'entry level': '2', 'entry-level': '2', 'entry': '2',\n        'associate': '3',\n        'mid-senior level': '4', 'mid-senior': '4', 'mid senior': '4', 'senior': '4',\n        'director': '5',\n        'executive': '6', 'exec': '6',\n      };\n      const codes = experienceLevel.split(/[,;/]+/).map((e) => map[e.trim().toLowerCase()]).filter(Boolean);\n      if (codes.length) url += `&f_E=${[...new Set(codes)].join(',')}`;\n    }\n\n    // Workplace type: On-site=1, Remote=2, Hybrid=3 (comma-separated).\n    const WT = { 'on-site': '1', 'onsite': '1', 'on site': '1', 'office': '1', 'in-office': '1', 'remote': '2', 'hybrid': '3' };\n    const wtCodes = workplaceRaw\n      ? workplaceRaw.split(/[,;/]+/).map((w) => WT[w.trim().toLowerCase()]).filter(Boolean)\n      : [];\n    if (wtCodes.length) url += `&f_WT=${[...new Set(wtCodes)].join(',')}`;\n\n    // Employment type -> f_JT (Full-time=F, Part-time=P, Contract=C, Temporary=T, Internship=I, Volunteer=V, Other=O).\n    const JT = { 'full-time': 'F', 'fulltime': 'F', 'full time': 'F', 'part-time': 'P', 'parttime': 'P', 'part time': 'P', 'contract': 'C', 'temporary': 'T', 'temp': 'T', 'internship': 'I', 'intern': 'I', 'volunteer': 'V', 'other': 'O' };\n    if (employmentRaw) {\n      const codes = employmentRaw.split(/[,;/]+/).map((t) => {\n        const key = t.trim().toLowerCase();\n        return JT[key] || t.trim().charAt(0).toUpperCase();\n      }).filter(Boolean);\n      if (codes.length) url += `&f_JT=${[...new Set(codes)].join(',')}`;\n    }\n\n    if (isTrue(easyApplyRaw)) url += '&f_AL=true&f_EA=true';\n\n    results.push({ json: { url, location, geoId, keyword } });\n  }\n}\n\nreturn results;\n"
+      }
+    },
+    {
+      "id": "a1b2c3d4-1111-4aaa-9bbb-000000000001",
+      "name": "Detect Language",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2592,
+        240
+      ],
+      "parameters": {
+        "jsCode": "// Lightweight language heuristic (no external deps) to keep English-only ads.\nconst title = String($json.title || '').toLowerCase();\nconst desc = String($json.description || '').toLowerCase();\nconst sample = (title + ' ' + desc).slice(0, 5000);\n\n// Non-Latin scripts (Cyrillic/Hebrew/Arabic/CJK/Hangul) => not English.\nconst nonLatin = (sample.match(/[\\u0400-\\u04FF\\u0590-\\u05FF\\u0600-\\u06FF\\u4E00-\\u9FFF\\u3040-\\u30FF\\uAC00-\\uD7AF]/g) || []).length;\n\nconst words = sample.split(/[^a-zäöüßàâçéèêëîïôûùüÿñæœáíóú]+/i).filter(Boolean);\nconst total = words.length || 1;\n\nconst EN = new Set(['the','and','to','of','in','for','with','you','we','is','are','an','or','on','as','at','this','that','will','your','our','be','have','from','by','role','team','experience','skills','work','job','we\\u2019re','who','what']);\nconst DE = new Set(['und','der','die','das','f\\u00fcr','mit','wir','sie','ein','eine','im','den','von','zu','ist','sind','auf','als','oder','bei','dein','deine','unser','aufgaben','kenntnisse','erfahrung','stelle','bewerbung','mitarbeiter']);\nconst FR = new Set(['le','la','les','des','une','un','et','pour','avec','nous','vous','est','sont','au','aux','dans','sur','ou','vos','notre','poste','comp\\u00e9tences','exp\\u00e9rience','entreprise']);\nconst ES = new Set(['el','la','los','las','una','uno','y','para','con','nosotros','usted','es','son','en','sobre','sus','nuestro','puesto','experiencia','conocimientos','empresa']);\n\nlet en=0, de=0, fr=0, es=0;\nfor (const w of words) {\n  if (EN.has(w)) en++;\n  if (DE.has(w)) de++;\n  if (FR.has(w)) fr++;\n  if (ES.has(w)) es++;\n}\n\nconst other = Math.max(de, fr, es);\nconst isEnglish = nonLatin < 5 && en >= 3 && en >= other;\n\n// Employment-type preference check, sourced from the Filter sheet. Workplace type\n// (On-site/Remote/Hybrid) is not present in guest job pages, so it is applied only\n// as a LinkedIn search filter (f_WT) and is not re-verified here.\nconst norm = (s) => String(s || '').toLowerCase().replace(/[^a-z]/g, '');\nconst wanted = new Set();\ntry {\n  for (const r of $('Get row(s) in sheet').all()) {\n    const rr = r.json || {};\n    const key = Object.keys(rr).find((k) => k.trim().toLowerCase() === 'employment type');\n    const rawVal = key ? String(rr[key] || '') : '';\n    rawVal.split(/[,;/]+/).map(norm).filter(Boolean).forEach((v) => wanted.add(v));\n  }\n} catch (e) {}\nconst empNorm = norm($json.employmentType);\n// Keep when no filter is set, when the ad did not declare a type, or when it matches.\nconst prefsMatch = wanted.size === 0 || !empNorm || wanted.has(empNorm);\n\nreturn [{ json: { ...$json, isEnglish, prefsMatch, langStats: { en, de, fr, es, total, nonLatin }, wantedEmployment: [...wanted] } }];\n"
+      }
+    },
+    {
+      "id": "b2c3d4e5-2222-4bbb-9ccc-000000000003",
+      "name": "Is English?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2400,
+        256
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "b2c3d4e5-2222-4bbb-9ccc-000000000002",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.isEnglish }}",
+              "rightValue": ""
+            },
+            {
+              "id": "d4e5f6a7-4444-4ddd-9eee-000000000004",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.prefsMatch }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c3d4e5f6-3333-4ccc-9ddd-000000000010",
+      "name": "Get existing jobs",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "onError": "continueRegularOutput",
+      "position": [
+        -2160,
+        -448
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE",
+          "mode": "list",
+          "cachedResultName": "job_search_2026",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1501487018,
+          "mode": "list",
+          "cachedResultName": "Result",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Acsm3Ugp2s_2o2-_SCvd9fHSQ7Xxmf_85pbGJp_CNVE/edit#gid=1501487018"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I2QkkAZolEbEmZwx",
+          "name": "Google Sheets account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "794f238d-344e-45d3-815d-9877ce8a2033",
+      "name": "Sticky Note14",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2640,
+        128
+      ],
+      "parameters": {
+        "content": "Detect language, allow only English ones",
+        "height": 260,
+        "width": 404
+      }
+    },
+    {
+      "id": "e5f6a7b8-5555-4eee-9fff-000000000020",
+      "name": "Fetch Company Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "onError": "continueRegularOutput",
+      "position": [
+        -2960,
+        416
+      ],
+      "parameters": {
+        "jsCode": "// Follow the company's LinkedIn page (from the job's topcard link) and extract\n// website, description and size. Runs once for all items; batchSize is 1 upstream.\nconst UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';\n\nconst decode = (s = '') =>\n  String(s)\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&quot;/g, '\"')\n    .replace(/&#39;/g, \"'\")\n    .replace(/&rsquo;/g, \"'\")\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\nconst ddAfter = (html, testId) => {\n  const m = html.match(new RegExp(`data-test-id=[\"']${testId}[\"'][\\\\s\\\\S]*?<dd[^>]*>([\\\\s\\\\S]*?)<\\\\/dd>`, 'i'));\n  return m ? m[1] : '';\n};\n\nconst parseCompany = (html) => {\n  const out = { companyWebsite: '', companyDescription: '', companySize: '', companyEmployees: '' };\n\n  // Website: the dd holds a LinkedIn redirect link whose ?url= param is the real site.\n  const wInner = ddAfter(html, 'about-us__website');\n  if (wInner) {\n    const href = (wInner.match(/href=[\"']([^\"']+)[\"']/i) || [])[1] || '';\n    const cleanHref = href.replace(/&amp;/g, '&');\n    const urlParam = (cleanHref.match(/[?&]url=([^&]+)/i) || [])[1];\n    if (urlParam) {\n      try { out.companyWebsite = decodeURIComponent(urlParam); } catch (e) { out.companyWebsite = urlParam; }\n    } else if (/^https?:\\/\\//i.test(cleanHref)) {\n      out.companyWebsite = cleanHref;\n    }\n    if (!out.companyWebsite) {\n      out.companyWebsite = decode(wInner).replace(/\\s*External link.*$/i, '').trim();\n    }\n  }\n\n  // Company size range, e.g. \"51-200 employees\".\n  const sInner = ddAfter(html, 'about-us__size');\n  if (sInner) out.companySize = decode(sInner);\n\n  // Description of what the company does.\n  const dMatch = html.match(/data-test-id=[\"']about-us__description[\"'][^>]*>([\\s\\S]*?)<\\/(?:p|div|section)>/i);\n  if (dMatch) out.companyDescription = decode(dMatch[1]);\n  if (!out.companyDescription) {\n    const og = html.match(/<meta[^>]+property=[\"']og:description[\"'][^>]+content=[\"']([^\"']*)[\"']/i);\n    if (og) out.companyDescription = decode(og[1]).replace(/^.*?\\|\\s*/, '');\n  }\n\n  // Exact headcount from JSON-LD when present.\n  const em = html.match(/\"numberOfEmployees\"\\s*:\\s*\\{[^}]*?\"value\"\\s*:\\s*(\\d+)/i);\n  if (em) out.companyEmployees = em[1];\n\n  return out;\n};\n\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const job = item.json;\n  let company = { companyWebsite: '', companyDescription: '', companySize: '', companyEmployees: '' };\n  const url = String(job.companyUrl || '').trim();\n\n  if (url && /^https?:\\/\\/[a-z.]*linkedin\\.com\\/company\\//i.test(url)) {\n    // Pause before the extra LinkedIn request; retry with backoff on rate limit.\n    for (let attempt = 1; attempt <= 3; attempt++) {\n      try {\n        await new Promise((r) => setTimeout(r, attempt === 1 ? 4000 : 10000 * (attempt - 1)));\n        const resp = await this.helpers.httpRequest({\n          url,\n          method: 'GET',\n          headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9' },\n          timeout: 20000,\n        });\n        const html = typeof resp === 'string' ? resp : (resp && (resp.body || resp.data)) || '';\n        if (html && typeof html === 'string') company = parseCompany(html);\n        company.companyError = '';\n        break;\n      } catch (e) {\n        // Non-fatal: keep the job flowing even if the company page is blocked.\n        const msg = String((e && e.message) || e);\n        company.companyError = msg.slice(0, 150);\n        const status = (e && (e.httpCode || e.statusCode || e.status)) || 0;\n        if (String(status) !== '429' && !/429|too many requests/i.test(msg)) break;\n      }\n    }\n  }\n\n  results.push({\n    json: {\n      ...job,\n      website: company.companyWebsite || '',\n      companyDescription: company.companyDescription || '',\n      companySize: company.companySize || '',\n      companyEmployees: company.companyEmployees || '',\n      companyError: company.companyError || '',\n    },\n    pairedItem: item.pairedItem ?? { item: results.length },\n  });\n}\n\nreturn results;\n"
+      }
+    }
+  ],
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Fetch Job Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Filter": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Job Page": {
+      "main": [
+        [
+          {
+            "node": "Parse Job Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Output": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Job Links": {
+      "main": [
+        [
+          {
+            "node": "Dedupe Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get existing jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Create search URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Job Attributes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Company Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modify Job Attributes": {
+      "main": [
+        [
+          {
+            "node": "Detect Language",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Jobs from Linkedin": {
+      "main": [
+        [
+          {
+            "node": "Extract Job Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Score Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create search URL": {
+      "main": [
+        [
+          {
+            "node": "Fetch Jobs from Linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dedupe Links": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Language": {
+      "main": [
+        [
+          {
+            "node": "Is English?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is English?": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Company Details": {
+      "main": [
+        [
+          {
+            "node": "Modify Job Attributes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger1": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "zrVnvFyniKLXXNGI",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-07-30T16:22:05.179Z",
+      "updatedAt": "2026-07-30T16:22:05.179Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,620 @@
+{
+  "id": "fwZSRNsp6FDSzcDK",
+  "name": "Tool_Consult_CTO_Marcus",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:34.733Z",
+  "updatedAt": "2026-10-03T14:00:48.853Z",
+  "isArchived": false,
+  "versionId": "aca75958-dc3f-447c-9086-f17785bd239a",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -3440,
+        -768
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "31a2fd7d-13f7-44d8-850f-ab598482a2cc",
+      "name": "Social Media Content",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -1696,
+        -320
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"project_name\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"description\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \t\"category\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"roles_active\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        },\n        \"summary_brief\": {\n  \t\t\t\"type\": \"string\"\n  \t\t},\n        \"acceptance_criteria\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        }        \n\t}\n}\n"
+      }
+    },
+    {
+      "id": "ee4502e4-221c-4b29-b043-3d8d789ed7a7",
+      "name": "gpt-4o LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3344,
+        -352
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "6af3c95a-ea62-48ce-8b5c-48895446309e",
+      "name": "MARCUS (CTO - ORCHESTRATOR)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2864,
+        -768
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "hasOutputParser": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "5ecd9ac6-73bc-424c-a1ac-db1962157abd",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -3216,
+        -352
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "cc2fb24e-a298-470e-9cc1-bd94b2aad9e3",
+      "name": "Tool_Consult_UIUX",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -3040,
+        -224
+      ],
+      "parameters": {
+        "description": "Call this tool to interact with the Alex (UIUX team).",
+        "workflowId": {
+          "__rl": true,
+          "value": "tA5CB9j7v6d0QKD8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/tA5CB9j7v6d0QKD8",
+          "cachedResultName": "Tool_Consult_UIUX"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}",
+            "sessionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionId', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "task"
+          ],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "c383bfb4-a9f7-4745-8aac-c9816f1425ad",
+      "name": "Tool_Consult_Architect",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -2864,
+        -336
+      ],
+      "parameters": {
+        "description": "Call this tool when you need to interact with the System and Software Architect",
+        "workflowId": {
+          "__rl": true,
+          "value": "HkJjyW2jYEoYINpZ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/HkJjyW2jYEoYINpZ",
+          "cachedResultName": "Tool_Consult_Architect"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}",
+            "sessionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionId', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "6950d7cb-a3ac-4646-9840-43151c834175",
+      "name": "Tool_Consult_Mobile_Dev",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -2672,
+        -224
+      ],
+      "parameters": {
+        "description": "Call this tool when you need to interact with the Mobile developer, a.k.a Mike.",
+        "workflowId": {
+          "__rl": true,
+          "value": "Z99ohwRfBmfiK7jk",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Z99ohwRfBmfiK7jk",
+          "cachedResultName": "Tool_Consult_Mobile_Dev"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}",
+            "sessionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionId', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "task"
+          ],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "ef2ee37c-71db-472f-ae9e-f367b37a1994",
+      "name": "Tool_Consult_Senior_Backend",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -2496,
+        -336
+      ],
+      "parameters": {
+        "description": "Call this tool when you need to interact with the Senior Backend developer.",
+        "workflowId": {
+          "__rl": true,
+          "value": "pgVGX0DCyG9m1Z4N",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/pgVGX0DCyG9m1Z4N",
+          "cachedResultName": "Tool_Consult_Senior_Backend"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}",
+            "sessionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionId', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "task"
+          ],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "89be9677-2a3c-48a9-9f08-b989e2815105",
+      "name": "Tool_Consult_Senior_Frontend",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -2304,
+        -336
+      ],
+      "parameters": {
+        "description": "Call this tool when you need to interact with the Senior Frontend developer.",
+        "workflowId": {
+          "__rl": true,
+          "value": "7sRUr4TaHZkFWOWu",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/7sRUr4TaHZkFWOWu",
+          "cachedResultName": "Tool_Consult_Senior_Frontend"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}",
+            "sessionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionId', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "3630594f-ca1d-4e60-a46f-6989b989e098",
+      "name": "Tool_Consult_DevOps",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -2144,
+        -336
+      ],
+      "parameters": {
+        "description": "Call this tool when you need to interact with the Cloud and DevOps engineer.",
+        "workflowId": {
+          "__rl": true,
+          "value": "09mm1vyDRU1Ntvf6",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/09mm1vyDRU1Ntvf6",
+          "cachedResultName": "Tool_Consult_DevOps"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}",
+            "sessionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionId', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "task"
+          ],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "e79af7f3-3381-4664-a8b7-20acf5db1055",
+      "name": "Tool_Consult_QA",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -1936,
+        -320
+      ],
+      "parameters": {
+        "description": "Call this tool when you need to interact with the QA team.",
+        "workflowId": {
+          "__rl": true,
+          "value": "w5sBL5x0EaIMY7gI",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/w5sBL5x0EaIMY7gI",
+          "cachedResultName": "Tool_Consult_QA"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}",
+            "sessionId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sessionId', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "490fa78d-daec-4782-81f5-9aabf8bb8211",
+      "name": "MARCUS (CTO - ORCHESTRATOR)1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2032,
+        -768
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the task that you have to complete.\n{{ $json.task }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=ROLE:\nYou are Marcus, the CTO. You are the technical authority. You organize all of the technical efforts taking place in the company. You do not make the hands on work. You coordinate different technical roles to operate in order, enable their communication.\n\nSHARED COMPANY CONTEXT:\n\nCompany: A 15-person Agency building MVPs.\nThe Team Roster: CEO, Marcus (CTO - You), Priya (Product), Alex (Design), Sarah (Web), Mike (Mobile), Ben (Backend), Doug (DevOps), Sam (QA)\n\nRESPONSIBILITIES AND CAPABILITIES:\n- Technical Guidence: You rephrase the executive requirements and targets to the technical team using their own jargon. You define the technical problem, proposal for solutions and guide the team to accomplish the necessary efforts in the light of your supervision.\n- You use inputs from the Product Management Team's researches and requirement sets.\n- Cloud Engineering: You guide and manage Cloud team for all cloud related efforts on AWS/Azure/GCP setup, Docker, Kubernetes.  You know all the cons and pros of selectable services.\n- DevOps: You guide and manage the DevOps for the requirements of CI/CD pipelines, automated deployments.\n- Security: You guide and manage the Security Engineer ensuring data compliance and safety.\n- Code Review: You guide and manage the QA specialist enforcing high standards for Leo and the juniors.\n\nDELEGATIONS AND INTERACTIONS:\n- From Max (CEO): Receives business goals. Returns technical feasibility and risk assessments.\n- From Priya (PRODUCT AND RESEARCH LEAD): Receives feature requests. Returns Yes or No based on complexity. These were handed to you by CEO as he is orchestrating the effort. Ask if you do not get.\n- To Leo: Dictating the tech stack and helping with complex logic blocks.\n- To Alex (UIUX LEAD): Show me the prototype. Is it clean enough to sell?\n- To Mia (Growth): Write a case study about this project so we can get more clients.\n- To Sarah (Senior Frontend Engineer): Develop the frontend of the applications.\n- To Mike (SENIOR MOBILE ENGINEER): Develop the IOS/Android applications.\n- To Ben (Senior Backend Engineer): Develop the backend API code. \n- To Doug (DevOps Engineer): Provision Cloud and other resources necessary for development. \n- To Sam (QA): Reviewing automated test strategies.\n\nCORE PHILOSOPHIES:\n- Tech Debt Kills: We build fast, but we don't build messy. Structure matters.\n- Security First: Never compromise on data safety.\n\nPERSONALITY AND TONE:\n- Authoritative: You know your stack.\n- Cautious: You protect the company from technical risks.\n- Technical: You use correct terminology (latency, throughput, schema, API).\n\nOUTPUT:\n- Return your response in the JSON format and include all of the requested fields."
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Content": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "gpt-4o LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MARCUS (CTO - ORCHESTRATOR)": {
+      "main": [
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Tool_Consult_UIUX": {
+      "ai_tool": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_Architect": {
+      "ai_tool": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_Mobile_Dev": {
+      "ai_tool": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_Senior_Backend": {
+      "ai_tool": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_Senior_Frontend": {
+      "ai_tool": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_DevOps": {
+      "ai_tool": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_QA": {
+      "ai_tool": [
+        [
+          {
+            "node": "MARCUS (CTO - ORCHESTRATOR)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "fwZSRNsp6FDSzcDK",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:34.735Z",
+      "updatedAt": "2026-04-25T13:12:34.735Z"
+    }
+  ],
+  "activeVersion": null
+}

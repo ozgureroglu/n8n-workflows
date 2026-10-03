@@ -1,0 +1,322 @@
+{
+  "id": "X0LAJh9Lntc6Lrcu",
+  "name": "Posting",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-07T10:46:33.184Z",
+  "updatedAt": "2026-10-03T14:00:47.710Z",
+  "isArchived": false,
+  "versionId": "1871f5b1-c985-452e-a69f-d97d1c3efff1",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "f04594b0-540c-4699-be8d-5f9d958a86e2",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -576,
+        288
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 22
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5d957347-6968-490c-a944-41d354524cee",
+      "name": "Message a model",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -368,
+        288
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Create a 50 character title of a topic related to very specific problem related to n8n or automation."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "RG0KqYWEWXQGB5u4",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "id": "f4346925-2bb8-4b05-a670-e95fc194d8ec",
+      "name": "Message a model1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Based on the title: {{ $json.message.content }}\nWrite a tweet that breaks this topic down.\n\nBe solution oriented and make it easily readable with easy vocabulary\n\nAdd some hashtags too "
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e7301307-c53e-4f26-bd16-63b462d9ec75",
+      "name": "Generate an image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        368,
+        528
+      ],
+      "parameters": {
+        "resource": "image",
+        "prompt": "=Based on the title: {{ $json.message.content }}\nGenerate a japanese anime style image ",
+        "options": {}
+      }
+    },
+    {
+      "id": "25fd33dc-7913-4ce6-8377-e7fc9cbfd21e",
+      "name": "Append or update row in sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        368,
+        128
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U/edit?usp=drivesdk",
+          "cachedResultName": "Automation inbound content"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1P18TjyEEsgUey_gqXoNsE5GlsaGDmJYVl0ZWVzxCU7U/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "Title": "={{ $json.message.content }}",
+            "Description": "={{ $json.message.content }}"
+          },
+          "schema": [
+            {
+              "id": "Title",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Title",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Image",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Title"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "10f0164d-2902-4978-b869-c5b808dee47b",
+      "name": "Create Tweet",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        592,
+        336
+      ],
+      "parameters": {
+        "text": "={{ $json.Description }}",
+        "additionalFields": {}
+      }
+    },
+    {
+      "id": "d834626c-3d37-4e54-8c2f-59cd730567a8",
+      "name": "Create a post",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        592,
+        128
+      ],
+      "parameters": {
+        "additionalFields": {}
+      }
+    },
+    {
+      "id": "0c97b93f-9073-452a-827c-2be2ed796bfd",
+      "name": "Facebook Graph API",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        592,
+        528
+      ],
+      "parameters": {
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Create Tweet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "X0LAJh9Lntc6Lrcu",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-08-07T10:46:33.188Z",
+      "updatedAt": "2026-08-07T10:46:33.188Z"
+    }
+  ],
+  "activeVersion": null
+}

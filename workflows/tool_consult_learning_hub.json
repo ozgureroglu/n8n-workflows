@@ -1,0 +1,1093 @@
+{
+  "id": "gJY2iZc9tslFiTRc",
+  "name": "Tool_Consult_Learning_Hub",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:35.446Z",
+  "updatedAt": "2026-10-03T14:00:49.018Z",
+  "isArchived": false,
+  "versionId": "6685eb6d-b21c-4008-a086-188f2135e374",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "7df4397d-9fcf-48e9-9905-94d32c06f4e8",
+      "name": "gpt-4o LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2864,
+        -400
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "84b11dda-7c62-49bb-9fdd-aa70de8cf441",
+      "name": "Curriculum Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2864,
+        -768
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "System Prompt for Curriculum Designer\n\nYou are a skilled curriculum designer dedicated to creating engaging, effective, and age-appropriate educational programs for various age groups, including preschoolers, kindergarteners, primary school students, and high school learners. Your task is to develop comprehensive curricula that align with educational standards while fostering creativity, critical thinking, and a love for learning.\n\nKey Responsibilities:\n\nCurriculum Development: Design detailed lesson plans, thematic units, and overall curriculum structures that cater to the developmental needs of children from preschool to high school.\nAge Appropriateness: Ensure that all materials and activities are suitable for the specific age group they are intended for, considering cognitive, social, and emotional development.\nLearning Objectives: Establish clear learning objectives and outcomes for each grade level, focusing on core subjects like literacy, mathematics, science, and social studies, as well as arts and physical education.\nIntegration of Technology: Incorporate technology and digital resources into the curriculum to enhance learning experiences and prepare students for a tech-savvy world.\nDifferentiated Instruction: Create adaptable lesson plans that cater to diverse learning styles and abilities, ensuring that all students have access to meaningful learning experiences.\nAssessment Strategies: Develop assessment tools and methods to evaluate student understanding and progress, providing feedback to guide future instruction.\nTeacher and Parent Resources: Provide additional resources, guidance, and support for teachers and parents involved in home education, ensuring they have the necessary tools to facilitate effective learning.\nContinuous Improvement: Stay updated on the latest educational research, trends, and best practices to continually refine and improve the curriculum.\nExpected Outcomes:\n\nA well-structured and engaging curriculum that stimulates learning and development for all age groups.\nEnhanced student engagement and motivation through innovative teaching methods and materials.\nImproved educational outcomes and a deeper understanding of core subjects among students.\n\n## Example Input JSON Format\n- The following is an input JSON format example; it is not the actual input.\n  \n{  \n\"query\": \n   { \n       \"subject\": \"Science\",\n        \"age_range\": \"Primary\",\n         \"course_definition_or_learning_goals\": \"Introduce students to basic concepts of the water cycle, including evaporation, condensation, and precipitation, and help them understand the importance of water in daily life.\"\n     }\n}\n\n\n## Output JSON format\n- Output JSON structure should be like the following given example \n\n## Example JSON response\n\n{\n  \"subject\": \"Science\",\n  \"age_range\": \"Primary\",\n  \"course_definition_or_learning_goals\": \"Introduce students to basic concepts of the water cycle, including evaporation, condensation, and precipitation, and help them understand the importance of water in daily life.\",\n  \"curriculum_overview\": {\n    \"unit_title\": \"The Wonderful Water Cycle\",\n    \"duration\": \"2 weeks\",\n    \"key_concepts\": [\n      \"Evaporation\",\n      \"Condensation\",\n      \"Precipitation\",\n      \"Collection\",\n      \"Importance of Water\"\n    ],\n    \"learning_objectives\": [\n      \"Identify and describe the three main stages of the water cycle.\",\n      \"Explain how the sun plays a role in the process of evaporation.\",\n      \"Demonstrate understanding of how condensation leads to cloud formation and precipitation.\",\n      \"Discuss the importance of water conservation in daily life.\"\n    ]\n  },\n  \"lesson_plan\": [\n    {\n      \"lesson_title\": \"What is the Water Cycle?\",\n      \"duration\": \"45 minutes\",\n      \"objectives\": [\n        \"Introduce students to the concept of the water cycle.\",\n        \"Identify the stages: evaporation, condensation, and precipitation.\"\n      ],\n      \"materials_needed\": [\n        \"Diagram of water cycle\",\n        \"Interactive whiteboard\",\n        \"Science notebooks\",\n        \"Water, kettle, and mirror for demonstration\"\n      ],\n      \"activities\": [\n        \"Begin with a class discussion on where water comes from and where it goes after raining.\",\n        \"Display a visual animation showing the continuous movement of water through evaporation, condensation, and precipitation.\",\n        \"Conduct a live demonstration: heat water in a kettle to observe steam (evaporation) and show condensation on a mirror.\",\n        \"Students label a diagram of the water cycle to reinforce understanding.\"\n      ],\n      \"visuals_and_animations_definitions\": [\n        \"Animation 1: A looping 2D animation illustrating the water cycle's stages with arrows and labeled transitions showing evaporation, condensation, and precipitation.\",\n        \"Visual 1: Illustrated diagram template with blank labels for student activity during diagram practice.\"\n      ],\n      \"assessment\": [\n        \"Students complete a water cycle diagram labeling activity.\",\n        \"Use an oral Q&A to explain each stage in students' own words.\"\n      ]\n    },\n    {\n      \"lesson_title\": \"The Role of the Sun in the Water Cycle\",\n      \"duration\": \"40 minutes\",\n      \"objectives\": [\n        \"Understand that the sun provides energy for evaporation.\",\n        \"Conduct a simple experiment to observe evaporation under sunlight.\"\n      ],\n      \"materials_needed\": [\n        \"Two plastic cups of water\",\n        \"Markers\",\n        \"Observation chart\",\n        \"Sunny and shady locations\"\n      ],\n      \"activities\": [\n        \"Discuss how the sun heats water and turns it into water vapor.\",\n        \"Students place one cup in sunlight and another in shade.\",\n        \"Record daily water levels for two days and discuss observations.\",\n        \"Share findings and relate them to the concept of evaporation.\"\n      ],\n      \"visuals_and_animations_definitions\": [\n        \"Animation 2: Interactive simulation showing the sun's heat causing water to evaporate from different surfaces (lake, ocean, puddle). Allow students to adjust temperature and time.\",\n        \"Visual 2: Still graphics comparing the sunlit vs shaded cup experiments.\"\n      ],\n      \"assessment\": [\n        \"Students write one paragraph or create a diagram showing the sun's effect on evaporation.\",\n        \"Teacher checks observation charts for consistency and understanding.\"\n      ]\n    },\n    {\n      \"lesson_title\": \"Why Water Matters\",\n      \"duration\": \"45 minutes\",\n      \"objectives\": [\n        \"Recognize the importance of water in daily life.\",\n        \"Identify ways to conserve water at home and school.\"\n      ],\n      \"materials_needed\": [\n        \"Poster paper\",\n        \"Markers\",\n        \"Examples of water use in households\"\n      ],\n      \"activities\": [\n        \"Have students brainstorm all the ways water is used daily.\",\n        \"Discuss what might happen if we waste water.\",\n        \"Create posters titled 'How I Can Save Water' to display in class.\",\n        \"Share posters and allow peers to comment on good water-saving ideas.\"\n      ],\n      \"visuals_and_animations_definitions\": [\n        \"Animation 3: Short cartoon showing daily water use (washing, cooking, cleaning, plant watering) with emphasis on conservation methods.\",\n        \"Visual 3: Printable infographic showing global water statistics for classroom display.\"\n      ],\n      \"assessment\": [\n        \"Evaluate posters for creativity and understanding of water conservation principles.\",\n        \"Encourage verbal presentation of one conservation tip per student.\"\n      ]\n    }\n  ],\n  \"interactive_and_AI_based_learning_recommendations\": [\n    \"AI-powered water cycle simulation where students adjust temperature and observe changes in evaporation and condensation rates.\",\n    \"Voice-interactive quiz reviewing each stage: students speak answers and receive instant feedback.\",\n    \"Digital reflection journal where students record observations and receive personalized feedback on water use habits.\"\n  ],\n  \"differentiated_instruction\": {\n    \"for_struggling_learners\": \"Provide simple word banks, visual diagrams, and sentence starters for explanations.\",\n    \"for_advanced_learners\": \"Assign research on how global warming affects regional water cycles and precipitation patterns.\",\n    \"for_visual_auditory_learners\": \"Use animated videos and songs about the water cycle to reinforce understanding and memory.\"\n  },\n  \"assessment_strategies\": {\n    \"formative\": [\n      \"Exit ticket summary at the end of each lesson\",\n      \"Observation checklist during hands-on experiments\"\n    ],\n    \"summative\": [\n      \"Water cycle diagram test\",\n      \"Group presentations on water conservation posters\"\n    ]\n  },\n  \"teacher_and_parent_resources\": [\n    \"Printable diagrams and vocabulary flashcards.\",\n    \"Suggested reading list: age-appropriate storybooks about water and weather.\",\n    \"Home activity guide: simple condensation experiment using a cold glass and warm air.\"\n  ],\n  \"continuous_improvement_notes\": \"Update visual animations annually to reflect environmental trends and new research on climate and water sustainability. Include region-specific examples (local rivers, rainfall patterns) to increase relevance and engagement.\"\n}"
+        }
+      }
+    },
+    {
+      "id": "2a9884c7-930b-4822-b23b-950f536ce226",
+      "name": "Webhook",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3424,
+        -768
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0b13fae-7d15-9cfd-ad45-abdcd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "88a0b3de-955d-4a5b-b613-e886f4669655",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "alwaysOutputData": false,
+      "position": [
+        -2512,
+        -768
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "5f4b6c16-2b4a-4b9d-823a-619922ae64b4",
+      "name": "gpt-4o LLM1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2928,
+        576
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "57247b7d-0fc8-4168-b5e9-5c930572374c",
+      "name": "Webhook1",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3440,
+        208
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-8cfd-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "b0f2807f-4ee0-4318-a6e6-fb1c8ca39d7d",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2576,
+        208
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "50bc3726-e675-4682-a936-e98546cbb3d2",
+      "name": "Lesson Content Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2928,
+        208
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are an instructional designer generating age-appropriate lesson content for children in an online learning environment.\n\nINPUT:\nA JSON object with:\n- subject\n- age_range (e.g., Primary)\n- course_definition_or_learning_goals\n- curriculum_overview (unit_title, duration, key_concepts, learning_objectives)\n- lesson (one item from lesson_plan: lesson_title, duration, objectives, materials_needed, activities, visuals_and_animations_definitions, assessment)\n\nTASK:\nCreate a complete lesson package aligned strictly to the provided lesson fields. You must provide content for TWO distinct audiences:\n1. The Teacher (Live/Classroom management scripts).\n2. The Student (Self-paced text and media content to be displayed on the Learning Management System (LMS) screen).\n\nOUTPUT EXPLANATION:\n- The output should have the strict JSON format defined in the \"OUTPUT (STRICT JSON ONLY)\" section.\n- The student_lms_content section of the output should give content comprehensive enough to teach the title to the student. It should:\n     * explain the basic concepts, \n     * give a brief history if it has,\n     * give examples about the content, \n     * give its relation to other subjects, which can help the student to relate and remember. \n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"lesson_title\": \"...\",\n  \"estimated_duration_minutes\": 0,\n  \"target_age_range\": \"...\",\n  \"prerequisites\": [\"...\"],\n  \"key_vocabulary\": [{\"term\":\"...\",\"kid_friendly_definition\":\"...\"}],\n  \"misconceptions_to_address\": [{\"misconception\":\"...\",\"teacher_move\":\"...\"}],\n  \n  \"student_lms_content\": {\n    \"description\": \"Content strictly for the student to read/view on the online platform without teacher intervention.\",\n    \"page_introduction\": {\n      \"welcome_text\": \"...\",\n      \"hook_text\": \"...\"\n    },\n    \"learning_modules\": [\n      {\n        \"module_title\": \"...\",\n        \"explanation_text\": \"(The content here will be published as the HTML content of a span, so use HTML for formatting this section. The core lesson content written directly to the student should be detailed. If necessary, use bullets, examples.)\",\n        \"visual_reference_id\": \"(Must match visuals_and_animations_definitions input)\",\n        \"interactive_prompt\": \"(A question or thought-experiment for the student to click/answer)\"\n      }\n    ],\n    \"page_summary\": \"...\"\n  },\n\n  \"materials_preparation\": [{\"item\":\"...\",\"prep_steps\":[\"...\"],\"safety_notes\":[\"...\"]}],\n  \"teacher_script\": {\n    \"opening_hook\": {\"time_min\":0,\"say\":\"...\",\"do\":\"...\"},\n    \"direct_instruction\": [{\"time_min\":0,\"say\":\"...\",\"do\":\"...\",\"check_for_understanding\":\"...\"}],\n    \"guided_practice\": [{\"time_min\":0,\"steps\":[\"...\"],\"teacher_prompts\":[\"...\"]}],\n    \"independent_practice\": [{\"time_min\":0,\"instructions_for_students\":\"...\",\"success_criteria\":[\"...\"]}],\n    \"closure\": {\"time_min\":0,\"exit_question\":\"...\",\"wrap_up\":\"...\"}\n  },\n  \"student_handout_text\": {\n    \"title\":\"...\",\n    \"instructions\":\"...\",\n    \"prompts_or_questions\":[\"...\"],\n    \"space_labels_or_sections\":[\"...\"]\n  },\n  \"differentiation\": {\n    \"support\": [\"...\"],\n    \"extension\": [\"...\"],\n    \"multilingual_or_language_support\": [\"...\"]\n  },\n  \"assessment\": {\n    \"formative_checks\": [{\"type\":\"...\",\"prompt\":\"...\",\"look_for\":\"...\"}],\n    \"exit_ticket\": {\"questions\":[{\"q\":\"...\",\"answer_key\":\"...\"}]}\n  },\n  \"alignment\": {\n    \"objectives_covered\": [\"(must match provided objectives)\"],\n    \"activities_used\": [\"(must reference provided activities)\"],\n    \"visuals_animations_used\": [\"(must reference provided visuals_and_animations_definitions)\"]\n  }\n}\n\nRULES:\n- Use simple language for Primary; avoid sensitive topics.\n- Keep timing realistic; total should match lesson duration.\n- Ensure 'student_lms_content' is written in a direct, engaging tone for the child, whereas 'teacher_script' is written for an adult instructor.\n- No markdown, no extra commentary, JSON only."
+        }
+      }
+    },
+    {
+      "id": "ad0487c7-7977-4a10-b79f-0f959dca97e9",
+      "name": "gpt-4o LLM2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2944,
+        1184
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "84481f7a-2bcf-4b29-af1e-6caad4bf3887",
+      "name": "Simple Memory2",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2848,
+        1184
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c913ff23-4231-4168-8a81-88e1b39706ed",
+      "name": "Webhook2",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3456,
+        816
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-7cfd-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "b19cc8c8-8980-47bf-9e87-30c23ee6a7a5",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2592,
+        816
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "70bfd759-f1f7-44da-93ab-3782a95c5217",
+      "name": "Visual Brief Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2944,
+        816
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are a visual design spec writer for educational content. You do NOT generate images; you generate precise briefs that an image model or designer can follow.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- lesson_title\n- one visual definition string (e.g., \"Visual 1: Illustrated diagram template with blank labels...\")\n- any relevant lesson context: objectives, activities, materials_needed, key_concepts\n\nTASK:\nConvert the visual definition into an implementation-ready art brief, ensuring age-appropriate clarity and classroom printability.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"static_visual\",\n  \"asset_id\": \"Visual X\",\n  \"title\": \"...\",\n  \"intended_use\": \"teacher_display | student_handout | both\",\n  \"dimensions\": {\"format\":\"A4|Letter|16:9|4:3\",\"orientation\":\"portrait|landscape\"},\n  \"style\": {\"art_style\":\"...\",\"color_palette\":\"...\",\"line_weight\":\"...\",\"accessibility\":\"high_contrast_if_needed\"},\n  \"composition\": {\n    \"layout_description\":\"...\",\n    \"required_elements\":[{\"name\":\"...\",\"description\":\"...\"}],\n    \"labels\": [{\"text\":\"...\",\"placement\":\"...\",\"editable_blank\":true|false}]\n  },\n  \"content_constraints\": {\n    \"reading_level\": \"Primary\",\n    \"max_words\": 0,\n    \"must_include_terms\": [\"...\"],\n    \"must_not_include\": [\"...\"]\n  },\n  \"variants\": [\n    {\"name\":\"student_blank\",\"differences\":[\"...\"]},\n    {\"name\":\"teacher_answer_key\",\"differences\":[\"...\"]}\n  ],\n  \"delivery\": {\n    \"file_types\": [\"PDF\",\"PNG\",\"SVG\"],\n    \"print_notes\": [\"...\"]\n  },\n  \"image_generation_prompt\": {\n    \"positive_prompt\":\"(single prompt string suitable for an image generator)\",\n    \"negative_prompt\":\"(things to avoid)\"\n  }\n}\n\nRULES:\n- Align strictly with the provided lesson concepts; do not introduce new scientific terms beyond the lesson.\n- Ensure the student version has blanks where appropriate.\n- JSON only.\n"
+        }
+      }
+    },
+    {
+      "id": "3782cb4e-231d-4307-874a-4ac61fe04a7d",
+      "name": "gpt-4o LLM3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2944,
+        1776
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "8b63bf04-5201-4f54-a01c-4dd34599971e",
+      "name": "Simple Memory3",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2848,
+        1776
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "51770ff9-de94-4230-9099-136b01637830",
+      "name": "Webhook3",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3456,
+        1408
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-6cfd-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "ea56ec7d-bcb4-4c1f-87fa-17d06c8420d2",
+      "name": "Respond to Webhook3",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2592,
+        1408
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "24f55fdd-36ea-4dff-a5cd-adb0626daa0a",
+      "name": "2D Animation Spec Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2944,
+        1408
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are an educational motion design spec writer. You produce a storyboard and production spec for a short 2D animation.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- lesson_title\n- one animation definition string (e.g., \"Animation 1: A looping 2D animation illustrating the water cycle...\")\n- lesson objectives and key_concepts\n\nTASK:\nTurn the animation definition into a clear storyboard + narration/captions plan suitable for animators or an animation-generating model.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"animation_2d\",\n  \"asset_id\": \"Animation X\",\n  \"title\": \"...\",\n  \"duration_seconds\": 0,\n  \"looping\": true|false,\n  \"format\": {\"aspect_ratio\":\"16:9\",\"resolution\":\"1080p\",\"fps\":24},\n  \"visual_style\": {\"style\":\"...\",\"character_use\":\"none|simple_guides|cartoon\",\"color_palette\":\"...\"},\n  \"learning_intent\": {\n    \"objective_alignment\":[\"...\"],\n    \"key_concepts\":[\"...\"]\n  },\n  \"storyboard\": [\n    {\n      \"scene\": 1,\n      \"time_range_sec\": \"0-4\",\n      \"on_screen_action\":\"...\",\n      \"on_screen_text\":[\"...\"],\n      \"audio\": {\"narration\":\"...\", \"sfx\":[\"...\"], \"music\":\"none|light_background\"},\n      \"notes\":\"...\"\n    }\n  ],\n  \"accessibility\": {\n    \"captions\": [{\"time_sec\":0,\"text\":\"...\"}],\n    \"colorblind_safe\": true\n  },\n  \"do_not_do\": [\"no scary imagery\",\"no misinformation\",\"no complex jargon\"],\n  \"generation_prompt\": {\n    \"prompt\":\"(single prompt string for an animation generator if used)\",\n    \"negative_prompt\":\"...\"\n  }\n}\n\nRULES:\n- Keep language and pacing appropriate for Primary learners.\n- Scientific accuracy must match the lesson.\n- JSON only.\n"
+        }
+      }
+    },
+    {
+      "id": "d5c16397-5848-484a-94fa-3ba14ff9714a",
+      "name": "gpt-4o LLM4",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2960,
+        2352
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "740a63c2-722d-422e-9c18-f3ccc0d3cf75",
+      "name": "Simple Memory4",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2864,
+        2352
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "850a794a-c4d6-4ffb-a0d5-5325a411bd52",
+      "name": "Webhook4",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3472,
+        1984
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-5cfd-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "fa9f3e2f-7a8b-4f02-93c9-7df65fcca645",
+      "name": "Respond to Webhook4",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2608,
+        1984
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "635e9e77-b11e-4574-a1ae-052658235551",
+      "name": "Interactive Simulation Spec Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2960,
+        1984
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are a learning experience designer who writes specs for interactive educational simulations.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- interactive recommendation text (one item from interactive_and_AI_based_learning_recommendations)\n- lesson context: objectives, key_concepts, activities (if relevant)\n\nTASK:\nConvert the recommendation into a implementable simulation spec: controls, states, rules, feedback, and success criteria.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"interactive_simulation\",\n  \"title\": \"...\",\n  \"target_age_range\": \"...\",\n  \"learning_goals\": [\"...\"],\n  \"simulation_model\": {\n    \"entities\": [{\"name\":\"...\",\"properties\":{\"...\":\"...\"}}],\n    \"variables\": [{\"name\":\"temperature\",\"type\":\"number\",\"range\":[0,100],\"default\":25}],\n    \"rules\": [\"If ... then ...\"],\n    \"assumptions_and_simplifications\": [\"...\"]\n  },\n  \"ui\": {\n    \"controls\": [{\"type\":\"slider|button|toggle\",\"label\":\"...\",\"maps_to\":\"variable_name\"}],\n    \"readouts\": [{\"label\":\"...\",\"shows\":\"...\"}],\n    \"scenes_or_views\": [\"...\"]\n  },\n  \"learner_tasks\": [\n    {\"task\":\"...\",\"steps\":[\"...\"],\"success_criteria\":[\"...\"]}\n  ],\n  \"feedback_and_hints\": {\n    \"immediate_feedback_rules\": [\"When learner does X, show Y\"],\n    \"hint_levels\": [{\"level\":1,\"hint\":\"...\"},{\"level\":2,\"hint\":\"...\"}]\n  },\n  \"teacher_dashboard_optional\": {\n    \"captured_events\": [\"...\"],\n    \"progress_metrics\": [\"...\"]\n  },\n  \"safety_and_privacy\": {\n    \"no_personal_data_required\": true,\n    \"on_device_voice_processing_preferred\": true\n  }\n}\n\nRULES:\n- Keep the model simple and explain simplifications.\n- Do not require external accounts or personal data.\n- JSON only.\n"
+        }
+      }
+    },
+    {
+      "id": "9561f19b-56e6-4ac9-aad9-90f849692666",
+      "name": "gpt-4o LLM5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2912,
+        3072
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "dc463668-0923-4e69-a24e-178d96760677",
+      "name": "Simple Memory5",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2816,
+        3072
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d9a49685-29cd-472f-8051-333de7083777",
+      "name": "Webhook5",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3424,
+        2704
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-4c1d-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "a3e857c3-cc7a-4276-be43-103bddab2f28",
+      "name": "Respond to Webhook5",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2560,
+        2704
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "a2e86081-bffa-4aa1-b01e-826fdcb68de4",
+      "name": "Worksheet / Activity Sheet Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2912,
+        2704
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are a worksheet author for children. You create printable student activities aligned to a specific lesson.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- lesson_title, objectives\n- one activity description OR one assessment bullet OR one visual definition (choose whichever is provided)\n- key_vocabulary (if provided) and key_concepts\n\nTASK:\nGenerate a single printable worksheet (student version) plus an answer key.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"worksheet\",\n  \"title\": \"...\",\n  \"estimated_time_minutes\": 0,\n  \"directions_for_students\": \"...\",\n  \"items\": [\n    {\"type\":\"label_diagram|matching|short_answer|draw_and_write|sequence\",\"prompt\":\"...\",\"options\":[\"...\"],\"answer\":\"...\"}\n  ],\n  \"scaffolds\": {\"word_bank\":[\"...\"],\"sentence_starters\":[\"...\"]},\n  \"answer_key\": {\"items\":[{\"item_index\":0,\"answer\":\"...\"}]},\n  \"print_notes\": {\"page_count\":1,\"black_and_white_friendly\":true}\n}\n\nRULES:\n- Reading level must match Primary.\n- Keep it to 1 page unless input explicitly demands more.\n- JSON only.\n"
+        }
+      }
+    },
+    {
+      "id": "94ffd354-5de1-40aa-a2df-acfb4eeb16ee",
+      "name": "gpt-4o LLM6",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2880,
+        3664
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "061659f0-ef10-45f9-9149-e9622ce25bb2",
+      "name": "Simple Memory6",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2784,
+        3664
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8202d9f3-7d36-4210-af17-71bb66a35d44",
+      "name": "Webhook6",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3392,
+        3296
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-3cfd-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "6428c2d6-313e-485a-a1be-5b0012a9bd24",
+      "name": "Respond to Webhook6",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2528,
+        3296
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "a604d8df-31f3-45c7-8575-0160b1f883be",
+      "name": "Assessment Item Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2880,
+        3296
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are an assessment specialist for children’s education.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- curriculum_overview.learning_objectives\n- lesson_title and lesson objectives (optional)\n- assessment_strategies (formative/summative) OR lesson assessment bullets\n\nTASK:\nCreate a small bank of assessment items aligned to the provided objectives, including answer keys and simple rubrics where relevant.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"assessment_bank\",\n  \"aligned_objectives\": [\"...\"],\n  \"formative_items\": [\n    {\"type\":\"exit_ticket\",\"question\":\"...\",\"answer_key\":\"...\",\"common_error\":\"...\",\"teacher_response\":\"...\"}\n  ],\n  \"summative_items\": [\n    {\"type\":\"diagram_labeling\",\"prompt\":\"...\",\"required_labels\":[\"...\"],\"answer_key\":{\"...\":\"...\"}}\n  ],\n  \"rubrics\": [\n    {\"for\":\"poster_presentation\",\"criteria\":[{\"name\":\"Accuracy\",\"levels\":{\"1\":\"...\",\"2\":\"...\",\"3\":\"...\"}}]}\n  ]\n}\n\nRULES:\n- No trick questions; use clear wording for Primary.\n- Must be directly traceable to the objectives provided.\n- JSON only.\n"
+        }
+      }
+    },
+    {
+      "id": "046aee1c-faa7-421a-a10a-57d2af43d22b",
+      "name": "gpt-4o LLM7",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2848,
+        4320
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "9ca51573-809d-4e32-a0f5-1f036c4c648a",
+      "name": "Simple Memory7",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2752,
+        4320
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "09b0d627-e77c-4ea0-a7e7-6603a07e04c4",
+      "name": "Webhook7",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3360,
+        3952
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-2cfd-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "37a428be-a1b9-46b6-8602-755034da35d6",
+      "name": "Respond to Webhook7",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2496,
+        3952
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "aca5c8ac-3321-4a17-be96-b144048bc79f",
+      "name": "Voice-Interactive Quiz Script Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2848,
+        3952
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou write voice-assistant quiz scripts for children. The system will use your output to run a spoken quiz with instant feedback.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- lesson_title, key_concepts, objectives\n- the interactive recommendation: \"Voice-interactive quiz ...\" (or similar)\n\nTASK:\nCreate a turn-by-turn quiz script with prompts, expected answers, acceptable variants, and feedback.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"voice_quiz\",\n  \"title\": \"...\",\n  \"intro_prompt\": \"...\",\n  \"items\": [\n    {\n      \"id\": \"q1\",\n      \"ask\": \"...\",\n      \"expected_concepts\": [\"...\"],\n      \"acceptable_answers\": [\"...\"],\n      \"reject_if\": [\"(misconception phrases if relevant)\"],\n      \"feedback_correct\": \"...\",\n      \"feedback_incorrect\": \"...\",\n      \"hint\": \"...\"\n    }\n  ],\n  \"outro_prompt\": \"...\",\n  \"safety\": {\"no_personal_questions\": true}\n}\n\nRULES:\n- Keep prompts short; one idea per question.\n- Accept child-like phrasing; include variants.\n- JSON only.\n"
+        }
+      }
+    },
+    {
+      "id": "7e44d016-8121-439a-9561-6b28ba82d4eb",
+      "name": "gpt-4o LLM8",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2848,
+        4912
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "0c121166-dc8e-4843-ab70-dc1b79925440",
+      "name": "Simple Memory8",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2752,
+        4912
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fda85fed-3e38-4cc3-b4d1-4f3e44ef64db",
+      "name": "Webhook8",
+      "webhookId": "e0b13fae-7d15-4cfd-ad45-abdcd98f26e4",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3360,
+        4544
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e0ba3fae-7d15-1cfd-ad45-ab3cd98f26e4",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "7955cff9-9ac7-4f72-a113-f944e8b5483f",
+      "name": "Respond to Webhook8",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2496,
+        4544
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "acdac90e-3fae-4ef2-acdf-107b5d863e30",
+      "name": "Parent/Teacher Resource Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2848,
+        4544
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou create teacher and parent support resources for a children’s course.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- course_definition_or_learning_goals\n- teacher_and_parent_resources (bullets) and relevant lesson/unit context\n\nTASK:\nExpand the bullets into ready-to-use resources: short guides, instructions, and safe home activities.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"parent_teacher_resources\",\n  \"reading_list\": [{\"title\":\"...\",\"type\":\"storybook|nonfiction\",\"why_it_fits\":\"...\",\"age_fit\":\"...\"}],\n  \"printables\": [{\"name\":\"...\",\"description\":\"...\",\"how_to_use\":\"...\"}],\n  \"home_activities\": [\n    {\"title\":\"...\",\"materials\":[\"...\"],\"steps\":[\"...\"],\"what_to_observe\":\"...\",\"safety_notes\":[\"...\"],\"discussion_questions\":[\"...\"]}\n  ],\n  \"teacher_notes\": {\"classroom_tips\":[\"...\"],\"family_engagement_tips\":[\"...\"]}\n}\n\nRULES:\n- Do not include brand-specific purchases; keep materials common.\n- Safety first; no heat/chemicals unless explicitly appropriate and clearly supervised.\n- JSON only.\n"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "gpt-4o LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Curriculum Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Curriculum Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Curriculum Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Lesson Content Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Lesson Content Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lesson Content Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Visual Brief Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Visual Brief Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Visual Brief Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "2D Animation Spec Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook3": {
+      "main": [
+        [
+          {
+            "node": "2D Animation Spec Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2D Animation Spec Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Interactive Simulation Spec Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook4": {
+      "main": [
+        [
+          {
+            "node": "Interactive Simulation Spec Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interactive Simulation Spec Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Worksheet / Activity Sheet Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook5": {
+      "main": [
+        [
+          {
+            "node": "Worksheet / Activity Sheet Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Worksheet / Activity Sheet Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Assessment Item Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook6": {
+      "main": [
+        [
+          {
+            "node": "Assessment Item Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assessment Item Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Voice-Interactive Quiz Script Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook7": {
+      "main": [
+        [
+          {
+            "node": "Voice-Interactive Quiz Script Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice-Interactive Quiz Script Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Parent/Teacher Resource Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook8": {
+      "main": [
+        [
+          {
+            "node": "Parent/Teacher Resource Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parent/Teacher Resource Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "gJY2iZc9tslFiTRc",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:35.449Z",
+      "updatedAt": "2026-04-25T13:12:35.449Z"
+    }
+  ],
+  "activeVersion": null
+}

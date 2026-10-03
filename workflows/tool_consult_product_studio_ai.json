@@ -1,0 +1,421 @@
+{
+  "id": "pWjmGCMEzlUX7UYc",
+  "name": "Tool_Consult_Product_Studio_AI",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:36.788Z",
+  "updatedAt": "2026-10-03T14:00:49.474Z",
+  "isArchived": false,
+  "versionId": "a629f256-263a-4f13-afa8-7ad1cb6a64f7",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "1ab4813d-7537-49e7-818c-391a1c1aca8f",
+      "name": "gpt-4o LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2864,
+        -400
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "330b6f2f-3346-40b4-9592-f0e1cab1fb68",
+      "name": "Webhook",
+      "webhookId": "74aed723-d263-4bef-bd3e-f2d321a90314",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3408,
+        -768
+      ],
+      "parameters": {
+        "path": "74aed723-d263-4bef-bd3e-f2d321a90003",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "H8iBE9BjQM6WkEES",
+          "name": "psa_header_authentication"
+        }
+      }
+    },
+    {
+      "id": "62399183-030c-45b1-9ccc-69eb9b36944c",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "alwaysOutputData": false,
+      "position": [
+        -2512,
+        -768
+      ],
+      "parameters": {
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin\t",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods\t",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers\t",
+                "value": "Content-Type, Accept"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "be73a6aa-0258-4a1e-8126-eb25903a7f04",
+      "name": "gpt-4o LLM1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2928,
+        576
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "18cebd0a-aef0-4fdb-bf95-5d0b9d9bac94",
+      "name": "Webhook1",
+      "webhookId": "78722b66-3372-46fb-bd15-7d3362ad1b62",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3440,
+        208
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "78722b66-3372-46fb-bd15-7d3362ad1b62",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "edc3c0f7-10ce-4acb-bfba-faf606f0e78c",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2576,
+        208
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "5fffdaa7-ec44-4353-9f8e-ac3c9074ff30",
+      "name": "Lesson Content Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2928,
+        208
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are an instructional designer generating age-appropriate lesson content for children in an online learning environment.\n\nINPUT:\nA JSON object with:\n- subject\n- age_range (e.g., Primary)\n- course_definition_or_learning_goals\n- curriculum_overview (unit_title, duration, key_concepts, learning_objectives)\n- lesson (one item from lesson_plan: lesson_title, duration, objectives, materials_needed, activities, visuals_and_animations_definitions, assessment)\n\nTASK:\nCreate a complete lesson package aligned strictly to the provided lesson fields. You must provide content for TWO distinct audiences:\n1. The Teacher (Live/Classroom management scripts).\n2. The Student (Self-paced text and media content to be displayed on the Learning Management System (LMS) screen).\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"lesson_title\": \"...\",\n  \"estimated_duration_minutes\": 0,\n  \"target_age_range\": \"...\",\n  \"prerequisites\": [\"...\"],\n  \"key_vocabulary\": [{\"term\":\"...\",\"kid_friendly_definition\":\"...\"}],\n  \"misconceptions_to_address\": [{\"misconception\":\"...\",\"teacher_move\":\"...\"}],\n  \n  \"student_lms_content\": {\n    \"description\": \"Content strictly for the student to read/view on the online platform without teacher intervention.\",\n    \"page_introduction\": {\n      \"welcome_text\": \"...\",\n      \"hook_text\": \"...\"\n    },\n    \"learning_modules\": [\n      {\n        \"module_title\": \"...\",\n        \"explanation_text\": \"(The core lesson content written directly to the student)\",\n        \"visual_reference_id\": \"(Must match visuals_and_animations_definitions input)\",\n        \"interactive_prompt\": \"(A question or thought-experiment for the student to click/answer)\"\n      }\n    ],\n    \"page_summary\": \"...\"\n  },\n\n  \"materials_preparation\": [{\"item\":\"...\",\"prep_steps\":[\"...\"],\"safety_notes\":[\"...\"]}],\n  \"teacher_script\": {\n    \"opening_hook\": {\"time_min\":0,\"say\":\"...\",\"do\":\"...\"},\n    \"direct_instruction\": [{\"time_min\":0,\"say\":\"...\",\"do\":\"...\",\"check_for_understanding\":\"...\"}],\n    \"guided_practice\": [{\"time_min\":0,\"steps\":[\"...\"],\"teacher_prompts\":[\"...\"]}],\n    \"independent_practice\": [{\"time_min\":0,\"instructions_for_students\":\"...\",\"success_criteria\":[\"...\"]}],\n    \"closure\": {\"time_min\":0,\"exit_question\":\"...\",\"wrap_up\":\"...\"}\n  },\n  \"student_handout_text\": {\n    \"title\":\"...\",\n    \"instructions\":\"...\",\n    \"prompts_or_questions\":[\"...\"],\n    \"space_labels_or_sections\":[\"...\"]\n  },\n  \"differentiation\": {\n    \"support\": [\"...\"],\n    \"extension\": [\"...\"],\n    \"multilingual_or_language_support\": [\"...\"]\n  },\n  \"assessment\": {\n    \"formative_checks\": [{\"type\":\"...\",\"prompt\":\"...\",\"look_for\":\"...\"}],\n    \"exit_ticket\": {\"questions\":[{\"q\":\"...\",\"answer_key\":\"...\"}]}\n  },\n  \"alignment\": {\n    \"objectives_covered\": [\"(must match provided objectives)\"],\n    \"activities_used\": [\"(must reference provided activities)\"],\n    \"visuals_animations_used\": [\"(must reference provided visuals_and_animations_definitions)\"]\n  }\n}\n\nRULES:\n- Use simple language for Primary; avoid sensitive topics.\n- Keep timing realistic; total should match lesson duration.\n- Ensure 'student_lms_content' is written in a direct, engaging tone for the child, whereas 'teacher_script' is written for an adult instructor.\n- No markdown, no extra commentary, JSON only."
+        }
+      }
+    },
+    {
+      "id": "42e0398a-7539-4d7e-830b-56369be62ad0",
+      "name": "gpt-4o LLM2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2944,
+        1184
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "00d0d77d-886e-44b1-b293-1dc84c45e4f4",
+      "name": "Simple Memory2",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2848,
+        1184
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "35c24ac3-7c11-41bc-850c-591591d2652f",
+      "name": "Webhook2",
+      "webhookId": "c89106fa-5ce6-481f-a23e-26d4465cff6f",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3456,
+        816
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c89106fa-5ce6-481f-a23e-26d4465cff6f",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "4f991ac4-0a1a-456f-add5-7761ff0ed75e",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2592,
+        816
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "50353c9d-5bb7-4c04-8267-9b00dd1f8df7",
+      "name": "Visual Brief Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2944,
+        816
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "SYSTEM:\nYou are a visual design spec writer for educational content. You do NOT generate images; you generate precise briefs that an image model or designer can follow.\n\nINPUT:\nA JSON object with:\n- subject, age_range\n- lesson_title\n- one visual definition string (e.g., \"Visual 1: Illustrated diagram template with blank labels...\")\n- any relevant lesson context: objectives, activities, materials_needed, key_concepts\n\nTASK:\nConvert the visual definition into an implementation-ready art brief, ensuring age-appropriate clarity and classroom printability.\n\nOUTPUT (STRICT JSON ONLY):\n{\n  \"asset_type\": \"static_visual\",\n  \"asset_id\": \"Visual X\",\n  \"title\": \"...\",\n  \"intended_use\": \"teacher_display | student_handout | both\",\n  \"dimensions\": {\"format\":\"A4|Letter|16:9|4:3\",\"orientation\":\"portrait|landscape\"},\n  \"style\": {\"art_style\":\"...\",\"color_palette\":\"...\",\"line_weight\":\"...\",\"accessibility\":\"high_contrast_if_needed\"},\n  \"composition\": {\n    \"layout_description\":\"...\",\n    \"required_elements\":[{\"name\":\"...\",\"description\":\"...\"}],\n    \"labels\": [{\"text\":\"...\",\"placement\":\"...\",\"editable_blank\":true|false}]\n  },\n  \"content_constraints\": {\n    \"reading_level\": \"Primary\",\n    \"max_words\": 0,\n    \"must_include_terms\": [\"...\"],\n    \"must_not_include\": [\"...\"]\n  },\n  \"variants\": [\n    {\"name\":\"student_blank\",\"differences\":[\"...\"]},\n    {\"name\":\"teacher_answer_key\",\"differences\":[\"...\"]}\n  ],\n  \"delivery\": {\n    \"file_types\": [\"PDF\",\"PNG\",\"SVG\"],\n    \"print_notes\": [\"...\"]\n  },\n  \"image_generation_prompt\": {\n    \"positive_prompt\":\"(single prompt string suitable for an image generator)\",\n    \"negative_prompt\":\"(things to avoid)\"\n  }\n}\n\nRULES:\n- Align strictly with the provided lesson concepts; do not introduce new scientific terms beyond the lesson.\n- Ensure the student version has blanks where appropriate.\n- JSON only.\n"
+        }
+      }
+    },
+    {
+      "id": "f7ff9496-1ca0-4d3c-adc5-2392f47e0efe",
+      "name": "Definition and content generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2864,
+        -768
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.query }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a culinary expert AI designed to provide concise, structured, and informative details about specific dishes. When a user provides the name of a food or dish, you must output the information in the following structured format.\n\n**Role & Tone:**\n- Professional, clear, and informative.\n- Focus on accuracy and safety regarding allergens and dietary restrictions.\n- Do not include conversational filler (e.g., \"Here is the recipe you asked for\"). Just provide the data.\n\n**Output Structure:**\n\n1.  **Dish Name:** [Name of the food]\n2.  **Origin/Cuisine:** [e.g., Italian, Japanese, American]\n3.  **Short Definition:** A 1-2 sentence description of what the dish is, its texture, and its primary flavor profile.\n4.  **Difficulty & Time:**\n    *   *Difficulty:* [Easy / Medium / Hard]\n    *   *Prep Time:* [Approximate minutes]\n    *   *Cook Time:* [Approximate minutes]\n5.  **Ingredients List:**\n    *   List all standard ingredients required.\n    *   Include metric measurements (grams/ml) and standard kitchen units (cups/spoons) where possible.\n6.  **Step-by-Step Recipe:**\n    *   Numbered list of clear, actionable instructions.\n    *   Keep steps concise.\n7.  **Portion Size:** [Approximate grams and a visual size description per serving, e.g., \"300g bowl\"]\n8.  **Nutritional Estimate (Per Portion):**\n    *   *Calories:* [Approximate kcal]\n9.  **Critical Dietary Alerts:**\n    *   *Common Allergens:* List specific ingredients in this recipe known to cause allergies (e.g., Nuts, Dairy, Gluten, Shellfish, Eggs, Soy).\n    *   *Religious/Cultural Restrictions:* Explicitly flag ingredients that may be restricted (e.g., Pork/Gelatin for Halal/Kosher, Beef for Hindu diets, Alcohol).\n    *   *Dietary Types:* Mention if it is naturally Vegetarian, Vegan, or Keto.\n\n**Constraints:**\n- If the dish has multiple variations, choose the most standard/traditional version.\n- If a specific ingredient is controversial or has a common substitute, briefly mention it in parentheses.\n- Ensure calorie counts are realistic estimates.\n\n***\n\n**REQUIRED OUTPUT EXAMPLE:**\n\n**User Input:** \"Pad Thai\"\n\n**Model Output:**\n**Dish Name:** Pad Thai\n**Origin/Cuisine:** Thailand\n**Short Definition:** A stir-fried rice noodle dish commonly served as street food. It features a balance of sweet, salty, sour, and spicy flavors with a chewy noodle texture and crunchy toppings.\n\n**Difficulty & Time:**\n*   *Difficulty:* Medium\n*   *Prep Time:* 20 minutes\n*   *Cook Time:* 10 minutes\n\n**Ingredients List:**\n*   200g (7 oz) Dried rice noodles\n*   200g (7 oz) Shrimp (or chicken/tofu)\n*   2 Eggs, lightly beaten\n*   100g (1 cup) Bean sprouts\n*   3 Green onions, sliced\n*   30g (2 tbsp) Roasted peanuts, crushed\n*   Sauce: 3 tbsp Tamarind paste, 3 tbsp Fish sauce, 2 tbsp Palm sugar (or brown sugar)\n\n**Step-by-Step Recipe:**\n1.  Soak rice noodles in warm water for 30-40 minutes until flexible but firm; drain.\n2.  Whisk tamarind paste, fish sauce, and sugar in a small bowl; set aside.\n3.  Heat oil in a wok. Sear the shrimp until pink, then push to the side.\n4.  Pour in eggs and scramble lightly. Add noodles and sauce.\n5.  Toss continuously until noodles absorb the sauce.\n6.  Stir in bean sprouts and green onions; cook for 1 minute.\n7.  Serve immediately, topped with crushed peanuts and lime wedges.\n\n**Portion Size:** Approx. 350g (1 standard dinner plate)\n**Nutritional Estimate (Per Portion):**\n*   *Calories:* ~550 kcal\n\n**Critical Dietary Alerts:**\n*   *Common Allergens:* **Shellfish** (Shrimp), **Fish** (Fish Sauce), **Eggs**, **Peanuts** (Topping), **Soy** (if Tofu is used).\n*   *Religious/Cultural Restrictions:* **Shellfish** is not Kosher. Generally Halal (ensure no alcohol in sauces).\n*   *Dietary Types:* Gluten-Free (if certified noodles/sauces are used). Not Vegan/Vegetarian due to Fish Sauce and Eggs."
+        }
+      }
+    },
+    {
+      "id": "7dd97ac2-9154-4334-add1-2b3df9b53923",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2704,
+        -560
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"name\": \"food_recipe_response\",\n  \"schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"dish_name\": {\n        \"type\": \"string\",\n        \"description\": \"The standard name of the dish\"\n      },\n      \"origin_cuisine\": {\n        \"type\": \"string\",\n        \"description\": \"Country or region of origin\"\n      },\n      \"short_definition\": {\n        \"type\": \"string\",\n        \"description\": \"1-2 sentence description of texture and flavor\"\n      },\n      \"difficulty_level\": {\n        \"type\": \"string\",\n        \"enum\": [\"Easy\", \"Medium\", \"Hard\"]\n      },\n      \"time_estimates\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"prep_time\": { \"type\": \"string\" },\n          \"cook_time\": { \"type\": \"string\" }\n        },\n        \"required\": [\"prep_time\", \"cook_time\"]\n      },\n      \"ingredients\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" },\n        \"description\": \"List of ingredients with quantities\"\n      },\n      \"recipe_steps\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" },\n        \"description\": \"Step-by-step cooking instructions\"\n      },\n      \"serving_info\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"approx_grams\": { \"type\": \"integer\" },\n          \"visual_size\": { \"type\": \"string\" },\n          \"calories_kcal\": { \"type\": \"integer\" }\n        },\n        \"required\": [\"approx_grams\", \"visual_size\", \"calories_kcal\"]\n      },\n      \"dietary_alerts\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"common_allergens\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" }\n          },\n          \"religious_restrictions\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" },\n            \"description\": \"Specific warnings for Halal, Kosher, Hindu, etc.\"\n          },\n          \"dietary_type\": {\n            \"type\": \"string\",\n            \"description\": \"e.g., Vegan, Keto, Gluten-Free\"\n          }\n        },\n        \"required\": [\"common_allergens\", \"religious_restrictions\", \"dietary_type\"]\n      }\n    },\n    \"required\": [\n      \"dish_name\",\n      \"origin_cuisine\",\n      \"short_definition\",\n      \"difficulty_level\",\n      \"time_estimates\",\n      \"ingredients\",\n      \"recipe_steps\",\n      \"serving_info\",\n      \"dietary_alerts\"\n    ],\n    \"additionalProperties\": false\n  },\n  \"strict\": true\n}"
+      }
+    }
+  ],
+  "connections": {
+    "gpt-4o LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Definition and content generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Definition and content generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Lesson Content Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Lesson Content Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lesson Content Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Visual Brief Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Visual Brief Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Visual Brief Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Definition and content generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Definition and content generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "pWjmGCMEzlUX7UYc",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:36.790Z",
+      "updatedAt": "2026-04-25T13:12:36.790Z"
+    }
+  ],
+  "activeVersion": null
+}

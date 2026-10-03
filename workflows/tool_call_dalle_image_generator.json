@@ -1,0 +1,83 @@
+{
+  "id": "KdI1KTIJWrYebhJz",
+  "name": "Tool_call_dalle_image_generator",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:13:02.858Z",
+  "updatedAt": "2026-10-03T14:00:48.726Z",
+  "isArchived": false,
+  "versionId": "cf325c83-ebf1-49a0-bdd7-644c07fc4064",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "ad896a5a-1890-4cb9-8796-fd3d466e718b",
+      "name": "Generate an image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -32
+      ],
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.query }}",
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "e4f6b383-1c3e-40a1-b992-0f2905eb084b",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        -32
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    }
+  ],
+  "connections": {
+    "Generate an image": {
+      "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "KdI1KTIJWrYebhJz",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:13:02.860Z",
+      "updatedAt": "2026-04-25T13:13:02.860Z"
+    }
+  ],
+  "activeVersion": null
+}

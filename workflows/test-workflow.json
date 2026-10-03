@@ -1,0 +1,29 @@
+{
+  "id": "sYxJERTpFmQfbUZS",
+  "name": "test-workflow",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:11:07.842Z",
+  "updatedAt": "2026-10-03T14:00:48.569Z",
+  "isArchived": false,
+  "versionId": "a1807c4c-7942-485c-98b8-5bc1cca1659d",
+  "triggerCount": 0,
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {},
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "sYxJERTpFmQfbUZS",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:11:07.846Z",
+      "updatedAt": "2026-04-25T13:11:07.846Z"
+    }
+  ],
+  "activeVersion": null
+}

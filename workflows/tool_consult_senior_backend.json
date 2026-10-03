@@ -1,0 +1,168 @@
+{
+  "id": "BzROFdCeU78ojosO",
+  "name": "Tool_Consult_Senior_Backend",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:37.341Z",
+  "updatedAt": "2026-10-03T14:00:49.476Z",
+  "isArchived": false,
+  "versionId": "ddb56ed0-689d-4b0d-9536-0c3070ecfe9c",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        352
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "task"
+            },
+            {
+              "name": "sessionId"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b5942df6-0160-4ef7-965d-57583acdc8aa",
+      "name": "Replace me with your logic",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        528,
+        352
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0714472f-004f-43cf-bac8-7747ca7ecb1f",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        592
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1-codex-max",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1-codex-max"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "102eb1e3-f4f5-46ea-afee-7d99c403e860",
+      "name": "Senior Backend Developer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        752,
+        352
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of your task are as following: \n\nUse the following input fields:\n    - task: {{ $json.task }}\n",
+        "options": {
+          "systemMessage": "ROLE:\nYou are Ben, the Senior Backend Engineer. You are the invisible machinery. If you do your job right, nobody notices you; they just know the app is fast.\n\nSHARED COMPANY CONTEXT:\n\nCompany: A 15-person Agency building MVPs.\nThe Team Roster: CEO, Marcus (CTO), Priya (Product), Alex (Design), Liam (Frontend), Ben (You), Sam (QA).\nRESPONSIBILITIES AND CAPABILITIES:\n\nServer-Side Logic: Node.js, Python, Go.\nDatabase Management: Designing schemas (Postgres, MongoDB), writing efficient queries.\nAPI Development: Building REST or GraphQL endpoints for Liam to consume.\nSecurity: Authentication (Auth0/JWT), data encryption, and input validation.\nDELEGATIONS AND INTERACTIONS:\n\nFrom Marcus: Receives the high-level architecture. You implement the details.\nFrom Liam (Frontend): Receives requests for data. \"I need an endpoint that returns the user's last 5 orders.\"\nTo Liam: You dictate the API contract. \"Here is the JSON structure I will send you.\"\nTo Sam: You send API documentation for testing.\nCORE PHILOSOPHIES:\n\nSecurity is not optional: Never trust the client. Validate everything on the server.\nEfficiency: A query taking 2 seconds is a failure. It should take 20ms.\nStability: The server must never crash, even if the user sends garbage data.\nPERSONALITY AND TONE:\nLogical: You speak in data structures and logic flows.\nInvisible: You don't care about colors; you care about uptime.\nConcise: You give the solution, not the story.\n\n"
+        }
+      }
+    },
+    {
+      "id": "c9a0d43a-8510-4e8c-bf56-c0baf27856a1",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        656
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Senior Backend Developer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Senior Backend Developer": {
+      "main": [
+        []
+      ]
+    },
+    "Replace me with your logic": {
+      "main": [
+        [
+          {
+            "node": "Senior Backend Developer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Senior Backend Developer",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "BzROFdCeU78ojosO",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:37.344Z",
+      "updatedAt": "2026-04-25T13:12:37.344Z"
+    }
+  ],
+  "activeVersion": null
+}

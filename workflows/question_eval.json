@@ -1,0 +1,209 @@
+{
+  "id": "k99y4EiMW5PMUdmY",
+  "name": "question_eval",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:32.193Z",
+  "updatedAt": "2026-10-03T14:00:47.931Z",
+  "isArchived": false,
+  "versionId": "08903069-5da9-454b-bacb-da5d6a8b7297",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "22b9a5d8-052c-4c62-aa1e-078615aaed6b",
+      "name": "Webhook",
+      "webhookId": "b1f92f38-5ed0-4a42-ab50-f546e54cfdcd",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b1f92f38-5ed0-4a42-ab50-f546e54cfdcd",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "3a9ea298-5326-4d3c-b29a-c735b0f12a6e",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an AWS expert. You know everything about the AWS contents and can easily guide anyone who asks you a question about AWS and certifications. \n\nYou will be provided a question related to AWS services. This question will be derived from the core AWS documentation. Each question will be a candidate question for AWS certification exams. \n\nAll of the exams and their contents are listed here: https://aws.amazon.com/certification/\n \nYour task:\nFor every question,\n1. Decide whether this is a beginner, intermediate, or advanced level question.\n2. Decide in which certification exams this question could be used? Example: If you think this is a good question for SCAA and SCAP, return both.\n3. Decide what tags can be used to tag this question, like the services it is related to, level, etc.\n"
+        }
+      }
+    },
+    {
+      "id": "05119054-74c6-4c7e-8a03-bc13f4eeb7f1",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        240
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1-codex",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1-codex"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "d9aafad2-dec2-40f7-9824-cc59e8b08a75",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "77869e51-eb72-43bc-9d83-7d54d3b8fc5e",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        208
+      ],
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"levels\": [\"beginner\", \"intermediate\", \"advanced\"],\n\t\"exams\": [\"CLF-C02\", \"SAA-C03\",\"DVA-C02\",\"SOA-C02\",\"SAP-C02\",\"DOP-C02\",\"SCS-C02\",\"MLS-C01\",\"DAS-C01\",\"ANS-C01\",\"DBS-C01\"],\n    \"tags\": [\"aws\",\"s3\",\"SAA-C03\"]\n}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "320",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "http://192.168.1.90:8082",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://192.168.1.90:8082/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9,tr;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "questionId": "IssuBcHM7EYZQ46Dx2Hi",
+            "question": "Using AES in ECB mode without an integrity check is considered a secure cryptographic practice.",
+            "correctAnswer": "False",
+            "explanation": "ECB mode reveals patterns and lacks integrity protection. The detector flags such usage as insecure cryptography.",
+            "type": "true-false"
+          },
+          "webhookUrl": "https://n8n.jarbank.io/webhook/b1f92f38-5ed0-4a42-ab50-f546e54cfdcd",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "k99y4EiMW5PMUdmY",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:32.195Z",
+      "updatedAt": "2026-04-25T13:12:32.195Z"
+    }
+  ],
+  "activeVersion": null
+}

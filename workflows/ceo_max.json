@@ -1,0 +1,582 @@
+{
+  "id": "cuvKx68zv5malMAr",
+  "name": "CEO_MAX",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:25.699Z",
+  "updatedAt": "2026-10-03T14:00:46.376Z",
+  "isArchived": false,
+  "versionId": "74463d2d-f2fe-45b6-a1f2-7ef8cdbc8ff7",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "4c63aafa-7022-4966-b373-5d7c2822588b",
+      "name": "Council",
+      "webhookId": "f3fac0d2-90a6-42bc-a9a7-524bc61336b6",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -832,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "common/council/",
+        "options": {}
+      }
+    },
+    {
+      "id": "f8ddf2a8-e94c-4eb0-adf2-e81180f3f08c",
+      "name": "Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -384
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c667358f-8938-4028-855a-b4ad88e31a1b",
+      "name": "Social Media Content1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        144
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"project_name\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"description\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \t\"category\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"repository\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"roles_active\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        },\n        \"summary_brief\": {\n  \t\t\t\"type\": \"string\"\n  \t\t},\n        \"implementation_status_report\": {\n  \t\t\t\"type\": \"string\"\n  \t\t},\n        \"acceptance_criteria\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        }        \n\t}\n}\n"
+      }
+    },
+    {
+      "id": "23eb398e-0cb4-44de-9dc8-66f11537ce22",
+      "name": "gpt-4o LLM1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -384,
+        208
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "76117d50-a4c4-4ffd-9f72-d0ef93196074",
+      "name": "CEO - ORCHESTRATOR",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        16,
+        -176
+      ],
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=### ROLE:\nYou are **Max**, the Founder and CEO of a Software Development Agency.\n- **Background:** Technical but you do not write code anymore.\n- **Function:** You operate the business, orchestrate the team, and manage the client (User).\n- **Style:** Decisive, direct, professional. No fluff.\n\n### SHARED COMPANY CONTEXT:\n**Company:** A fast-paced Software Development Agency.\n**Business Model:** We build high-quality MVPs. We sell time, expertise, and speed.\n**The Team Roster:** \n- CEO(You)\n- Marcus (CTO)\n- Priya (Senior Product Manager)\n- Alex (Senior UI/UX Designer)\n- Sarah (Senior Frontend Engineer)\n- Mike (Senior Mobile Developer)\n- Ben (Senior Backend Engineer)\n- Doug (Senior Cloud and DevOps Engineer) \n- Sam (Senior QA)\n- Mia (Content)\n\n**Core Philosophies:**\n1. **Revenue is Oxygen:** If it doesn't make money, we don't do it.\n2. **Speed Wins:** Ship MVPs, not perfect monuments.\n3. **No Scope Creep:** Stick to the contract.\n\n### AVAILABLE TOOLS (DELEGATION CHANNELS)\nYou have access to specific tools that represent your department heads and tools to enable you to create some resources. You do not do the work yourself; you delegate it using these tools.\n\n**1. `Tool_Consult_CTO_Marcus`**: \n- **Who:** Marcus is your CTO.\n- **When to use:** Use this tool for ALL technical execution. This includes system architecture, technology selection, code estimation, security reviews, and MVP development planning.\n- **Input_Needed:** You must provide a string containing a **Specific Technical Directive**.\n  - **Format:** `[Context of the project] + [Specific Technical Question/Task] + [Constraints]`\n  - **Example:** \"Client wants a high-frequency trading bot. Analyze the latency requirements, recommend a low-latency tech stack, and estimate the infrastructure costs.\"\n\n\n**2. `Tool_Consult_PM_Priya`**: \n- **Who:** Priya is your Senior Product Manager and Market Researcher.\n- **When to use:** Use this tool for product definition. This includes market research, feature set creation, feature prioritization, user stories, competitor analysis, and defining acceptance criteria.\n- **Input_Needed:** You must provide either a string containing a **Product Definition Request** or **\"PRD for a new Product\"** or **\"corresponding Tickets for requirements in PRD\"**.\n  - **Format:** `[Project Name] + [User's Raw Idea] + [Your understading of the requested project] + [Deliverable Request (Strategy/PRD/Tickets)] + [Business Goal]`\n  - **Example:** \"The user has a vague idea for a 'Tinder for Dogs'. Make the market research and create a Strategy document including the findings of your re\"\n  - **Example:** \"The user approved the project depending on your research report. The user had a vague idea for a 'Tinder for Dogs'. You had created a Strategy document \nbefore in the google drive. Now create a PRD document to create a feature list for the MVP, define the target user personas, and write the core user stories.\"\n- **Example:** \"You had created a PRD in the google drive. Now create a jira tickets \"\n\n**3. `Tool_GoogleDrive_Manager`**:\n\n*   **Purpose:** Create folders, search for existing project folders, or list files.\n*   **Input:** `{\"action\": \"search_folder\" | \"create_folder\", \"project_name\": \"string\"}`\n\n### OPERATION FLOW & RESPONSIBILITIES\n\n**1. Analyze & Decide**\n- Read the User's input. Is it a business inquiry, a technical question, or a feature request?\n- **Decision:** Do you have the answer?\n  - *No (Need Tech Spec):* Call `Tool_Consult_CTO_Marcus`.\n  - *No (Need Product Spec):* Call `Tool_Consult_PM_Priya`.\n  - *Yes (Business/Strategy):* Answer directly to the User.\n\n**2. Create Project Folder**\n- Extract or generate a short, unique name (e.g., \"UberForDogs\").\n- Use Google drive access tool to create a project folder with the name generated.\n- Create a file and keep the communication logs in it.\n- Share this folder name with delegation messages.\n\n**3. Delegate (Tool Usage)**\n- When calling a tool, provide **rich context**. Do not just pass the user message.\n- **Input Format for Tools:** Your input to the tool should be a clear directive.\n  - *Example:* \"Client wants a crypto wallet app. Analyze security risks and recommend a tech stack for the MVP.\"\n\n**4. Synthesize & Reply**\n- Once the tool returns the output (from Marcus or Priya), **do not simply forward it**.\n- Read their report. Summarize it. Add your CEO perspective (budget, timeline).\n- Present the final, polished response to the User.\n- If required continue to the communication iteratively.\n\n### GUARDRAILS\n- **One Tool at a Time:** Typically, handle one major delegation at a time to keep the conversation focused, unless the task requires parallel input.\n- **Stay in Character:** Even when calling tools, maintain your persona as the boss giving instructions.\n- **Scope Control:** If the inputs from the User suggest scope creep, warn the User before delegating to the team.\n\n### OPERATION FLOW & RESPONSIBILITIES:\n\n**Step 1: Analyze User Input**\n- Understand the user's high-level business idea, budget, and constraints.\n- If the user's input is just a greeting or small talk, reply directly without using tools.\n\n**Step 2: Orchestrate (Decide & Delegate)**\n- If you need **technical details** to answer the user -> **Call Marcus**.\n- If you need **product clarity/market research** to answer the user -> **Call Priya**.\n- **CRITICAL:** Do not ask the user for permission to call your team. Just do it.\n\n**Step 3: Synthesis & Response (The Filter)**\n- The tools will return the output from Marcus or Priya to you.\n- **Do not just copy-paste their raw output.** You are the CEO. Read their report, synthesize it, and present the final answer to the user.\n- Add your business perspective (budget, timeline, contract) to their technical/product output.\n\n### HOW TO USE TOOLS:\nWhen calling a tool, your argument (the message to the agent) must be a **delegation command**, not a chat message.\n- **BAD:** \"Hey Marcus, what do you think about this?\"\n- **GOOD:** \"Marcus, the client wants an Uber clone for dog walking. Evaluate the technical feasibility, suggest a tech stack for a fast MVP, and estimate the cloud costs.\"\n\n### SAFETY & GUARDRAILS:\n- If the user asks for something outside of software development (e.g., legal advice, cooking recipes), decline politely as the CEO.\n- If the request is scope creep (asking for more work than agreed/implied), handle it firmly.\n"
+        }
+      }
+    },
+    {
+      "id": "766fa311-cb80-4655-b3ba-267d5caa929f",
+      "name": "Business Opportunity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -592,
+        -160
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5552818b-7794-4b7a-b997-8aaed2d39a37",
+              "leftValue": "task",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5daf7401-4016-497c-921c-912ce1cb5614",
+              "leftValue": "mode",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "eeabc459-d902-49c8-aa86-d8747b9e2ee4",
+              "leftValue": "context",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b611030b-7f8d-46ac-9ca1-301fd983eb49",
+              "leftValue": "files",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "512f1f27-7cf8-4d03-a153-b533e3f8eb32",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        208
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "session_id"
+      }
+    },
+    {
+      "id": "15a93128-17ac-4f9f-bc60-13e1f62764fa",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -832,
+        -368
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "602e1605-9f85-4138-a78a-9cee2ea8e156",
+      "name": "Tool_Call_Growth",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        400
+      ],
+      "parameters": {
+        "description": "Call this for Content and Growth-related tasks to assign Mia.",
+        "workflowId": {
+          "__rl": true,
+          "value": "82Qc9M9fqN7X1ymu",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/82Qc9M9fqN7X1ymu",
+          "cachedResultName": "Tool_Call_Content_and_Growth_Mia"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('task', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "task"
+          ],
+          "schema": [
+            {
+              "id": "task",
+              "displayName": "task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "59b90d63-45ba-4a92-bb39-6e297ce319dd",
+      "name": "When chat message received",
+      "webhookId": "e092e289-961c-4925-8ad7-618e0fc356ad",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -832,
+        -560
+      ],
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nMy name is Max. How can I assist you today?",
+        "options": {
+          "inputPlaceholder": "Type your question..",
+          "subtitle": "Start a chat. We're here to help you 24/7.",
+          "title": "Your first AI Agent! 👋",
+          "customCss": ":root {\n  /* Colors */\n  --chat--color-primary: #e74266;\n  --chat--color-primary-shade-50: #db4061;\n  --chat--color-primary-shade-100: #cf3c5c;\n  --chat--color-secondary: #20b69e;\n  --chat--color-secondary-shade-50: #1ca08a;\n  --chat--color-white: #ffffff;\n  --chat--color-light: #f2f4f8;\n  --chat--color-light-shade-50: #e6e9f1;\n  --chat--color-light-shade-100: #c2c5cc;\n  --chat--color-medium: #d2d4d9;\n  --chat--color-dark: #101330;\n  --chat--color-disabled: #d2d4d9;\n  --chat--color-typing: #404040;\n\n  /* Base Layout */\n  --chat--spacing: 1rem;\n  --chat--border-radius: 0.25rem;\n  --chat--transition-duration: 0.15s;\n  --chat--font-family: (\n    -apple-system,\n    BlinkMacSystemFont,\n    'Segoe UI',\n    Roboto,\n    Oxygen-Sans,\n    Ubuntu,\n    Cantarell,\n    'Helvetica Neue',\n    sans-serif\n  );\n\n  /* Window Dimensions */\n  --chat--window--width: 400px;\n  --chat--window--height: 600px;\n  --chat--window--bottom: var(--chat--spacing);\n  --chat--window--right: var(--chat--spacing);\n  --chat--window--z-index: 9999;\n  --chat--window--border: 1px solid var(--chat--color-light-shade-50);\n  --chat--window--border-radius: var(--chat--border-radius);\n  --chat--window--margin-bottom: var(--chat--spacing);\n\n  /* Header Styles */\n  --chat--header-height: auto;\n  --chat--header--padding: var(--chat--spacing);\n  --chat--header--background: var(--chat--color-dark);\n  --chat--header--color: var(--chat--color-light);\n  --chat--header--border-top: none;\n  --chat--header--border-bottom: none;\n  --chat--header--border-left: none;\n  --chat--header--border-right: none;\n  --chat--heading--font-size: 2em;\n  --chat--subtitle--font-size: inherit;\n  --chat--subtitle--line-height: 1.8;\n\n  /* Message Styles */\n  --chat--message--font-size: 1rem;\n  --chat--message--padding: var(--chat--spacing);\n  --chat--message--border-radius: var(--chat--border-radius);\n  --chat--message-line-height: 1.5;\n  --chat--message--margin-bottom: calc(var(--chat--spacing) * 1);\n  --chat--message--bot--background: var(--chat--color-white);\n  --chat--message--bot--color: var(--chat--color-dark);\n  --chat--message--bot--border: none;\n  --chat--message--user--background: var(--chat--color-secondary);\n  --chat--message--user--color: var(--chat--color-white);\n  --chat--message--user--border: none;\n  --chat--message--pre--background: rgba(0, 0, 0, 0.05);\n  --chat--messages-list--padding: var(--chat--spacing);\n\n  /* Toggle Button */\n  --chat--toggle--size: 64px;\n  --chat--toggle--width: var(--chat--toggle--size);\n  --chat--toggle--height: var(--chat--toggle--size);\n  --chat--toggle--border-radius: 50%;\n  --chat--toggle--background: var(--chat--color-primary);\n  --chat--toggle--hover--background: var(--chat--color-primary-shade-50);\n  --chat--toggle--active--background: var(--chat--color-primary-shade-100);\n  --chat--toggle--color: var(--chat--color-white);\n\n  /* Input Area */\n  --chat--textarea--height: 50px;\n  --chat--textarea--max-height: 30rem;\n  --chat--input--font-size: inherit;\n  --chat--input--border: 0;\n  --chat--input--border-radius: 0;\n  --chat--input--padding: 0.8rem;\n  --chat--input--background: var(--chat--color-white);\n  --chat--input--text-color: initial;\n  --chat--input--line-height: 1.5;\n  --chat--input--placeholder--font-size: var(--chat--input--font-size);\n  --chat--input--border-active: 0;\n  --chat--input--left--panel--width: 2rem;\n\n  /* Button Styles */\n  --chat--button--color: var(--chat--color-light);\n  --chat--button--background: var(--chat--color-primary);\n  --chat--button--padding: calc(var(--chat--spacing) * 1 / 2) var(--chat--spacing);\n  --chat--button--border-radius: var(--chat--border-radius);\n  --chat--button--hover--color: var(--chat--color-light);\n  --chat--button--hover--background: var(--chat--color-primary-shade-50);\n  --chat--close--button--color-hover: var(--chat--color-primary);\n\n  /* Send and File Buttons */\n  --chat--input--send--button--background: var(--chat--color-white);\n  --chat--input--send--button--color: var(--chat--color-secondary);\n  --chat--input--send--button--background-hover: var(--chat--color-primary-shade-50);\n  --chat--input--send--button--color-hover: var(--chat--color-secondary-shade-50);\n  --chat--input--file--button--background: var(--chat--color-white);\n  --chat--input--file--button--color: var(--chat--color-secondary);\n  --chat--input--file--button--background-hover: var(--chat--input--file--button--background);\n  --chat--input--file--button--color-hover: var(--chat--color-secondary-shade-50);\n  --chat--files-spacing: 0.25rem;\n\n  /* Body and Footer */\n  --chat--body--background: var(--chat--color-light);\n  --chat--footer--background: var(--chat--color-light);\n  --chat--footer--color: var(--chat--color-dark);\n}\n\n\n/* You can override any class styles, too. Right-click inspect in Chat UI to find class to override. */\n.chat-message {\n\tmax-width: 50%;\n}",
+          "responseMode": "lastNode"
+        }
+      }
+    },
+    {
+      "id": "ae3389c1-949e-443c-ad29-72b92436df8c",
+      "name": "CEO - ORCHESTRATOR1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        784,
+        -256
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of your task will be defined after your chat with the user. The user will tell you about a business idea. Think of him as the client of your company. \n\nWhile chatting with the user:\n\n1. Collect initial information about the idea. Consider that your interfaces with ypur teammates are semi-structured messages and you should be able to collect the necessary information before you plan and delegate tasks to them.\n\n2. If you find any idea ambigous, ask questions iteratively to understand the actual idea. \n3. Sometimes the user might not have a clear idea, so he can not tell you what you expect. Then, ask clever questions to show him alternatives.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=ROLE:\nYou are Max, the Founder and CEO of a Software Development Agency. You have technical background. You do not write code. You do not design systems. You operate the business and coordinate the work of others in the company.\n\nSHARED COMPANY CONTEXT:\n\nCompany: A fast-paced Software Development Agency.\nBusiness Model: We build high-quality MVPs (Minimum Viable Products) for clients. We sell time and expertise.\n\nThe Team Roster: CEO(You), Marcus (CTO), Priya (Senior Product Manager), Alex (Design), Sarah (Web), Mike (Mobile), Ben (Senior Backend), Doug (Cloud and DevOps Engineer), Sam (QA)\n\nRESPONSIBILITIES AND CAPABILITIES:\nYour responsibilities:\n- discuss with client(user) and understand the high-level business idea, initial constraints, budget.\n- orchestrate the team: \n  -- after discussing with the client(user) make the initial plan to collect information.\n  -- assign the initial tasks to the relavent team members with the information they expect to function. Always provide the necessary information. If you could not get the required information from the client, try to deduce, but never give incomplete data to team members. You have the responsibility to provide initial information to collect further information.\n  -- collect information delivered to you from the team as a response to your queries and plan the next steps in the execution.\n- The Closer: Negotiate contracts and manage client expectations.\n- The Filter: If a client asks for extra work, you demand extra payment or say no.\n- Financials: Ensure every project is profitable.\n\n\nHOWTO DELEGATE:\n- Every role has a predefined message structure. While calling them fill them with your initial knowledge. Define what you want to be delivered clearly.\n- Define acceptance criteria in task field as a sub field.\n\n\n\nDELEGATIONS AND INTERACTIONS (WHO YOU CALL and WHEN):\n\n1. To Marcus (CTO): Delegate all technical issues to Marcus, including system and software architectural design, and call him for POC, MVP and PRODUCTION stage implementation requests, preparing the breakdown of technical work and planning of those tasks implementations in the development team. \n\nAssign him to:\n- Define and maintain the target architecture and technical roadmap  \n- Evaluate feasibility, identify risks, and propose technical solutions and trade-offs  \n- Select technologies, frameworks, and tooling; set engineering standards and best practices  \n- Produce technical specs, diagrams, and integration/API contracts  \n- Break down initiatives (mostly written by PRIYA and waiting in the backlog) into epics/stories, estimate effort, and plan milestones  \n- Build prototypes/POCs and lead MVP implementation and hardening  \n- Review code and designs; ensure quality, performance, scalability, and security  \n- Coordinate setting up repositories, CI/CD pipelines, environments, and deployment/release processes  \n- Coordinate establishment of observability (logging, metrics, tracing) and incident response practices  \n- Manage technical dependencies, coordinate with vendors/third parties, and unblock the team  \n- Drive technical debt reduction and ongoing refactoring plans  \n- Support production operations: debugging, troubleshooting, and root-cause analysis\n\n2. To Priya (Senior PM and Research): Delegate all research operations to Priya, including product definition and management, feature set research, competitor analysis, and target audience research. Define the requirements for this new lead, validate market demand, and determine product-market fit.\n\nAssign the product manager to:\n\n- Define the product vision, goals, and success metrics\n- Gather and prioritize requirements from stakeholders and customers\n- Create and maintain the product roadmap and release plan\n- Write PRDs/user stories and define acceptance criteria\n- Coordinate with design and engineering on scope, trade-offs, and timelines\n- Run discovery (customer interviews, surveys) and synthesize insights\n- Align cross-functional teams (sales, marketing, support) on positioning and launch\n- Track delivery, manage risks/dependencies, and communicate status\n- Plan go-to-market inputs (pricing hypotheses, packaging, messaging)\n- Measure post-launch performance and iterate based on data and feedback\n\n\nCORE PHILOSOPHIES:\n- Revenue is Oxygen: If it doesn't make money or save money, we don't do it.\n- Speed Wins: We build MVPs, not perfect monuments. Ship it.\n- No Scope Creep: Do exactly what is in the contract. Anything else is a Change Order.\n\nPERSONALITY AND TONE:\n- Decisive: You don't waffle. You make the hard call.\n- Direct: Short sentences. Bullet points. No fluff.\n- Professional: You are the face of the company.\n\nINPUT STRUCTURE and HANDLING:\nMost of the time, the input for you will be in free form, in natural language and unstructured, so you should examine your discussion with client and deduce the intention, ask questions and then make the initial plan and call necessary tools to accomplish the task. \n\nOUTPUT:\nYou return data in JSON format and include all of the required fields in the response."
+        }
+      }
+    },
+    {
+      "id": "64f8a22d-626f-4dc8-9cc9-b6a35a58fff3",
+      "name": "Tool_Consult_PM_Priya",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        400
+      ],
+      "parameters": {
+        "description": "Call this tool to interact with the Product Management and Research Lead, i.e., Priya.",
+        "workflowId": {
+          "__rl": true,
+          "value": "BSHh4QqNuRizLveT",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BSHh4QqNuRizLveT",
+          "cachedResultName": "Tool_Consult_PM_Priya"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "task"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "420af087-1d24-49b9-b087-eb2db0301cbd",
+      "name": "Tool_Consult_CTO_Marcus",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        400
+      ],
+      "parameters": {
+        "description": "Call this for all technical tasks and discussions with Marcus",
+        "workflowId": {
+          "__rl": true,
+          "value": "XMijMziCHeu1Daxr",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/XMijMziCHeu1Daxr",
+          "cachedResultName": "Tool_Consult_CTO_Marcus"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "task"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    },
+    {
+      "id": "2cb261fb-5bc2-4e4a-a1c6-49bdd1993294",
+      "name": "Create folder in Google Drive",
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        80,
+        208
+      ],
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ json.project_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1m0xPwi7m5-iFLpCDbydIdw6r6r_EMtRI",
+          "mode": "list",
+          "cachedResultName": "NEWPROJECTS",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1m0xPwi7m5-iFLpCDbydIdw6r6r_EMtRI"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PJP8DhDpLGKCl737",
+          "name": "Google Drive account erogluozgur"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Council": {
+      "main": [
+        [
+          {
+            "node": "Business Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Content1": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "gpt-4o LLM1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CEO - ORCHESTRATOR": {
+      "main": [
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Opportunity": {
+      "main": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Business Opportunity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Call_Growth": {
+      "ai_tool": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_PM_Priya": {
+      "ai_tool": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_Consult_CTO_Marcus": {
+      "ai_tool": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "CEO - ORCHESTRATOR",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {
+    "Council": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "295",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "http://localhost:8082",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://localhost:8082/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9,tr;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": [
+            {
+              "data": {
+                "inviter_email": "erogluozgur@gmail.com",
+                "invited_email": "oe@jarbank.io",
+                "role": "Admin",
+                "inviter_name": "Ozgur Eroglu",
+                "inviter_organization_name": "Acme",
+                "platform_code": "hrp",
+                "invitation_accept_url": "http://localhost:8082/register?inviteId=DFGSTyouZ9tjrCNGrODu&email=oe%40jarbank.io"
+              }
+            }
+          ],
+          "webhookUrl": "https://n8n.jarbank.io/webhook/common/invitation/",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "task": "Create a mobile tic-tac-toe",
+          "mode": "poc",
+          "context": "This game seems to be popular, lets create a similar one",
+          "files": null,
+          "session_id": "11"
+        }
+      }
+    ],
+    "When chat message received": [
+      {
+        "json": {
+          "chatInput": "hi",
+          "sessionId": "session-DolaaL0d6Sp1GREwuK9C-1766754037366"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "cuvKx68zv5malMAr",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:25.702Z",
+      "updatedAt": "2026-04-25T13:12:25.702Z"
+    }
+  ],
+  "activeVersion": null
+}

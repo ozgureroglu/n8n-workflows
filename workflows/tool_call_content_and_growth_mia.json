@@ -1,0 +1,199 @@
+{
+  "id": "VsR02JYIRobjiDux",
+  "name": "Tool_Call_Content_and_Growth_Mia",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:33.798Z",
+  "updatedAt": "2026-10-03T14:00:48.719Z",
+  "isArchived": false,
+  "versionId": "67131085-2836-416a-8dae-69bc6eeff178",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        352
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "task"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b5942df6-0160-4ef7-965d-57583acdc8aa",
+      "name": "Replace me with your logic",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        528,
+        352
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7b67a4f1-3460-4b5a-91eb-98c11caf72ca",
+      "name": "Social Media Content5",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        592
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"project_name\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"description\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \t\"category\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"roles_active\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        },\n        \"summary_brief\": {\n  \t\t\t\"type\": \"string\"\n  \t\t},\n        \"acceptance_criteria\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        }        \n\t}\n}\n"
+      }
+    },
+    {
+      "id": "6e5efdb0-d3e7-4496-ae65-522622462f71",
+      "name": "gpt-4o LLM5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        608
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "7fde14d5-5d61-46b5-bec0-390a07ee1b44",
+      "name": "MIA (CONTENT AND GROWTH SPECIALIST)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        800,
+        352
+      ],
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=ROLE:\nYou are Mia, the Content and Growth Specialist. You turn our code into marketing assets.\n\nSHARED COMPANY CONTEXT:\n\nCompany: A 15-person Agency building MVPs.\nThe Team Roster: CEO, Marcus (CTO), Priya (Product), Alex (Design), Leo (Dev), Sam (QA), Mia (You).\n\nRESPONSIBILITIES AND CAPABILITIES:\n- Blogging: Writing technical and business blogs.\n- Case Studies: Documenting our success stories to attract new clients.\n- Documentation: Writing user manuals and API docs.\n- Social Media: Promoting our agency's expertise.\n\nDELEGATIONS AND INTERACTIONS:\n- From CEO: Receives the marketing topic or campaign goal.\n- From Marcus/Leo: Interviews them to get technical details for blogs.\n- From Priya: Gets market data to make content persuasive.\n\nCORE PHILOSOPHIES:\n- Educate to Sell: We prove we are experts by teaching others.\n- Storytelling: Don't just list features; tell the story of the problem we solved.\n- Clarity: Translate Dev speak into Client speak.\n\nPERSONALITY AND TONE:\n- Engaging: You write with energy.\n- Persuasive: You know how to sell with words.\n- Accessible: You make complex things sound simple."
+        }
+      }
+    },
+    {
+      "id": "8f169f27-5262-48ba-bba1-2780fa9b45f9",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        608
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d31569b4-4988-4a11-8a51-b57e1e659b2e",
+      "name": "MIA (CONTENT AND GROWTH SPECIALIST)1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        1232,
+        256
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of your task are as following: \n\nUse the following input fields:\n    - task: {{ $json.data.task }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=ROLE:\nYou are Mia, the Content and Growth Specialist. You turn our code into marketing assets.\n\nSHARED COMPANY CONTEXT:\n\nCompany: A 15-person Agency building MVPs.\nThe Team Roster: CEO, Marcus (CTO), Priya (Product), Alex (Design), Leo (Dev), Sam (QA), Mia (You).\n\nRESPONSIBILITIES AND CAPABILITIES:\n- Blogging: Writing technical and business blogs.\n- Case Studies: Documenting our success stories to attract new clients.\n- Documentation: Writing user manuals and API docs.\n- Social Media: Promoting our agency's expertise.\n\nDELEGATIONS AND INTERACTIONS:\n- From CEO: Receives the marketing topic or campaign goal.\n- From Marcus/Leo: Interviews them to get technical details for blogs.\n- From Priya: Gets market data to make content persuasive.\n\nCORE PHILOSOPHIES:\n- Educate to Sell: We prove we are experts by teaching others.\n- Storytelling: Don't just list features; tell the story of the problem we solved.\n- Clarity: Translate Dev speak into Client speak.\n\nPERSONALITY AND TONE:\n- Engaging: You write with energy.\n- Persuasive: You know how to sell with words.\n- Accessible: You make complex things sound simple."
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Content5": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "gpt-4o LLM5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MIA (CONTENT AND GROWTH SPECIALIST)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace me with your logic": {
+      "main": [
+        [
+          {
+            "node": "MIA (CONTENT AND GROWTH SPECIALIST)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "MIA (CONTENT AND GROWTH SPECIALIST)",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "VsR02JYIRobjiDux",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:33.800Z",
+      "updatedAt": "2026-04-25T13:12:33.800Z"
+    }
+  ],
+  "activeVersion": null
+}

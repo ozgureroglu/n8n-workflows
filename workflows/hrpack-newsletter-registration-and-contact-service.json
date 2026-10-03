@@ -1,0 +1,864 @@
+{
+  "id": "wxQ7tQUFkxzdbsx1",
+  "name": "HRPACK newsletter registration and contact service",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:30.060Z",
+  "updatedAt": "2026-10-03T14:00:47.414Z",
+  "isArchived": false,
+  "versionId": "bc4fbf95-c8d5-40d8-8e3a-cdcaddf4a9c1",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "d776b55a-65fe-4e12-9071-58911fa9c5cc",
+      "name": "Registered API Keys",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        1616
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ab01b9f-473f-4f1b-8ddf-8d5a7b706323",
+              "name": "registered_api_keys",
+              "type": "array",
+              "value": "[|   {      \"user_id\":\"user_1\",      \"api_key\":\"test\"   },   {      \"user_id\":\"user_2\",      \"api_key\":\"sk-lihefoihz1RZD9vaQQaL6En7zehfAZJAOJZ14joEKe1h\"   }]"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d20bdc9b-3020-4fa3-88c3-b6c3d5a585b2",
+      "name": "API Key Identified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        512
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "17645189-94de-42c8-8d9d-9b9046513b38",
+              "leftValue": "={{ $json.headers[\"x-api-key\"] }}",
+              "rightValue": "sk-lihefoihz1RZD9vaQQaL6En7zehfAZJAOJZ14joEKe1h",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b34ad49e-351a-4f42-8336-d4300d442c50",
+      "name": "Respond to Webhook (success)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        400
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"user_id\": \"{{ $json.user_id }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "2da5855a-d54a-43f1-b4c5-3ff510a10bd3",
+      "name": "Respond to Webhook (unauthorized)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        608
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"error\": \"Please provide a valid x-api-key header.\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "0b56b704-4dd6-490a-9998-f8eb2ef0a00e",
+      "name": "Secured Webhook",
+      "webhookId": "bf0be3b1-f140-4bc5-9040-a0e71dd78661",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        368,
+        512
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "newsletter/register",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qryedbGcEAYx3Pym",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "id": "88070916-27b2-42fb-8005-970b6d5a08fc",
+      "name": "Find API Key",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "alwaysOutputData": true,
+      "position": [
+        880,
+        1616
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "526ec1b1-4f6d-41ea-b35a-1347c01aa03a",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.api_key }}",
+              "rightValue": "={{ $('Get API Key').last().json.body.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2a06aaa0-1ac3-4750-9770-6eec7e9310a9",
+      "name": "Get API Key",
+      "webhookId": "bf0be3b1-f140-4bc5-9040-a0e71dd78661",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        224,
+        1616
+      ],
+      "parameters": {
+        "path": "tutorial/secure-webhook/api-keys",
+        "authentication": "headerAuth",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qryedbGcEAYx3Pym",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "id": "3803f9b8-deec-4262-a76b-bfd72d572493",
+      "name": "Split Out Users",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        672,
+        1616
+      ],
+      "parameters": {
+        "fieldToSplitOut": "registered_api_keys",
+        "options": {}
+      }
+    },
+    {
+      "id": "d81a0dd5-9c90-4fee-a7ec-46e9aabb53a3",
+      "name": "Test Secure Webhook",
+      "disabled": true,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        512
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://n8n.jarbank.io/webhook-test/newsletter/register",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "test"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "={\n  \"email\": \"user@example.com\"\n}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SKmDAkNeOGBRccKr",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "id": "ca63d58d-4683-4dbc-bd1e-6fd2724152f7",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        320
+      ],
+      "parameters": {
+        "content": "### ▶️ Public Endpoint & Tester\n\n*   **`Secured Webhook`**: This is your public-facing endpoint. It listens for requests containing an `x-api-key` header.\n*   **`Test Secure Webhook`**: Use this node to test the endpoint. Change the `x-api-key` header value to test valid and invalid keys.",
+        "height": 340,
+        "width": 600,
+        "color": 6
+      }
+    },
+    {
+      "id": "14afef1c-6a99-46f5-96e1-c536a9afde69",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        144,
+        1424
+      ],
+      "parameters": {
+        "content": "### 📦 Mock Database\n\nThese nodes simulate a database of users and their API keys.\n\n*   **`Get API Key`**: A private webhook that receives a key and checks it against the list.\n*   **`Registered API Keys`**: **EDIT THIS NODE** to add or remove the API keys you want to be considered valid. Each key should be unique to a user.",
+        "height": 380,
+        "width": 1020,
+        "color": 7
+      }
+    },
+    {
+      "id": "12074ea9-65a9-4696-8c87-c77842f44467",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        688,
+        208
+      ],
+      "parameters": {
+        "content": "#### ✅ Gatekeeper\n\nThis IF node checks the result from our \"database\".\n\n*   If a user was found for the given API key, it proceeds to the **success** response.\n*   If not, it sends a **401 Unauthorized** error.",
+        "height": 580,
+        "width": 440,
+        "color": 7
+      }
+    },
+    {
+      "id": "5a0e2e8a-74df-403d-94ef-d5b8b5a0bd13",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        1808
+      ],
+      "parameters": {
+        "content": "## Was this helpful? Let me know!\n\nI really hope this tutorial helped you understand how to build secured webhooks better. Your feedback is incredibly valuable and helps me create better resources for the n8n community.\n\n### **Share Your Thoughts & Ideas**\n\nWhether you have a suggestion, found a typo, or just want to say thanks, I'd love to hear from you!\nHere's a simple n8n form built for this purpose:\n\n#### ➡️ **[Click here to give feedback](https://api.ia2s.app/form/templates/feedback?template=Secure%20Webhook%20Tutorial)**\n\n### **Ready to Build Something Great?**\n\nIf you're looking to take your n8n skills or business automation to the next level, I can help.\n\n**🎓 n8n Coaching:** Want to become an n8n pro? I offer one-on-one coaching sessions to help you master workflows, tackle specific problems, and build with confidence.\n#### ➡️ **[Book a Coaching Session](https://api.ia2s.app/form/templates/coaching?template=Secure%20Webhook%20Tutorial)**\n\n**💼 n8n Consulting:** Have a complex project, an integration challenge, or need a custom workflow built for your business? Let's work together to create a powerful automation solution.\n#### ➡️ **[Inquire About Consulting Services](https://api.ia2s.app/form/templates/consulting?template=Secure%20Webhook%20Tutorial)**\n\n---\n\nHappy Automating!\nLucas Peyrin",
+        "height": 800,
+        "width": 540,
+        "color": 4
+      }
+    },
+    {
+      "id": "cc70df9a-29c3-4f71-bcae-35a4784bca2a",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1168,
+        400
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ",
+          "mode": "list",
+          "cachedResultName": "newsletter_emails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.body.email }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "3a5793a1-8e98-4343-a8c5-fed23743bd73",
+      "name": "Send an email",
+      "type": "n8n-nodes-base.mailjet",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        400
+      ],
+      "parameters": {
+        "fromEmail": "HRPack<contact@hrpack.io>",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Nice to meet you",
+        "html": "Welcome,<br/><br/>We are thrilled to have you join our newsletter! The first issue will be sent out in just a month. As we prepare valuable content for you, we would love to hear your thoughts on what you would like to see AI achieve in HR. <br/><br/>Thank you,<br/>The HRPack Family.",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "mailjetEmailApi": {
+          "id": "syj5R8GKK7SVBsX9",
+          "name": "Mailjet Email account: erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "fa6433e7-91cc-4fba-9f94-5ca0780f2445",
+      "name": "API Key Identified1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        1120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "17645189-94de-42c8-8d9d-9b9046513b38",
+              "leftValue": "={{ $json.headers[\"x-api-key\"] }}",
+              "rightValue": "sk-lihefoihz1RZD9vaQQaL6En7zehfAZJAOJZ14joEKe1h",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d44f62a2-18e9-45ae-9618-35d6788ff528",
+      "name": "Respond to Webhook (success)1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        1008
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"user_id\": \"{{ $json.user_id }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "55a9dfc2-f39d-4ad5-a852-e528d588a8c2",
+      "name": "Respond to Webhook (unauthorized)1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        1216
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"error\": \"Please provide a valid x-api-key header.\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "1076932e-00a1-4131-b981-137ef504b84a",
+      "name": "Secured Webhook1",
+      "webhookId": "bf0be3b1-f140-4bc5-9040-a0e71dd78661",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        352,
+        1120
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contact/submit",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qryedbGcEAYx3Pym",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "id": "3951e8f0-9e7a-4511-a498-e05d50918683",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        928
+      ],
+      "parameters": {
+        "content": "### ▶️ Public Endpoint & Tester\n\n*   **`Secured Webhook`**: This is your public-facing endpoint. It listens for requests containing an `x-api-key` header.\n*   **`Test Secure Webhook`**: Use this node to test the endpoint. Change the `x-api-key` header value to test valid and invalid keys.",
+        "height": 340,
+        "width": 600,
+        "color": 6
+      }
+    },
+    {
+      "id": "6abaaae0-7f42-4206-8fa2-b2f4f36c1675",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        688,
+        816
+      ],
+      "parameters": {
+        "content": "#### ✅ Gatekeeper\n\nThis IF node checks the result from our \"database\".\n\n*   If a user was found for the given API key, it proceeds to the **success** response.\n*   If not, it sends a **401 Unauthorized** error.",
+        "height": 580,
+        "width": 440,
+        "color": 7
+      }
+    },
+    {
+      "id": "097d169e-13ab-4b8c-9bbe-38183d274c51",
+      "name": "Append row in sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1168,
+        1008
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ",
+          "mode": "list",
+          "cachedResultName": "newsletter_emails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 677852129,
+          "mode": "list",
+          "cachedResultName": "contact_requests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15ldYD0XNWz82KaOTXnqhcrdUd6vIKDNskgeA3YA7okQ/edit#gid=677852129"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.body.email }}",
+            "name": "={{ $json.body.name }}",
+            "subject": "={{ $json.body.subject }}",
+            "message": "={{ $json.body.message }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "5f5dfbfc-6280-49f1-adae-d9eecfdec89f",
+      "name": "Send an email1",
+      "type": "n8n-nodes-base.mailjet",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        1008
+      ],
+      "parameters": {
+        "fromEmail": "HRPack<contact@hrpack.io>",
+        "toEmail": "={{ $json.email }}",
+        "subject": "Nice to meet you",
+        "html": "=Hi {{ $json.name }},<br/><br/>Thanks! We've received your request. We'll get back to you soon. <br/><br/>Best,<br/>The HRPack Family.",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "mailjetEmailApi": {
+          "id": "syj5R8GKK7SVBsX9",
+          "name": "Mailjet Email account: erogluozgur"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Get API Key": {
+      "main": [
+        [
+          {
+            "node": "Registered API Keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Secured Webhook": {
+      "main": [
+        [
+          {
+            "node": "API Key Identified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Users": {
+      "main": [
+        [
+          {
+            "node": "Find API Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Key Identified": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (success)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (unauthorized)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registered API Keys": {
+      "main": [
+        [
+          {
+            "node": "Split Out Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook (success)": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send an email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Key Identified1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (success)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (unauthorized)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook (success)1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Secured Webhook1": {
+      "main": [
+        [
+          {
+            "node": "API Key Identified1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send an email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v0"
+  },
+  "staticData": {},
+  "pinData": {
+    "Secured Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "33",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"141\", \"Not?A_Brand\";v=\"8\", \"Chromium\";v=\"141\"",
+            "content-type": "application/json",
+            "x-api-key": "sk-lihefoihz1RZD9vaQQaL6En7zehfAZJAOJZ14joEKe1h",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "https://hrpack.io",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "https://hrpack.io/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9,tr;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "email": "erogluozgur@gmail.com"
+          },
+          "webhookUrl": "https://n8n.jarbank.io/webhook/newsletter/register",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Secured Webhook1": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "33",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"141\", \"Not?A_Brand\";v=\"8\", \"Chromium\";v=\"141\"",
+            "content-type": "application/json",
+            "x-api-key": "sk-lihefoihz1RZD9vaQQaL6En7zehfAZJAOJZ14joEKe1h",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "https://hrpack.io",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "https://hrpack.io/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9,tr;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "email": "erogluozgur@gmail.com",
+            "name": "Ozgur"
+          },
+          "webhookUrl": "https://n8n.jarbank.io/webhook/newsletter/register",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "wxQ7tQUFkxzdbsx1",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:30.062Z",
+      "updatedAt": "2026-04-25T13:12:30.062Z"
+    }
+  ],
+  "activeVersion": null
+}

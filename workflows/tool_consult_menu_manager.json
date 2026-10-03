@@ -1,0 +1,400 @@
+{
+  "id": "AJK0TeQHItNgUQN8",
+  "name": "Tool_Consult_Menu_Manager",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:35.805Z",
+  "updatedAt": "2026-10-03T14:00:49.353Z",
+  "isArchived": false,
+  "versionId": "cde7464e-f652-4496-b459-e219f9133176",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "f1c4a6ef-aed7-4a58-8415-c5a72d407c96",
+      "name": "gpt-4o LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2864,
+        -400
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "239eaa02-d799-46b4-abb9-84dd25daa385",
+      "name": "Webhook",
+      "webhookId": "f311fac1-6b0b-4fc6-8aad-eb86c2a68629",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3232,
+        -768
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f311fac1-6b0b-4fc6-8aad-eb86c2d33129",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7g0qob9nWMvJP7A4",
+          "name": "menu_manager_access"
+        }
+      }
+    },
+    {
+      "id": "bf8eb348-5e0e-492d-9d82-a8171f32dc97",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "alwaysOutputData": false,
+      "position": [
+        -2512,
+        -768
+      ],
+      "parameters": {
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Accept"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "974c328f-fa7d-4aaf-9d3c-b4b3924c2ed0",
+      "name": "gpt-4o LLM2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2912,
+        560
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "d5efae63-c604-4368-ab12-532d45236622",
+      "name": "Webhook2",
+      "webhookId": "79081123-1a44-423b-96bd-53fdd96261fa",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3424,
+        192
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "79081123-1a44-423b-93bd-53fdd96261fa",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7g0qob9nWMvJP7A4",
+          "name": "menu_manager_access"
+        }
+      }
+    },
+    {
+      "id": "b180335f-379b-47a1-8abc-79d3c9da1da4",
+      "name": "Respond to Webhook2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2560,
+        192
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "218a2104-a26c-4c44-8c17-7915940979c5",
+      "name": "Definition and content generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2864,
+        -768
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.itemName }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a culinary expert AI designed to provide concise, structured, and informative details about specific dishes. When a user provides the name of a food or dish, you must output the information in the following structured format.\n\n**Role & Tone:**\n- Professional, clear, and informative.\n- Focus on accuracy and safety regarding allergens and dietary restrictions.\n- Do not include conversational filler (e.g., \"Here is the recipe you asked for\"). Just provide the data.\n\n**Output Structure:**\n\n1.  **Dish Name:** [Name of the food]\n2.  **Origin/Cuisine:** [e.g., Italian, Japanese, American]\n3.  **Short Definition:** A 1-2 sentence description of what the dish is, its texture, and its primary flavor profile.\n4.  **Difficulty & Time:**\n    *   *Difficulty:* [Easy / Medium / Hard]\n    *   *Prep Time:* [Approximate minutes]\n    *   *Cook Time:* [Approximate minutes]\n5.  **Ingredients List:**\n    *   List all standard ingredients required.\n    *   Include metric measurements (grams/ml) and standard kitchen units (cups/spoons) where possible.\n6.  **Step-by-Step Recipe:**\n    *   Numbered list of clear, actionable instructions.\n    *   Keep steps concise.\n7.  **Portion Size:** [Approximate grams and a visual size description per serving, e.g., \"300g bowl\"]\n8.  **Nutritional Estimate (Per Portion):**\n    *   *Calories:* [Approximate kcal]\n9.  **Critical Dietary Alerts:**\n    *   *Common Allergens:* List specific ingredients in this recipe known to cause allergies (e.g., Nuts, Dairy, Gluten, Shellfish, Eggs, Soy).\n    *   *Religious/Cultural Restrictions:* Explicitly flag ingredients that may be restricted (e.g., Pork/Gelatin for Halal/Kosher, Beef for Hindu diets, Alcohol).\n    *   *Dietary Types:* Mention if it is naturally Vegetarian, Vegan, or Keto.\n\n**Constraints:**\n- If the dish has multiple variations, choose the most standard/traditional version.\n- If a specific ingredient is controversial or has a common substitute, briefly mention it in parentheses.\n- Ensure calorie counts are realistic estimates.\n\n***\n\n**REQUIRED OUTPUT EXAMPLE:**\n\n**User Input:** \"Pad Thai\"\n\n**Model Output:**\n**Dish Name:** Pad Thai\n**Origin/Cuisine:** Thailand\n**Short Definition:** A stir-fried rice noodle dish commonly served as street food. It features a balance of sweet, salty, sour, and spicy flavors with a chewy noodle texture and crunchy toppings.\n\n**Difficulty & Time:**\n*   *Difficulty:* Medium\n*   *Prep Time:* 20 minutes\n*   *Cook Time:* 10 minutes\n\n**Ingredients List:**\n*   200g (7 oz) Dried rice noodles\n*   200g (7 oz) Shrimp (or chicken/tofu)\n*   2 Eggs, lightly beaten\n*   100g (1 cup) Bean sprouts\n*   3 Green onions, sliced\n*   30g (2 tbsp) Roasted peanuts, crushed\n*   Sauce: 3 tbsp Tamarind paste, 3 tbsp Fish sauce, 2 tbsp Palm sugar (or brown sugar)\n\n**Step-by-Step Recipe:**\n1.  Soak rice noodles in warm water for 30-40 minutes until flexible but firm; drain.\n2.  Whisk tamarind paste, fish sauce, and sugar in a small bowl; set aside.\n3.  Heat oil in a wok. Sear the shrimp until pink, then push to the side.\n4.  Pour in eggs and scramble lightly. Add noodles and sauce.\n5.  Toss continuously until noodles absorb the sauce.\n6.  Stir in bean sprouts and green onions; cook for 1 minute.\n7.  Serve immediately, topped with crushed peanuts and lime wedges.\n\n**Portion Size:** Approx. 350g (1 standard dinner plate)\n**Nutritional Estimate (Per Portion):**\n*   *Calories:* ~550 kcal\n\n**Critical Dietary Alerts:**\n*   *Common Allergens:* **Shellfish** (Shrimp), **Fish** (Fish Sauce), **Eggs**, **Peanuts** (Topping), **Soy** (if Tofu is used).\n*   *Religious/Cultural Restrictions:* **Shellfish** is not Kosher. Generally Halal (ensure no alcohol in sauces).\n*   *Dietary Types:* Gluten-Free (if certified noodles/sauces are used). Not Vegan/Vegetarian due to Fish Sauce and Eggs."
+        }
+      }
+    },
+    {
+      "id": "1bac1fe2-84b5-4acb-b78b-af95d89f29af",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -2704,
+        -560
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"name\": \"food_recipe_response\",\n  \"schema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"dish_name\": {\n        \"type\": \"string\",\n        \"description\": \"The standard name of the dish\"\n      },\n      \"origin_cuisine\": {\n        \"type\": \"string\",\n        \"description\": \"Country or region of origin\"\n      },\n      \"short_definition\": {\n        \"type\": \"string\",\n        \"description\": \"1-2 sentence description of texture and flavor\"\n      },\n      \"difficulty_level\": {\n        \"type\": \"string\",\n        \"enum\": [\"Easy\", \"Medium\", \"Hard\"]\n      },\n      \"time_estimates\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"prep_time\": { \"type\": \"string\" },\n          \"cook_time\": { \"type\": \"string\" }\n        },\n        \"required\": [\"prep_time\", \"cook_time\"]\n      },\n      \"ingredients\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" },\n        \"description\": \"List of ingredients with quantities\"\n      },\n      \"recipe_steps\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" },\n        \"description\": \"Step-by-step cooking instructions\"\n      },\n      \"serving_info\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"approx_grams\": { \"type\": \"integer\" },\n          \"visual_size\": { \"type\": \"string\" },\n          \"calories_kcal\": { \"type\": \"integer\" }\n        },\n        \"required\": [\"approx_grams\", \"visual_size\", \"calories_kcal\"]\n      },\n      \"dietary_alerts\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"common_allergens\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" }\n          },\n          \"religious_restrictions\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" },\n            \"description\": \"Specific warnings for Halal, Kosher, Hindu, etc.\"\n          },\n          \"dietary_type\": {\n            \"type\": \"string\",\n            \"description\": \"e.g., Vegan, Keto, Gluten-Free\"\n          }\n        },\n        \"required\": [\"common_allergens\", \"religious_restrictions\", \"dietary_type\"]\n      }\n    },\n    \"required\": [\n      \"dish_name\",\n      \"origin_cuisine\",\n      \"short_definition\",\n      \"difficulty_level\",\n      \"time_estimates\",\n      \"ingredients\",\n      \"recipe_steps\",\n      \"serving_info\",\n      \"dietary_alerts\"\n    ],\n    \"additionalProperties\": false\n  },\n  \"strict\": true\n}"
+      }
+    },
+    {
+      "id": "51ccf1aa-677c-48c7-9019-a6abcff49cdd",
+      "name": "Dall-E image Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -2912,
+        192
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=### System Prompt: “Food Image Generator.”\n\n**Role:**  \nYou are an expert food photographer and visual designer specializing in creating hyper-realistic, appetizing food images for restaurant menus. Your task is to generate photo-quality images of dishes prepared and ready to serve, based solely on the provided description, ingredients, and preparation method.\n\n**Instructions:**  \n1. **Input:** The user will provide a short description, a list of ingredients, and basic recipe steps.  \n2. **Output:** Generate a single hyper-realistic image depicting the fully prepared dish, plated beautifully and ready to be served.  \n3. **Image Style & Quality:**  \n   - Use natural lighting and shallow depth of field (restaurant-style presentation).  \n   - Emphasize the freshness, color, and texture of ingredients.  \n   - Ensure realistic proportions and accurate depiction of the dish according to the input.  \n   - Background should be simple, elegant, and suitable for a menu photo (e.g., neutral wooden table, slate tile, or soft blurred background).  \n4. **Do not include:** Any text, watermarks, cartoonish styling, or unrealistic decoration.  \n5. **Intended Use:** The output image will be used in a restaurant menu or food catalog.\n\n**Example Input:**  \n```\nShort description: A creamy mushroom risotto with Parmesan and fresh parsley.  \nIngredients: Arborio rice, mushrooms, butter, onion, Parmesan cheese, white wine, vegetable broth, parsley, salt, pepper.  \nPreparation: Sauté onion and mushrooms in butter, add rice and toast, deglaze with wine, gradually add broth until creamy, stir in Parmesan, and top with parsley.\n```\n\n**Expected Output:**  \nA hyper-realistic image of the food defined in the description in the input as JSON or field of a JSON. \n"
+        }
+      }
+    },
+    {
+      "id": "2cf2644a-fac5-4f16-bb24-3e225112ab22",
+      "name": "Call Dall-E workflow",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -2720,
+        560
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "W8w1jgYwK-ZgWnafGWRQ2",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/W8w1jgYwK-ZgWnafGWRQ2",
+          "cachedResultName": "Tool_call_dalle_image_generator"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      }
+    }
+  ],
+  "connections": {
+    "gpt-4o LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Definition and content generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Definition and content generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Dall-E image Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Dall-E image Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Definition and content generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Definition and content generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dall-E image Generator": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Dall-E workflow": {
+      "ai_tool": [
+        [
+          {
+            "node": "Dall-E image Generator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {
+    "Webhook2": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "34.96.47.196",
+            "x-forwarded-for": "34.96.47.196",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "1072",
+            "content-type": "application/json",
+            "accept": "application/json",
+            "api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGM0ZDQ5My05NWJkLTQ4NjUtOTVkZC1lYTg4ZmQyODhkZTgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY3NzAwNDgyfQ.ZfCJyfgYbcSTY5RyyQXvBaMK9ukfmz22KB61h5Q_DFk",
+            "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
+            "accept-encoding": "gzip,deflate"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "short_description": "A classic salad featuring romaine lettuce and croutons dressed with a garlic-infused Caesar dressing, often topped with Parmesan cheese. It is known for its creamy, savory flavor with a hint of tanginess.",
+            "ingredients": [
+              "200g (7 cups) Romaine lettuce, chopped",
+              "100g (1 cup) Croutons",
+              "50g (1/2 cup) Parmesan cheese, grated",
+              "2 Egg yolks",
+              "2 cloves Garlic, minced",
+              "5 Anchovy fillets, minced",
+              "15 ml (1 tbsp) Worcestershire sauce",
+              "15 ml (1 tbsp) Lemon juice",
+              "5 ml (1 tsp) Dijon mustard",
+              "60 ml (4 tbsp) Olive oil",
+              "Salt and black pepper to taste"
+            ],
+            "recipe_steps": [
+              "In a mixing bowl, whisk together egg yolks, minced garlic, anchovies, Worcestershire sauce, lemon juice, and Dijon mustard.",
+              "Slowly drizzle olive oil into the mixture while whisking continuously to emulsify the dressing.",
+              "Season with salt and black pepper to taste.",
+              "In a large salad bowl, combine chopped romaine lettuce and croutons.",
+              "Pour the dressing over the salad and toss gently to coat the leaves evenly.",
+              "Sprinkle Parmesan cheese over the top and serve immediately."
+            ]
+          },
+          "webhookUrl": "https://n8n.jarbank.io/webhook/79081123-1a44-423b-93bd-53fdd96261fa",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "AJK0TeQHItNgUQN8",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:35.808Z",
+      "updatedAt": "2026-04-25T13:12:35.808Z"
+    }
+  ],
+  "activeVersion": null
+}

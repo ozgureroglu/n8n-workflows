@@ -1,0 +1,1223 @@
+{
+  "id": "ZAANI2JQmJPLiZ07",
+  "name": "Product Studio AI",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:13:00.684Z",
+  "updatedAt": "2026-10-03T14:00:47.973Z",
+  "isArchived": false,
+  "versionId": "33e34eae-ceeb-4a2e-8aca-b3ec4002fd13",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "8508401e-530b-4bb4-9e43-0f4903b3da24",
+      "name": "API Key Identified",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        -512
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "17645189-94de-42c8-8d9d-9b9046513b38",
+              "leftValue": "={{ $json.headers[\"x-api-key\"] }}",
+              "rightValue": "sk-lihefoihz1RZD9vaQQaL6En7zehfAZJAOJZ14joEKe1h",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "846700f5-c790-44fc-8e54-0520963cb653",
+      "name": "Respond to Webhook (success)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -288,
+        -624
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"user_id\": \"{{ $json.user_id }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "85ec905b-d1d1-4c9b-8ace-19efbc924449",
+      "name": "Respond to Webhook (unauthorized)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -288,
+        -416
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"error\": \"Please provide a valid x-api-key header.\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "55636703-ef3b-47e2-b0f7-0799f6422f62",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -80,
+        -624
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1zmBsZfiyHJXxsEx6vwUIpeqYEtx06aSv90KlbLNMX6s",
+          "mode": "list",
+          "cachedResultName": "PSA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zmBsZfiyHJXxsEx6vwUIpeqYEtx06aSv90KlbLNMX6s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 677852129,
+          "mode": "list",
+          "cachedResultName": "contact_requests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zmBsZfiyHJXxsEx6vwUIpeqYEtx06aSv90KlbLNMX6s/edit#gid=677852129"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.body.email }}",
+            "name": "={{ $json.body.name }}",
+            "subject": "={{ $json.body.subject }}",
+            "message": "={{ $json.body.message }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "18a44d49-5b6c-482c-9269-57ef421b4999",
+      "name": "Send an email",
+      "type": "n8n-nodes-base.mailjet",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -624
+      ],
+      "parameters": {
+        "fromEmail": "jarbank<oe@jarbank.io>",
+        "toEmail": "={{ $json.email }}",
+        "subject": "=Welcome to PSA, {{ $json.name }}",
+        "html": "Hi,<br/><br/>Welcome!<br>Thanks for joining. You can reach us anytime you need using the contact form in the application. <br/><br/>Thank you,<br/>The Jarbank Family.",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "mailjetEmailApi": {
+          "id": "syj5R8GKK7SVBsX9",
+          "name": "Mailjet Email account: erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "bb4a34c6-56ec-4f3b-97df-1506f947ba42",
+      "name": "Contact",
+      "webhookId": "bf0be3b1-f140-4bc5-9040-a0e71dd78661",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        -512
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "psa/contact",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "rawBody": true
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qryedbGcEAYx3Pym",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "id": "e3052b34-40bc-4669-bcce-d69d6b1c16af",
+      "name": "HEAD",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -720,
+        1088
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"method\": \"HEAD\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "9bb69216-bfaa-4484-884c-729330927f8f",
+      "name": "Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1472,
+        -528
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "987aa124-962c-4b17-b230-60be654a42d4",
+      "name": "Aggregate Method Branches",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        320
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json }}",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "7fadb378-69eb-42d9-87fd-f3d482ae1707",
+      "name": "PUT",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -720,
+        928
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"method\": \"PUT\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "41714164-6d5d-45b1-86bb-96e84aa036ff",
+      "name": "PATCH",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -720,
+        768
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"method\": \"PATCH\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "6163c80c-d2bf-41ae-9ca9-7bc00f768470",
+      "name": "DELETE",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -720,
+        608
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"method\": \"DELETE\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "263fe0dc-04cc-40b9-8823-216940f67fcc",
+      "name": "POST",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -720,
+        464
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"method\": \"POST\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "d1bba473-ce9e-4b17-905c-043cc2670543",
+      "name": "GET",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -720,
+        320
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"method\": \"GET\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "b20b61aa-38b1-49c5-acd7-c31ef012b736",
+      "name": "Routes Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        992
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"routes\": [\n    {\n      \"action\": \"doSomething\",\n      \"allowedMethods\": [\"GET\"],\n      \"subflowId\": -1\n    },\n    {\n      \"action\": \"doSomethingElse\",\n      \"allowedMethods\": [\"GET\", \"POST\"],\n      \"subflowId\": -1\n    },\n    {\n      \"action\": \"deleteSomething\",\n      \"allowedMethods\": [\"DELETE\"],\n      \"subflowId\": -1\n    }\n  ]\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "dc0ff5df-3add-48a9-8315-1231ab286072",
+      "name": "Query param exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        304
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d010b9f7-91c1-45b8-8f57-0dd17c4db7d2",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Universal Receiver').item.json.query?.action }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e0635395-a98c-4340-a024-bba4d9d22bf8",
+      "name": "Universal Receiver",
+      "webhookId": "a4696443-7af7-4183-8158-e2036fab13ef",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        336
+      ],
+      "parameters": {
+        "multipleMethods": true,
+        "httpMethod": [
+          "GET",
+          "POST",
+          "DELETE",
+          "PATCH",
+          "PUT",
+          "HEAD"
+        ],
+        "path": "psa/api",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      }
+    },
+    {
+      "id": "92990a9e-d12e-42df-8f31-6da6b173f9e2",
+      "name": "Sticky: Method detection",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        144
+      ],
+      "parameters": {
+        "content": "Method branches: Each branch hardcodes the HTTP method because n8n’s Webhook node does not expose the method as a property directly. We aggregate these branches so other nodes can reference a single `method` value.",
+        "height": 152,
+        "width": 308,
+        "color": 7
+      }
+    },
+    {
+      "id": "e49a7837-ea1d-4528-8d51-d5cdfe3653d2",
+      "name": "Sticky: Routes config",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        816
+      ],
+      "parameters": {
+        "content": "Route configuration: Map action names to subflow IDs and allowed HTTP methods. You can override this with other methods for receiving data, such as database queries or similar.",
+        "height": 152,
+        "width": 228,
+        "color": 7
+      }
+    },
+    {
+      "id": "51182404-86fb-4251-b204-1f66cfd279ad",
+      "name": "Sticky: Resolver",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        288,
+        816
+      ],
+      "parameters": {
+        "content": "Resolve Route: Reads the query action and method, checks the config and decides whether to run a subflow. ",
+        "height": 152,
+        "width": 180,
+        "color": 7
+      }
+    },
+    {
+      "id": "cc24e0ee-ca47-47ec-9f7b-4012d7fabe01",
+      "name": "Sticky: Execute & respond",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        96
+      ],
+      "parameters": {
+        "content": "Execution & Response: Executes the target subflow when valid and returns its output. But currently we want to build whole api endpoints in this workflow, so we are not using this ome.",
+        "height": 152,
+        "width": 308,
+        "color": 7
+      }
+    },
+    {
+      "id": "9912f67d-9b25-4ff3-862c-6cc19db99251",
+      "name": "[Error] Required query param missing",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        512
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"error\": \"Required information not provided!\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "33bf3cec-b4e4-4128-8637-76c78a3d0170",
+      "name": "Resolve",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        992
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// inputs\nconst method = $('Aggregate Method Branches').item.json.method;\nconst action = $(\"Universal Receiver\").item.json.query?.action;\nconst cfg = $(\"Routes Config\").item.json;\nconst routes = Array.isArray(cfg?.routes) ? cfg.routes : [];\nconst body = $(\"Universal Receiver\").item.json.body || null;\n\n// Try to find a matching route (action + method)\nconst routeByAction = routes.find(r => String(r.action || '').toLowerCase() === String(action || '').toLowerCase());\nconst routeByActionAndMethod = routes.find(r => {\n  const actionFound = String(r.action || '').toLowerCase() === String(action || '').toLowerCase();\n  const methodAllowed = Array.isArray(r.allowedMethods) && r.allowedMethods.includes(method);\n  return (actionFound && methodAllowed)\n});\n\nlet error = null;\nlet status = 200;\nlet allowHeader = null;\nlet workflowId = null;\n\nif (!action) {\n  error = 'MISSING_ACTION';\n  status = 400;\n} else if (!routeByAction) {\n  error = 'ROUTE_NOT_FOUND';\n  status = 404;\n} else if (!routeByActionAndMethod) {\n  error = 'METHOD_NOT_ALLOWED';\n  status = 405;\n  allowHeader = Array.isArray(routeByAction.allowedMethods) ? routeByAction.allowedMethods.join(', ') : '';\n} else {\n  workflowId = routeByActionAndMethod.subflowId ?? null;\n  if (workflowId == null) {\n    error = 'MISSING_SUBFLOW_ID';\n    status = 500;\n  }\n}\n\nreturn {\n  action,\n  method,\n  error,\n  status,\n  allow: allowHeader,\n  workflowIdToExecute: workflowId,\n  body\n};"
+      }
+    },
+    {
+      "id": "b55277e1-7da2-41b9-b499-ac077dfb2461",
+      "name": "Route is OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        992
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d010b9f7-91c1-45b8-8f57-0dd17c4db7d2",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Resolve').item.json.workflowIdToExecute }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "52199a95-96ee-4594-97e8-7d6bfdf64fe6",
+      "name": "Status = 405?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        1184
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "9928d071-7d13-4d05-9843-9f2f1b00b60e",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Resolve').item.json.status }}",
+              "rightValue": 405
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d5afbd53-4fce-4d0c-92b3-49db2b1272e5",
+      "name": "[Error] Method Not Allowed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        1104
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"error\": \"{{ $('Resolve').item.json.error }}\"\n}",
+        "options": {
+          "responseCode": 405,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Allow",
+                "value": "={{ $('Resolve').item.json.allow || '' }}"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "01f1f0f9-a48e-443f-95d1-60decfcf62cc",
+      "name": "Error - Not OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1264,
+        1360
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"error\": \"{{ $('Resolve').item.json.error || 'Bad request' }}\" }",
+        "options": {
+          "responseCode": "={{ $('Resolve').item.json.status || 400 }}"
+        }
+      }
+    },
+    {
+      "id": "067d5449-2a8b-4dc7-a1a9-eb1bcc238127",
+      "name": "Error - Subflow",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        -144
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"error\": \"Unexpected error in the executed subflow!\"\n}",
+        "options": {
+          "responseCode": 500
+        }
+      }
+    },
+    {
+      "id": "8a492e97-f37d-4867-bc74-bd23c359e0f6",
+      "name": "Sticky: Method detection1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        144
+      ],
+      "parameters": {
+        "content": "This flow acts as a centralized API router using a single webhook URL to receive incoming HTTP requests with different methods (GET, POST, DELETE, PATCH, PUT, HEAD). We accept all the incoming requests to our server with the path psa/api.\n\n- The flow separates and hardcodes each HTTP method into dedicated branches (Set nodes for GET, POST, etc.) since the webhook node doesn't expose the method directly. These branches are then consolidated in \"Aggregate Method Branches\" for easier reference.\n- It checks if the required query parameter action exists. If missing, it returns an error response.\n- The `Routes Config` node defines a list of routes mapping the action parameter and allowed HTTP methods to specific subflow IDs. This allows controlling which workflow to execute based on the request.\n- The `Resolve` code node matches the incoming action and method against the configured routes, returns error codes like 404 or 405 if no route/method matches, or identifies the subflow to execute.\n- Based on this result, the flow either executes the matched subflow or returns an appropriate error message and status code (400, 404, 405, 500).\n- After executing a subflow, it returns the subflow result as the response. If the subflow fails, a generic error is sent back.\n- This setup provides a flexible and maintainable way to route multiple API actions via a single webhook endpoint, with centralized management of routes, error handling, and response management.",
+        "height": 600,
+        "width": 500,
+        "color": 7
+      }
+    },
+    {
+      "id": "30508eed-fa0d-4a4b-8d99-f7a37d27655a",
+      "name": "Respond to Webhook (unauthorized)1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -112,
+        496
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"error\": \"Please provide a valid x-api-key header.\"\n}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "7c80e531-98c5-4d66-87ce-2b298415921a",
+      "name": "API Key Identified1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -336,
+        320
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "17645189-94de-42c8-8d9d-9b9046513b38",
+              "leftValue": "={{ $json.headers[\"x-api-key\"] }}",
+              "rightValue": "sk-lihefoihz1RZD9vaQQaL6En7zehfAZJAOJZ14joEKe1h",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e47189c0-9b64-4740-8b27-6ce48222de49",
+      "name": "Execute Workflow1",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -48
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "={{ $json.workflowIdToExecute }}",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "707d5733-e9d4-4432-aa17-c76d9699d561",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        -304
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.query.action }}",
+                    "rightValue": "packshot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "69bb2af9-5911-4994-9867-e37cb42f1fa7"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "18f4ab3d-2aff-4d1f-b25a-153851c32d28",
+                    "leftValue": "={{ $json.query.action }}",
+                    "rightValue": "lifestyle",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "26840d7e-023a-4ad5-8f77-80842e2ec27e",
+                    "leftValue": "={{ $json.query.action }}",
+                    "rightValue": "colorvariants",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8549a811-054d-4f3d-bf3c-2416fa1806b8",
+                    "leftValue": "={{ $json.query.action }}",
+                    "rightValue": "infographics",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      }
+    },
+    {
+      "id": "b24ca452-a480-4430-8146-6c1da34632a1",
+      "name": "Remove background",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1184,
+        -528
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/recraft-ai/recraft-remove-background/predictions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "wait"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "input",
+              "value": "={{ $json.body.input }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "ClTxFFSPdetswEAO",
+          "name": "Replicate Bearer Auth account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "API Key Identified": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (success)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (unauthorized)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook (success)": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send an email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact": {
+      "main": [
+        [
+          {
+            "node": "API Key Identified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HEAD": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Method Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Method Branches": {
+      "main": [
+        [
+          {
+            "node": "API Key Identified1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PUT": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Method Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PATCH": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Method Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DELETE": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Method Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Method Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Method Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routes Config": {
+      "main": [
+        [
+          {
+            "node": "Resolve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query param exists?": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[Error] Required query param missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Universal Receiver": {
+      "main": [
+        [
+          {
+            "node": "GET",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "POST",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DELETE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PATCH",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PUT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HEAD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve": {
+      "main": [
+        [
+          {
+            "node": "Route is OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route is OK?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Status = 405?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status = 405?": {
+      "main": [
+        [
+          {
+            "node": "[Error] Method Not Allowed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Not OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Key Identified1": {
+      "main": [
+        [
+          {
+            "node": "Query param exists?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (unauthorized)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow1": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Error - Subflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Remove background",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    },
+    "Remove background": {
+      "main": [
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {},
+  "pinData": {
+    "Universal Receiver": []
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "ZAANI2JQmJPLiZ07",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:13:00.687Z",
+      "updatedAt": "2026-04-25T13:13:00.687Z"
+    }
+  ],
+  "activeVersion": null
+}

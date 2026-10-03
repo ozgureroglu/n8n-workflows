@@ -1,0 +1,31 @@
+{
+  "id": "WHE5cpMNzXfQ3wJq",
+  "name": "NEXUS",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:31.557Z",
+  "updatedAt": "2026-10-03T14:00:47.655Z",
+  "isArchived": false,
+  "versionId": "5acfbd6f-60c8-4926-b9a4-e0db355a46b7",
+  "triggerCount": 0,
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "WHE5cpMNzXfQ3wJq",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:31.560Z",
+      "updatedAt": "2026-04-25T13:12:31.560Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,31 @@
+{
+  "id": "mddkMwnl7gS8Z2Zp",
+  "name": "CRA",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:26.715Z",
+  "updatedAt": "2026-10-03T14:00:46.516Z",
+  "isArchived": false,
+  "versionId": "a8c6c3af-6fe2-4286-8827-3f3c7c786816",
+  "triggerCount": 0,
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "mddkMwnl7gS8Z2Zp",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:26.718Z",
+      "updatedAt": "2026-04-25T13:12:26.718Z"
+    }
+  ],
+  "activeVersion": null
+}

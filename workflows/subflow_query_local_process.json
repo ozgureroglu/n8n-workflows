@@ -1,0 +1,360 @@
+{
+  "id": "OmWIPSBqBowTwTkq",
+  "name": "subflow_query_local_process",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-05-08T06:36:45.064Z",
+  "updatedAt": "2026-10-03T14:00:48.397Z",
+  "isArchived": false,
+  "versionId": "c0b0d57c-e72d-475d-b882-611f31d9befd",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "fbd65c4f-86b9-4347-bec4-c046831d0361",
+      "name": "Webhook",
+      "webhookId": "4b9b04c3-77fe-4385-8802-1ffacd64918a",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        304,
+        208
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "4b9b04c3-77fe-4385-8802-1ffacd64918a",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "5615b0fe-f4d7-45b9-bd3b-cc1941ba6b14",
+      "name": "Set Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        208
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "query",
+              "name": "query",
+              "type": "string",
+              "value": "={{ $json.body.query }}"
+            },
+            {
+              "id": "systemPromptName",
+              "name": "systemPromptName",
+              "type": "string",
+              "value": "={{ $json.body.systemPromptName || 'default' }}"
+            },
+            {
+              "id": "model",
+              "name": "model",
+              "type": "string",
+              "value": "={{ $json.body.model || 'qwen2.5-7b-instruct' }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5dee3f54-24ae-42af-acf3-5aea020c80b8",
+      "name": "Fetch System Prompt",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        752,
+        208
+      ],
+      "parameters": {
+        "collection": "system_prompts",
+        "options": {},
+        "query": "={{ JSON.stringify({ name: $json.systemPromptName }) }}"
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "RJXdz5u4D5z4mIEB",
+          "name": "MongoDB N8N-Data-Sources"
+        }
+      }
+    },
+    {
+      "id": "b2189a3d-7bb9-4109-8f80-463a10f4dd84",
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        208
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "query",
+              "name": "query",
+              "type": "string",
+              "value": "={{ $('Set Input').item.json.query }}"
+            },
+            {
+              "id": "model",
+              "name": "model",
+              "type": "string",
+              "value": "={{ $('Set Input').item.json.model }}"
+            },
+            {
+              "id": "systemPrompt",
+              "name": "systemPrompt",
+              "type": "string",
+              "value": "={{ $json.prompt || 'You are a helpful assistant.' }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "27387b9c-5aff-4f08-8232-1695e24f8695",
+      "name": "Call LM Studio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1184,
+        208
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.1.90",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{ $json.model }}\",\n  \"messages\": [\n    {\"role\": \"system\", \"content\": \"{{ $json.systemPrompt }}\"},\n    {\"role\": \"user\", \"content\": \"{{ $json.query }}\"}\n  ],\n  \"temperature\": 0.7,\n  \"stream\": false\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d593926f-594b-4aa2-bd43-a6b8c0e8975e",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        208
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"text\": \"{{ $json.choices[0].message.content }}\",\n  \"raw\": {{ JSON.stringify($json) }}\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "23763353-23dc-423d-9893-a3c3fad511db",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        112,
+        464
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "97d5d5b9-3850-44bf-846b-3a79b42fd6fc",
+      "name": "Test Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        304,
+        464
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "body.query",
+              "name": "body.query",
+              "type": "string",
+              "value": "What is the capital of Turkey?"
+            },
+            {
+              "id": "body.systemPromptName",
+              "name": "body.systemPromptName",
+              "type": "string",
+              "value": "geography_expert"
+            },
+            {
+              "id": "body.model",
+              "name": "body.model",
+              "type": "string",
+              "value": "qwen2.5-7b-instruct"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "68d971a4-ef94-49a2-9671-d782d1111212",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        0
+      ],
+      "parameters": {
+        "content": "## Expected Webhook Input\n\n```json\nPOST /webhook/lmstudio\n\n{\n  \"query\": \"Your question here\",\n  \"systemPromptName\": \"geography_expert\",\n  \"model\": \"qwen2.5-7b-instruct\"\n}\n```\n\n### Fields:\n- **query** (required): The user's question\n- **systemPromptName** (optional): Name key to fetch prompt from MongoDB. Default: \"default\"\n- **model** (optional): LM Studio model name. Default: \"qwen2.5-7b-instruct\"\n\n### MongoDB Collection: `system_prompts`\nExpected document structure:\n```json\n{\n  \"name\": \"geography_expert\",\n  \"prompt\": \"You are a helpful geography assistant...\"\n}\n```\n\n### Available Models:\n- qwen2.5-7b-instruct\n- qwen2.5-3b-instruct\n- qwen2.5-3b-instruct-mlx",
+        "height": 580,
+        "width": 650
+      }
+    },
+    {
+      "id": "d886ba85-40aa-4386-8ca9-ccb59ce5e335",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        -48
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            },
+            {
+              "name": "systemPromptName"
+            },
+            {
+              "name": "model"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Input": {
+      "main": [
+        [
+          {
+            "node": "Fetch System Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch System Prompt": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Call LM Studio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LM Studio": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Test Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Data": {
+      "main": [
+        [
+          {
+            "node": "Set Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Fetch System Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "OmWIPSBqBowTwTkq",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-05-08T06:36:45.070Z",
+      "updatedAt": "2026-05-08T06:36:45.070Z"
+    }
+  ],
+  "activeVersion": null
+}

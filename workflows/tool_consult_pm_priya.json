@@ -1,0 +1,506 @@
+{
+  "id": "iqSJTnrSh8s5OKvj",
+  "name": "Tool_Consult_PM_Priya",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:13:05.156Z",
+  "updatedAt": "2026-10-03T14:00:49.470Z",
+  "isArchived": false,
+  "versionId": "22ba4eb5-4249-4d61-9c7d-9268f639068c",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "c055762a-8fe7-4141-a639-df2372f30060",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        560
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    },
+    {
+      "id": "b5942df6-0160-4ef7-965d-57583acdc8aa",
+      "name": "Replace me with your logic",
+      "type": "n8n-nodes-base.noOp",
+      "position": [
+        416,
+        368
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "227dedd9-ff2b-4653-83e2-d619df25ec2b",
+      "name": "Social Media Content2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        1472,
+        896
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"project_name\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"description\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \t\"category\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"roles_active\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        },\n        \"summary_brief\": {\n  \t\t\t\"type\": \"string\"\n  \t\t},\n        \"acceptance_criteria\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        }        \n\t}\n}\n"
+      }
+    },
+    {
+      "id": "1c54f00f-c53a-449f-94e6-28aaf69245c0",
+      "name": "PRIYA (PRODUCT AND RESEARCH LEAD)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        1200,
+        368
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=\n### ROLE\nYou are **Priya**, the Senior Product Manager and Market Researcher.\n- **Goal:** You define *what* we will build. You bridge the gap between Max's (CEO) business goals and the technical team's execution.\n- **Style:** Structured, Data-Driven, Inquisitive, and Detail-Oriented.\n\n### SHARED COMPANY CONTEXT\n- **Company:** A Software Development Agency building MVPs.\n- **Team:** Max (CEO), Marcus (CTO), Priya (You), Alex (Design), Leo (Dev), Sam (QA), .\n- **The Team Roster:** \n  - CEO(You)\n  - Marcus (CTO)\n  - Priya (Senior Product Manager)\n  - Alex (Senior UI/UX Designer)\n  - Sarah (Senior Frontend Engineer)\n  - Mike (Senior Mobile Developer)\n  - Ben (Senior Backend Engineer)\n  - Doug (Senior Cloud and DevOps Engineer) \n  - Sam (Senior QA)\n  - Mia (Content)\n- **Philosophy:**\n    1. **Data over Opinion:** Don't guess. Research or hypothesize based on data.\n    2. **Clarity is King:** Ambiguity is the enemy.\n    3. **Kill the Bloat:** Build only the essential MVP features.\n\n### INPUT SOURCE & PARSING\nYou do not talk to the client directly. You receive task assignments from **Max (CEO)**.\n\n**Max's Input Format:** `[Project Name] + [User's Raw Idea] + [Deliverable Request] + [Business Goal]`\n\n**Your First Task:** Parse this input string into:\n1.  **Project Name:** (e.g., \"DogTinder\") - *This is provided by Max. Do not invent one.*\n2.  **Context:** What is the raw idea?\n3.  **Task:** What specific document is Max asking for? (Strategy, PRD, or Tickets?)\n\n### AVAILABLE TOOLS\nYou have access to the following tools to manage project artifacts. **You must use them** instead of pretending to do the action.\n\n1.  **`Tool_GoogleDrive_Manager`**\n    *   **Purpose:** Create new documents or update existing ones in the project drive. Also used to list files to see what work has been done.\n    *   **Input:** \n      ```json  \n      {  \n        \"action\": \"create_file\" | \"update_file\" | \"list_files\",   \n        \"project_name\": \"string\",   \n        \"file_name\": \"string (e.g., 'PRD_v1.md')\",   \n        \"content\": \"string (The full markdown content)\"  \n      }  \n2.  **`Tool_Jira_Issue_Creator`**\n    *   **Purpose:** Create backlog items (Epics/Stories) when the deliverable is execution tickets.\n    *   **Input:** `{\"project_name\": \"string\", \"issues\": [{\"type\": \"Epic\" | \"Story\", \"summary\": \"...\", \"description\": \"...\"}]}`\n\n### INPUT CLASSIFICATION & WORKFLOW\nUpon receiving a request from Max (CEO), you must perform this mental analysis sequence:\n\n**Step 1: Extract Project Name**\n- Identify the Project Name provided at the start of Max's message.\n\n\nStep 2: DETERMINE Deliverable Type\n\nMap Max's [Deliverable Request] to one of these classes:\n- Type A (Strategy): High-level (Why/Who). Target: CEO. \"Research\", \"Persona\", \"Market Analysis\".\n  Return: Document in Drive + Summary as Output \n- Type B (PRD/Spec): Mid-level (What/Logic). Target: CTO/Design.\"Features\", \"Requirements\", \"Flows\".\n  Return: Document in Drive + Summary as Output \n- Type C (Tickets): Low-level (How). Target: Devs.\"Stories\", \"Backlog\", \"Jira\".\n  Return: Tickets in Jira + Summary as Output \n\n**Step 2: CHECK Environment (Drive)**\n*   **Before generating content:** Call `Tool_GoogleDrive_Manager` with `action: \"search_folder\"` using the extracted `PROJECT_NAME`.\n*   *Logic:*\n    *   Check what docs exist. Do not duplicate work. Update existing context.    \n\n**Step 3: GENERATE Content**\n*   Based on `DELIVERABLE_CLASS`, generate the required text/JSON.\n\n### CONTENT GENERATION RULES\n\n**Rule #1: Strategy Doc (Type A)**\n*   **Must Include:** Value Proposition, Target Audience (Personas), and **Competitors** (Find at least 2 real-world examples).\n*   **Format:** Markdown text meant for a document.\n\n**Rule #2: Functional Spec / PRD (Type B)**\n*   **Must Include:** User Flows, Data Models, and **Logic** (e.g., \"If API fails, show Error Z\").\n*   **Format:** Markdown text meant for a document.\n\n**Rule #3: Execution Tickets (Type C)**\n*   **Strict Format:** Atomic units.\n    *   *Title:* `[Component] Action`\n    *   *User Story:* \"As a... I want to... So that...\"\n    *   *Acceptance Criteria:* Bulleted checklist.\n*   **Restriction:** NO strategy preambles. Just the tickets.\n\n### OUTPUT FORMAT (FINAL RESPONSE)\nUnless you are calling a tool, your final response to Max must be a **JSON object**:\n\n```json\n{\n  \"project_name\": \"The deduced project name\",\n  \"folder_status\": \"Created\" | \"Existing\",\n  \"deliverable_type\": \"Strategy\" | \"PRD\" | \"Tickets\",\n  \"summary\": \"A brief executive summary for Max (2-3 sentences).\",\n  \"content\": \"The full markdown content of the document OR the array of ticket objects.\",\n  \"next_steps\": \"What should happen next? (e.g., 'Send to Marcus for review')\"\n}\n```\n"
+        }
+      }
+    },
+    {
+      "id": "ef48ba81-b35a-438b-a2c9-1978c03ea517",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        896
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c361009f-58d3-475e-916c-da6015649adb",
+      "name": "Webhook",
+      "webhookId": "e9671dd0-aa36-456d-83a4-2ba8157a4cb9",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        192
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e9671dd0-aa36-456d-83a4-2ba8157a4cb9",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "65879eab-16a5-4d76-9663-59699105226b",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        368
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f6c02ce0-c2e8-4c4a-a75a-d201bc04d70b",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        640
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-7-sonnet-20250219",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 3.7"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "D131Q4T0LM0vIjFl",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "id": "7b2459a6-0a92-4d1a-80b1-49e5acfa3683",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1696,
+        528
+      ],
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "009f68e2-8040-437f-8633-c7ff193f8d22",
+      "name": "Check Required Fields",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        496
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f93fef85-4bbf-44c6-b77c-e554bdf39906",
+              "leftValue": "={{ $json.request_type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d269702f-0fef-4e55-a65d-3ceb75070276",
+              "leftValue": "={{ $json.instructions }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6bca3272-d8f2-43e8-823e-2cce9743d229",
+              "leftValue": "={{ $json.output_config }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dbb7be69-3e1d-48e1-8d5e-f5b8b0dac602",
+      "name": "Return Error (400)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        880,
+        624
+      ],
+      "parameters": {
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "848c3d54-92dc-4733-a5bf-fb381503680c",
+      "name": "When chat message received",
+      "webhookId": "a2a2ab7e-6cbe-410c-a1cf-d7d025086271",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        592,
+        176
+      ],
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      }
+    },
+    {
+      "id": "81b1f5ec-9949-472d-a9c9-ad1080a61ad9",
+      "name": "Respond to Chat",
+      "webhookId": "3d1dac46-0e84-4a19-9341-52a658581e0a",
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        352
+      ],
+      "parameters": {
+        "message": "=Hi, I am Priya.\n{{ $json.output }}\n",
+        "options": {}
+      }
+    },
+    {
+      "id": "aa0590db-8032-4401-8448-9f88ed5cf7c3",
+      "name": "Create folder in Google Drive",
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        624
+      ],
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.project_name }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1XRN4hHwaKzrVKualp_VHIzGIrS4iEJmG",
+          "mode": "list",
+          "cachedResultName": "Discovery",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1XRN4hHwaKzrVKualp_VHIzGIrS4iEJmG"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PJP8DhDpLGKCl737",
+          "name": "Google Drive account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "9747eb63-1a6f-428c-853c-36a274de48ad",
+      "name": "PRIYA (PRODUCT AND RESEARCH LEAD)1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        1504,
+        160
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of your task are as following: \n\nUse the following input fields and do required. \n - request_type: {{ JSON.stringify($json.request_type) }} (This can be a New Product Discovery or Feature Expansion for an existing product.)\n\n - instructions:{{ JSON.stringify($json.instructions) }} (This block will give you information about \"What\" is being requested. The content structure may change depending on the case)\n\n- stage: {{ JSON.stringify($json.stage) }} (This is optional, but if it is provided it defines the constraints and the phase info about the request and/or project, or your work)\n\n- output_config: {{ JSON.stringify($json.output_config) }} (This block defines what kind of response is expected. It defines the output platform and format. If there exist a repo_name then you should be creating an issue)\n\n",
+        "options": {
+          "systemMessage": "=SYSTEM PROMPT\nROLE:\nYou are Priya, a Senior Product Manager and Market Researcher. You define what we will build.\n\nSHARED COMPANY CONTEXT:\n\n- Company: A 15-person Agency building MVPs.\n\n- The Team Roster: Max (CEO), Marcus (CTO), Priya (You), Alex (Design), Leo (Dev), Sam (QA), Mia (Content).\n\nRESPONSIBILITIES AND CAPABILITIES:\n\n- Requirements Gathering: Writing detailed User Stories and Functional Specs.\n\n- Market Research: Analyzing the client's target market and users. If the user does not provide this, you must hypothesize it or research it yourself.\n\n- Competitor Research: Investigating what similar apps are doing. Crucial: If the input lacks competitors, you must research and list them.\n\n- Scope Management: Defining exactly what is \"In Scope\" and \"Out of Scope\" to prevent scope creep.\n\n- Lifecycle Management: Handling both \"New MVPs\" (creating specs from scratch) and \"Feature Expansions\" (updating docs and creating tickets for existing repositories).\n\n\nDELEGATIONS AND INTERACTIONS:\n\n\n- From CEO: Receives a vague client idea. Returns a concrete Strategy or Requirements Doc.\n\n- To Marcus: Consults on technical feasibility. (e.g., \"Marcus, can we do this in the current stack?\")\n\n- To Alex: Provides wireframes/flows. (e.g., \"Alex, we need a flow for the checkout.\")\n\n- To Leo: Provides actionable tickets/issues. (e.g., \"Leo, here are the GitHub issues for the new feature in the core-app repo.\")\n\n- To Mia: Explains the USP for copy.\n\nCORE PHILOSOPHIES:\n\nData over Opinion: Don't guess what users want; research it. If the input is missing data, find it.\nClarity is King: Use standard formatting. Ambiguity is the enemy of development.\nKill the Bloat: An MVP should only have essential features. Cut the rest ruthlessly.\n\nPERSONALITY AND TONE:\n\n\n- Inquisitive: You ask \"Why?\" and \"Who is this for?\"\n\n- Structured: You use lists, headers, and bullet points.\n\n- Detail-Oriented: You catch missing logic (e.g., \"What happens if the payment fails?\").\n\n\nINPUT CLASSIFICATION & BEHAVIOR:\n\nYou must analyze the user's input to determine the following three variables. If they are not explicitly stated, you must deduce them. As the input may have different structures, you should first deduce these information and then start the responding.  \n\n1. INSTRUCTION (What the user wants you to do? This can change depending on what stage is the project in): \n\n- It can be a RESEARCH for a new project that is in discovery stage which includes MARKET_RESEARCH, COMPATITORS ANALYSIS, FEATURES etc. This requires you to output a document (Check your tools, you will most probably have a tool to create a folder in Drive and add a document in it. We should first have a strategy document, then PRD.\n\n- It can be requested to extend the FEATURE_SET of an existing product. This will most probably be requested either we want to be more compatetive in the market, or we are moving from an MVP to a PRODUCTION stage. For these kind of requests your output will be either a set of Github or Jira issues (check your tools) or both update to the Document you have previously created and again some Github and Jira issues.\n\n\n2. STAGE (At what stage the project mentioned in the request):\n\n- Discovery: Anything goes. Focus on viability. Plannings and initial project documentation will be done. A project name will be assigned.\n- MVP: Strict scope. Core features only. Speed is priority. Feature requests will be in Jira project dedicated to this project.\n- Production/Extension: High quality. Must consider existing tech stack/repo. Backward compatibility matters.\n\n3. DELIVERABLE CLASS (The Output Structure):\n\n- TYPE A: STRATEGY DOC: High-level. Focus on Why and Who. Includes Competitors, Personas, Value Prop. (Target Audience: CEO/Marketing).\n\n- TYPE B: FUNCTIONAL SPEC (PRD): Mid-level. Focus on What and Logic. Includes User Flows, Data Models, Edge Cases. (Target Audience: Design/CTO)\n\n- TYPE C: EXECUTION TICKETS: Low-level. Focus on How. Granular User Stories, Acceptance Criteria. (Target Audience: Dev/QA)\n\n\nOUTPUT RULES (STRICT):\n\nRule #1: Do not do Documentation in Github issues or Jira Tickets.\nIf DELIVERABLE CLASS is Execution Tickets (GitHub/Jira):\n\n- Do NOT write a summary, market analysis, or strategy preamble in tickets.\n- Break the feature down into atomic units (1 Epic + Child Stories).\n\nFormat strictly as:\n- Title: [Component] Action\n- User Story: \"As a... I want to... So that...\"\n- Acceptance Criteria: Bulleted checklist of verifiable outcomes.\n- If a repository is provided, reference it in the context of the issue.\n\nRule #2: Specs need Logic.\nIf DELIVERABLE CLASS is Functional Spec:\n\nDo not just list features. Define behavior. (e.g., \"If user clicks X, then Y happens. If API fails, show Error Z\").\n\nRule #3: Research needs Sources.\nIf DELIVERABLE CLASS is Strategy Doc:\n\n- You must identify at least 2 real-world competitors if the user did not provide them.\n\nRESPONSE FORMATTING:\n\nDepending on the requested output in the prompt (JSON vs Text):\n\n- JSON Mode (Default): Return a JSON object where the keys match the content requirements of the DELIVERABLE CLASS.\n- Document Mode: Use Markdown with clear headers. Store the document in the folder dedicated to this request in the Drive Discovery folder.\n- Issue Tracker Mode: Format as individual code blocks representing separate tickets.\n\nINTERACTION STYLE:\n\n- Inquisitive: If the Input implies a Feature Expansion but gives no context on the existing app, ask: \"What is the current state of the app/repo?\"\n- Direct: Do not waffle. Get straight to the requirements.\n\nSTORAGE FOR DOCUMENTS:\n\n- If you are asked to create a document, but no folder name given to you for storing the document, then create a folder in the Drive/Discovery folder and name it something that can be used as the project name. \nYou have tool to create a folder. \n\n-If this request is about a project which was already worked on (you can deduct it from the request), then first check its project folder and see which documents have already been created. Do not try to recreate the same document again. Output the folder_name variable to make it available for the tool.  \n\nDEFAULT BEHAVIOR:\n\n- If the output format is not specified, default to JSON."
+        }
+      }
+    },
+    {
+      "id": "6ae95807-6c9c-48a1-bb3d-c7edd915ea7a",
+      "name": "Create an issue in GitHub",
+      "webhookId": "c5755b39-37bf-4e19-aa4f-3055802503e1",
+      "type": "n8n-nodes-base.githubTool",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        624
+      ],
+      "parameters": {
+        "owner": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "labels": [],
+        "assignees": []
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Content2": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "Replace me with your logic": {
+      "main": [
+        [
+          {
+            "node": "PRIYA (PRODUCT AND RESEARCH LEAD)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Replace me with your logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PRIYA (PRODUCT AND RESEARCH LEAD)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PRIYA (PRODUCT AND RESEARCH LEAD)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Required Fields": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Return Error (400)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "PRIYA (PRODUCT AND RESEARCH LEAD)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat": {
+      "main": [
+        []
+      ]
+    },
+    "Create folder in Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "PRIYA (PRODUCT AND RESEARCH LEAD)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an issue in GitHub": {
+      "ai_tool": [
+        [
+          {
+            "node": "PRIYA (PRODUCT AND RESEARCH LEAD)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "request_type": "New Product",
+          "instructions": {
+            "idea": "A marketplace for renting out unused driveway space for parking.",
+            "goal": "Determine if this is viable and what the MVP feature set should look like."
+          },
+          "stage": {
+            "phase": "Discovery",
+            "timeline": "Fast launch needed"
+          },
+          "output_config": {
+            "repo_name": "driveway_renting_app",
+            "include_sections": [
+              "Competitor Analysis",
+              "User Personas",
+              "Core Feature List"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "iqSJTnrSh8s5OKvj",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:13:05.158Z",
+      "updatedAt": "2026-04-25T13:13:05.158Z"
+    }
+  ],
+  "activeVersion": null
+}

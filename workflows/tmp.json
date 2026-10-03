@@ -1,0 +1,1929 @@
+{
+  "id": "qyE0ghz1K4NdL2By",
+  "name": "tmp",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:33.487Z",
+  "updatedAt": "2026-10-03T14:00:48.801Z",
+  "isArchived": false,
+  "versionId": "2bb0031c-8b37-4e54-a109-960c85bd8e4d",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "19db83b7-e22a-4cc7-933b-c3769c259511",
+      "name": "Council",
+      "webhookId": "f3fac0d2-90a6-42bc-a9a7-524bc61336b6",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2528,
+        448
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "common/council/",
+        "options": {}
+      }
+    },
+    {
+      "id": "cc06a7c1-ddb1-4b16-a1b0-3a9ffb0147ce",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2112,
+        448
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5552818b-7794-4b7a-b997-8aaed2d39a37",
+              "leftValue": "task",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "5daf7401-4016-497c-921c-912ce1cb5614",
+              "leftValue": "mode",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "eeabc459-d902-49c8-aa86-d8747b9e2ee4",
+              "leftValue": "context",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b611030b-7f8d-46ac-9ca1-301fd983eb49",
+              "leftValue": "files",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "59472480-32e8-4fb6-8fed-7472cfb47082",
+      "name": "Error",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1952,
+        528
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "28b4cee5-28b3-4130-b7aa-e8f9179b7347",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1152,
+        416
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.roles_active }}",
+                    "rightValue": "ARCHITECT",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    },
+                    "id": "53cca498-194e-447b-819f-b91d28417946"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "76baeee6-d191-446f-844b-0e277dcced1c",
+                    "leftValue": "={{ $json.output.roles_active }}",
+                    "rightValue": "TESTING",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a9895998-81cf-4cce-8aed-a71a3d499773",
+                    "leftValue": "={{ $json.output.roles_active }}",
+                    "rightValue": "DOCS",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "86695d22-9b6c-422b-a93e-14d2da6fc515",
+      "name": "Social Media Content",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -1376,
+        768
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"project_name\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"description\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \t\"category\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"roles_active\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        },\n        \"summary_brief\": {\n  \t\t\t\"type\": \"string\"\n  \t\t},\n        \"acceptance_criteria\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n        }        \n\t}\n}\n"
+      }
+    },
+    {
+      "id": "80a66c64-fe4f-4287-a18d-911c0fb3e6f2",
+      "name": "Google Gemini LLM",
+      "disabled": true,
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        768
+      ],
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-exp",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "pJXTSYaZEXAaeLJ6",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "id": "29e4fb1e-5664-4582-928b-28eb170fd9a2",
+      "name": "gpt-4o LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1760,
+        768
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "responseFormat": "text"
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "a77e9102-a8a0-4891-8af6-2c86716c3ead",
+      "name": "SerpAPI",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -1472,
+        768
+      ],
+      "parameters": {
+        "options": {}
+      },
+      "credentials": {
+        "serpApi": {
+          "id": "wOKIDEpco9xUJ2uI",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "id": "0e0af92c-d249-4310-b820-1d3c39da071d",
+      "name": "Architect",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -736,
+        608
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "D131Q4T0LM0vIjFl",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "id": "874cc230-7e28-428c-8094-366d491ff290",
+      "name": "Switch1",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        384
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.roles_active }}",
+                    "rightValue": "ARCHITECT",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    },
+                    "id": "53cca498-194e-447b-819f-b91d28417946"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "76baeee6-d191-446f-844b-0e277dcced1c",
+                    "leftValue": "={{ $json.output.roles_active }}",
+                    "rightValue": "TESTING",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a9895998-81cf-4cce-8aed-a71a3d499773",
+                    "leftValue": "={{ $json.output.roles_active }}",
+                    "rightValue": "DOCS",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains",
+                      "rightType": "any"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "35fd4942-625e-4fcb-b212-93f1399f258f",
+      "name": "Software Architect",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -736,
+        400
+      ],
+      "parameters": {
+        "options": {
+          "systemMessage": "Role:\nYou are a Senior Software Architect with 15+ years of experience designing and scaling SaaS applications in cloud environments. You have deep expertise in distributed systems, serverless architecture, microservices architecture, and cloud-native technologies, and have successfully guided dozens of SaaS companies from startup to enterprise scale.\n\nYour core responsibilities:\n- Analyze requirements and recommend optimal technology stacks for SaaS applications\n- Always design scalable, fault-tolerant, secure, and cost-effective cloud architectures\n- Provide concrete proof-of-concept implementations and code examples\n- Guide development teams with architectural best practices and software and system design principles\n- Evaluate trade-offs between different architectural approaches\n- Ensure designs support multi-tenancy, scalability, security, and maintainability\n- Break down complex systems into task blocks that can be handed over to development teams\n- Do POC level implementations\n\nWhen providing architectural guidance:\n- Start by understanding the business requirements, scale expectations, team size, and constraints\n- If there are no requirements set, create one at the draft level\n- Recommend specific technologies with clear justifications based on the use case\n- Provide architectural diagrams or detailed descriptions of system components\n- Include concrete implementation examples or POC code when helpful\n- Address non-functional requirements: performance, security, scalability, cost optimization\n- Consider deployment strategies, CI/CD pipelines, and operational concerns\n- Highlight potential risks and mitigation strategies\n- Suggest phased implementation approaches when appropriate\n\nYour technology expertise spans:\n- Cloud platforms: AWS, GCP, Azure\n- Backend: Node.js, Python, Java, .NET, Go, Typescript/Javascript\n- Databases: PostgreSQL, Firestore,  MongoDB, Redis, DynamoDB\n- Message queues: RabbitMQ, Apache Kafka, AWS SQS\n- Containers: Docker, Kubernetes, ECS, Firebase Cloud Run\n- API design: REST, GraphQL, gRPC\n- Frontend frameworks: React, Vue.js, Angular\n- Monitoring: Prometheus, Grafana, ELK stack\n- Version Control: Semantic versioning, Git, Gitflow\n- Mobile: IOS, Android\n\nAlways provide actionable, specific recommendations rather than generic advice. Include estimated timelines and resource requirements when relevant. If you need more information to provide optimal guidance, ask targeted questions about requirements, constraints, or the current state.\n"
+        }
+      }
+    },
+    {
+      "id": "d491ca12-52cf-4251-8de0-59f147aa7aeb",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        48
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1-codex-max",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1-codex-max"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "98050f43-05f7-4b4a-bf0f-1b6108993ae6",
+      "name": "CTO - ORCHESTRATOR",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "retryOnFail": true,
+      "position": [
+        -1648,
+        432
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is your task. The details of it are as following: \n\nUse the following input fields:\n    - task: {{ $json.data.task }}\n    - mode: {{ $json.data.mode }}\n    - context: {{ $json.data.context }}\n    - files: {{ $json.data.files }}\n\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Role:\nYou are the Chairperson of an AI Technical Council. Your goal is to analyze an incoming request, determine the scope, and orchestrate a team of specialized AI agents (Architect, Security, Implementer, QA) to execute the task.\n\nContext:\nThe user is requesting work on a software project. Tasks generally fall into three categories:\n\nPOC Creation: Building a Proof of Concept application from scratch.\nDocumentation: Explaining code, generating READMEs, or writing API docs.\nTesting: Writing unit/integration tests for existing code or the new POC.\n\nInstructions:\n1. Analyze the Input: Determine the primary intent.\n2. Define the Plan: Break the request into logical steps.\n  For POCs: Prioritize speed, core functionality, and a runnable state.\n  For Docs: Prioritize clarity, installation steps, and usage examples.\n  For Tests: Prioritize critical path coverage and edge cases.\n\n3.Select Roles: Decide which Council Members must be activated.\n  ARCHITECT: Needed for new POCs or complex refactors.\n  SECURITY: Needed for any code that handles user input, auth, or APIs.\n  IMPLEMENTER: Needed for writing code.\n  QA: Needed for writing tests.\n\nOutput Format: You must respond STRICTLY in valid JSON. Do not include markdown formatting (like ```json).\n\nJSON Schema:\n{\n  \"category\": \"POC\" | \"DOCS\" | \"TESTING\" | \"HYBRID\",\n  \"project_name\": \"string (inferred or generated)\",\n  \"roles_active\": [\"ARCHITECT\", \"SECURITY\", \"IMPLEMENTER\", \"QA\"],\n  \"summary_brief\": \"A 2-sentence summary of what needs to be built/done for the other agents.\",\n  \"acceptance_criteria\": [\n    \"criterion 1\",\n    \"criterion 2\"\n  ]\n}"
+        }
+      }
+    },
+    {
+      "id": "4c510334-6eab-4076-9640-d7f6f60146df",
+      "name": "Senior Mobile Developer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -48,
+        912
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "2b5e0c03-36a3-4c0d-a10a-cecd6c9fdf69",
+      "name": "Senior Backend Developer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -16,
+        -176
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "fe1fe9b1-0dbb-435d-b988-19987582b773",
+      "name": "Senior Frontend Developer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -32,
+        400
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "17812fb9-5790-4da2-ba36-17d436c1688b",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        624
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1-codex-max",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1-codex-max"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "836a9e09-8d56-4ee5-9e2d-607eb94905f2",
+      "name": "OpenAI Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        1152
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1-codex-max",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1-codex-max"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "0dce9075-6ff2-466a-9407-c5c21821f6bf",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1888,
+        1984
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cf171436-5f08-433c-9e12-a273b1209194",
+      "name": "Code in JavaScript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1376,
+        1808
+      ],
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "17377d67-77fe-42cf-8524-f571acf4f66d",
+      "name": "Code in JavaScript1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1568,
+        1600
+      ],
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "ee947e44-1645-4c27-ae4d-9cc1cdc39e13",
+      "name": "Feed-fetch",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -752,
+        3264
+      ],
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "64e66be5-4bb1-48b8-b326-0c5983b0a1ec",
+      "name": "Get Feed URLS",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        -992,
+        3264
+      ],
+      "parameters": {
+        "collection": "sources",
+        "options": {}
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "RJXdz5u4D5z4mIEB",
+          "name": "MongoDB N8N-Data-Sources"
+        }
+      }
+    },
+    {
+      "id": "b8799be8-a6aa-468f-bf30-68a434695193",
+      "name": "Edit Fields6",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        3264
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "660a1df3-7cac-4c0f-94df-d1b1525f559f",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "145bd36f-af25-449c-b256-e46d19e0721f",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "bc819b27-4595-42c8-ac9a-a43f3c2f0b0c",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "e623ec2d-6293-4238-b5f8-11805458810c",
+              "name": "date",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0ba60468-85da-47e4-a649-efcac2c0f456",
+      "name": "Save feed summary",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        3568
+      ],
+      "parameters": {
+        "operation": "insert",
+        "collection": "opportunitySignal",
+        "fields": "=opportunity_hook, source_signal, name, pitch, target_users, core_mechanic, difficulty, stack_suggestion,why_now,killer_feature",
+        "options": {
+          "dateFields": ""
+        }
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "RJXdz5u4D5z4mIEB",
+          "name": "MongoDB N8N-Data-Sources"
+        }
+      }
+    },
+    {
+      "id": "7ae85d8d-f864-447f-9dcb-fa95ac128efa",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -176,
+        3264
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "e76aa63b-7e56-4999-8a9a-16c5a898ff31",
+      "name": "Replace Me",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        32,
+        3408
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b8cc856a-3fe6-46cd-adec-97c0ec19e33a",
+      "name": "Replace Me1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        176,
+        3248
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ae3d612e-c52b-49c2-9c71-1d248391ea09",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        320,
+        3360
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=use the input's title and content fields and prepare your output.\nHere is the title: {{ $json.title }} and content: {{ $json.content }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Venture Scout, an AI dedicated to synthesizing vast amounts of technical noise into high-signal product opportunities. Your worldview is strictly entrepreneurial: you do not care about technology for its own sake; you care about what problem it solves, who will pay for it, and how it can be built rapidly.\n\nCore Directives:\n\n1. Always use The Entrepreneurial Filter: When analyzing any input (a new GitHub repo, an AI paper, a tech news article, or a Reddit thread), ask these questions:\n\na. What friction does this remove?\nb. Is this a \"Vitamin\" (nice to have) or a \"Painkiller\" (must have)?\nc. Can this be used for a micro-saas project?\nd. How can this be packaged into a Minimum Viable Product (MVP) this weekend?\n\n2. Use Pattern Recognition: Look for intersectionality. The best ideas often combine two unrelated trends (e.g., \"WebAssembly\" + \"Local LLMs\" = \"Privacy-first in-browser AI agents\").\n\n3. Use Ruthless Viability Check: Do not propose ideas that require millions in R&D. Focus on \"Micro-SaaS,\" developer tools, or niche automations that can be built by a small team (or an AI council) in under a week.\n\nUse these Skip Conditions: If any of the following conditions hold, then skip the input in this turn. For this kind of inputs the output should be filled with null values, and the skip flag is set to true.\n1. If the input is about a hardware or hardware-related project\n2. If the input mentions a project that requires a lot of budget\n3. If the input mentions a project that can not be done by a solopreneur's effort\n\n\nInput Context:\nYou will receive structured data, which will include: a title, a content section, a link, and a URL. These might be originating from summaries of trending repositories, Hacker News discussions, product launch notes, or technical documentation. Use the title and content sections from the input while evaluating. Here is the title: {{ $json.title }} and content: {{ $json.content }}\n\nOutput Structure:\nIf, at the end of your investigation, you decide that this is not a good opportunity or if the input holds one of the skip conditions mentioned above, then return an output where the value of the micro_saas_compatibility_score is zero, the value of the skip flag is true, and all other fields are set to null. If the input indicates an opportunity, then output by filling in the JSON format given as an example. You must format your response as a Structured Opportunity like the format given below.\n\nOutput Structure:\nYou must format your response as a Structured Opportunity Memo in JSON format:\n\njson\n{\n   \"skip\":  \"Boolean true or false\",\n  \"opportunity_hook\": \"A catchy one-liner describing the gap in the market.\",\n  \"source_signal\": \"Reference to the specific technology/news triggered this thought.\",\n  \"micro_saas_compatibility_score\":  \"A score indicating how suitable this opportunity is for a micro-saas project; 20 max\"\n  \"product_concept\": {\n    \"name\": \"Working Title\",\n    \"pitch\": \"The 'Uber for X' or 'Github Copilot for Y' explanation.\",\n    \"target_user\": \"Who is the desperate customer?\",\n    \"core_mechanic\": \"What does the software actually DO?\"\n  },\n  \"technical_feasibility\": {\n    \"difficulty\": \"LOW\" | \"MEDIUM\" | \"HIGH\",\n    \"stack_suggestion\": \"e.g., Next.js + OpenAI API + Supabase\"\n  },\n  \"why_now\": \"Why is this possible today and not 6 months ago?\",\n  \"killer_feature\": \"The one specific feature that makes this magical.\"\n}\n\n\nTone & Style:\nCynical but Optimistic: Be skeptical of hype, but excited about utility.\nAction-Oriented: Use verbs like \"scrape,\" \"bundle,\" \"automate,\" \"wrap.\"\nConcise: No fluff. Get to the value proposition immediately.\n\nExample Thinking Process:\nInput: \"New paper released on 1-bit LLMs that run efficiently on CPUs.\"\nBad Response: \"This is interesting because it saves energy.\"\nYour Response: \"Opportunity: Serverless AI Agents. Since 1-bit LLMs run on CPUs, we can deploy autonomous agents on cheap AWS Lambda tiers instead of expensive GPUs. Product: A 'forever-running' personal assistant for $1/month. Audience: 'People who want to use AI every day, every hour, at a low price\" "
+        }
+      }
+    },
+    {
+      "id": "4d7f6272-4a9f-40dd-b2b4-759d55c4ea22",
+      "name": "OpenAI Chat Model4",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        3520
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "fda91913-629f-4f93-a04a-df3dc6b4b776",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        3520
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"skip\": { \"type\": \"boolean\" },\n  \"opportunity_hook\": { \"type\": \"string\" },\n  \"source_signal\": { \"type\": \"string\" },\n  \"micro_saas_compatibility_score\": { \"type\": \"string\" },\n  \"product_concept\": {\n    \"type\": \"object\",\n    \"properties\": {\n        \"name\": { \"type\": \"string\" },\n        \"pitch\": { \"type\": \"string\" },\n        \"target_user\": { \"type\": \"string\" },\n        \"core_mechanic\": { \"type\": \"string\" }\n    }\n  },\n  \"technical_feasibility\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"difficulty\": { \"type\": \"string\" },\n      \"stack_suggestion\": { \"type\": \"string\" }\n    }\n  },\n  \"why_now\": { \"type\": \"string\" },\n  \"killer_feature\": { \"type\": \"string\" }\n}"
+      }
+    },
+    {
+      "id": "a269bcc8-fedb-465e-a313-c716112286e9",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        720,
+        3552
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "832786db-3695-4f00-adf9-f9c5ae51020e",
+              "leftValue": "={{ $json.output.skip }}",
+              "rightValue": {},
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8eae7f2d-5d22-4516-8a8b-e9165a61f377",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        1984
+      ],
+      "parameters": {
+        "fieldToSplitOut": "rss",
+        "options": {}
+      }
+    },
+    {
+      "id": "9bf4f492-0b97-45c6-b763-ff5511981b1d",
+      "name": "Set Tech News RSS Feeds",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1456,
+        1984
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8c00469-890b-4b5b-8e2e-2ad9ec2d0815",
+              "name": "rss",
+              "type": "array",
+              "value": "=[\"https://avc.com/feed/\",\n\"https://bothsidesofthetable.com/feed\",\n\"http://feeds.feedburner.com/entrepreneur/latest\",\n\"https://feld.com/feed\",\n\"https://www.forbes.com/entrepreneurs/feed/\",\n\"https://www.youtube.com/feeds/videos.xml?user=GaryVaynerchuk\",\n\"https://hnrss.org/frontpage\",\n\"https://www.inc.com/rss/\",\n\"https://www.intercom.com/blog/feed\",\n\"https://www.youtube.com/feeds/videos.xml?user=marieforleo\",\n\"https://rss.art19.com/masters-of-scale\",\n\"http://www.aaronsw.com/2002/feeds/pgessays.rss\",\n\"https://www.producthunt.com/feed\",\n\"https://www.quicksprout.com/rss\",\n\"https://feeds2.feedburner.com/SmallBusinessTrends\",\n\"http://feeds.feedburner.com/smartpassiveincome\",\n\"https://www.springwise.com/feed\",\n\"https://steveblank.com/feed/\",\n\"https://startupjunkie.libsyn.com/rss\",\n\"https://rss.art19.com/tim-ferriss-show\",\n\"http://feeds.feedburner.com/twistvid\",\n\"https://feeds.feedburner.com/venturebeat/SZYF\",\n\"https://feld.com/archives/tag/blog/feed\",\n\"https://geohot.github.io/blog/feed.xml\",\n\"http://news.ycombinator.com/rss\",\n\"http://guykawasaki.com/feed/\",\n\"http://ben-evans.com/benedictevans?format=rss\",\n\"http://firstround.com/review/feed.xml\",\n\"http://blog.samaltman.com/posts.atom\",\n\"http://andrewchen.co/feed/\",\n\"http://feeds.feedburner.com/BothSidesOfTheTable\",\n\"http://feed.onstartups.com/onstartups\",\n\"https://medium.com/feed/the-black-box-of-product-management\",\n\"https://productlife.to/feed\",\n\"https://lethain.com/feeds/\",\n\"https://seths.blog/feed/\",\n\"https://garyvaynerchuk.com/feed/\",\n\"https://mikemichalowicz.com/feed/\",\n\"https://www.youngupstarts.com/feed/\",\n\"https://foundr.com/blog/feed/\",\n\"https://www.chrisducker.com/feed/\",\n\"https://www.sramanamitra.com/feed/\",\n\"https://okdork.com/feed/\",\n\"https://www.briansolis.com/feed/\",\n\"https://mixergy.com/feed/\",\n\"https://femaleentrepreneurassociation.com/feed/\",\n\"https://www.tropicalmba.com/feed/\",\n\"https://blog.eonetwork.org/feed/\",\n\"https://virgin.com/entrepreneur/feed/\",\n\"https://www.forentrepreneurs.com/feed/\",\n\"https://www.under30ceo.com/feed/\",\n\"https://www.noobpreneur.com/feed/\"\n]\n"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d264ced0-12cc-4442-a194-927b7164f572",
+      "name": "Read RSS News Feeds",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "onError": "continueRegularOutput",
+      "position": [
+        -576,
+        2144
+      ],
+      "parameters": {
+        "url": "={{ $json.rss }}",
+        "options": {
+          "ignoreSSL": false
+        }
+      }
+    },
+    {
+      "id": "46539d42-a8fb-4d18-98de-a57cdb889185",
+      "name": "Set and Normalize Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        2144
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e9f27ceb-c5f2-4997-8cb1-67576a7bb337",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "id": "4c4f9417-40f2-4fb0-9976-d09f5984680f",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json['content:encodedSnippet'] ?? $json.contentSnippet}}"
+            },
+            {
+              "id": "e1986bac-054e-4240-ba50-536dbcd27337",
+              "name": "date",
+              "type": "string",
+              "value": "={{ $json.isoDate}}"
+            },
+            {
+              "id": "9566e23c-ac30-4d66-abbd-889f322688b7",
+              "name": "link",
+              "type": "string",
+              "value": "={{ $json.link }}"
+            },
+            {
+              "id": "61203b8d-7198-4087-83dc-83ac83afa5b1",
+              "name": "categories",
+              "type": "string",
+              "value": "={{ $json.categories }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e38d80db-ca03-4d0c-a52e-05318ab9fee4",
+      "name": "Text Classifier",
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        32,
+        2144
+      ],
+      "parameters": {
+        "inputText": "=Title: {{ $json.title }}\nContent: {{ $json.content }}\nCategories: {{ $json.categories }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "=AI",
+              "description": "AI and Artificial Intelligence related articles "
+            }
+          ]
+        },
+        "options": {
+          "fallback": "discard"
+        }
+      }
+    },
+    {
+      "id": "1d9ec958-4157-459f-9eed-4a06366231c0",
+      "name": "Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        2144
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "dda47c0b-b0b2-46f0-a469-cd1b0e1b8152",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              },
+              "leftValue": "={{ $json.isoDate }}",
+              "rightValue": "={{ $now.minus(1,\"days\") }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "67fed510-4cff-487b-9ac2-903dc3818be7",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        1792
+      ],
+      "parameters": {
+        "content": "## Step 1. Save news in a vector store (runs daily)",
+        "height": 532,
+        "width": 2372,
+        "color": 3
+      }
+    },
+    {
+      "id": "2dbf27db-e2e1-47fb-b624-b8e61abf13cd",
+      "name": "Git",
+      "type": "n8n-nodes-base.git",
+      "typeVersion": 1.1,
+      "position": [
+        -2384,
+        3264
+      ],
+      "parameters": {
+        "operation": "pull",
+        "repositoryPath": "/home/node/.n8n-files/opmls"
+      }
+    },
+    {
+      "id": "53753be5-f97e-4984-a682-cbd12ddba4a3",
+      "name": "Read/Write Files from Disk",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -2176,
+        3264
+      ],
+      "parameters": {
+        "fileSelector": "/home/node/.n8n-files/opmls/recommended/with_category/*.opml",
+        "options": {}
+      }
+    },
+    {
+      "id": "277e46f7-e708-4883-bf3f-4ff4de8af274",
+      "name": "Replace Me2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        3664
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8225d900-b1ab-4b4d-b761-7ffc7904ae4e",
+      "name": "Replace Me3",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        4432
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "909be19d-a82d-4606-87f9-a9c18b81974a",
+      "name": "RSS Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "onError": "continueRegularOutput",
+      "position": [
+        160,
+        4432
+      ],
+      "parameters": {
+        "url": "={{ $json.feedUrl }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "f79d6bdb-8c72-4df5-b727-29812ab040b9",
+      "name": "Loop Over RSS Feeds",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -256,
+        4016
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "49f43ad5-b693-419b-9b80-96aae706778b",
+      "name": "Loop Over OPML files",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1552,
+        3264
+      ],
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      }
+    },
+    {
+      "id": "f90db8ff-1530-4cda-ae4f-232f5610b473",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        4832
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0ee16c88-57b1-4cfb-a6af-212a8a3a020e",
+      "name": "Loop Over Articles",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        816,
+        4416
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "a5e90990-f2b9-4171-b529-e2dd1c3fb5dc",
+      "name": "Replace Me4",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        4560
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "61cc8030-10d5-4cf8-b473-6ab0129d2ba9",
+      "name": "Todays Articles",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "alwaysOutputData": true,
+      "position": [
+        384,
+        4432
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "dda47c0b-b0b2-46f0-a469-cd1b0e1b8152",
+              "operator": {
+                "type": "dateTime",
+                "operation": "after"
+              },
+              "leftValue": "={{ $json.isoDate }}",
+              "rightValue": "={{ $now.minus(1,\"days\") }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1259a596-5840-4918-a8cc-e6cda2a76c37",
+      "name": "isEmpty",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        4432
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8c9694d2-62bd-4bee-90a9-b661c404b383",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d22b552b-fd2b-4b8a-95b7-318ac471baff",
+      "name": "Code in JavaScript2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        3664
+      ],
+      "parameters": {
+        "jsCode": "// Set a single piece of custom execution data\n$execution.customData.set(\"opml\", $input.first().json.fileName );\n\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "c219d248-edbd-4e56-bef9-25efa266849d",
+      "name": "Code in JavaScript5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        4768
+      ],
+      "parameters": {
+        "jsCode": "// Get the custom data\nvar customData = $execution.customData.get(\"opml\");\n\n// Add custom data to each input item\nreturn $input.all().map(item => ({\n  json: {\n    ...item.json,\n    opml: customData\n  }\n}));"
+      }
+    },
+    {
+      "id": "cd604748-b4c0-4456-a224-2ae4c04103ee",
+      "name": "No Operation, do nothing1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1344,
+        3168
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "6f6070a9-2f3c-4fce-8110-64f7b40e995b",
+      "name": "Send Feed URLS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        3664
+      ],
+      "parameters": {
+        "jsCode": "const content = $json.content;\nconst fileName = $json.fileName;\n\nconst matches = content.match(/xmlUrl=[\"']([^\"']+)[\"']/gi);\nconst results = [];\n\nfor (const match of matches) {\n  const url = match.replace(/xmlUrl=[\"']/i, '').replace(/[\"']$/, '');\n  results.push({ json: { feedUrl: url, sourceFile: fileName } });\n}\n\nreturn results;"
+      }
+    },
+    {
+      "id": "1464f237-19a7-451e-b7fd-5483ee079c3a",
+      "name": "Extract Feed URLS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        3664
+      ],
+      "parameters": {
+        "jsCode": "const results = [];\n\nfor (let i = 0; i < $input.all().length; i++) {\n  const item = $input.all()[i];\n  const binaryKey = Object.keys(item.binary)[0];\n  \n  // Different syntax - pass index and property name\n  const buffer = await this.helpers.getBinaryDataBuffer(i, binaryKey);\n  const content = buffer.toString('utf8');\n  \n  results.push({\n    json: {\n      content: content,\n      fileName: item.json.fileName\n    }\n  });\n}\n\nreturn results;"
+      }
+    },
+    {
+      "id": "497863fc-2aaa-427f-bcc1-28cfe6dc77ad",
+      "name": "Loop Over Items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1008,
+        2016
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "9e2bde3c-22e5-448b-9b1d-eeaca4d787db",
+      "name": "Replace Me5",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        2144
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Council": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "CTO - ORCHESTRATOR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Software Architect",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Content": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "CTO - ORCHESTRATOR",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CTO - ORCHESTRATOR",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Architect": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Software Architect",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Senior Backend Developer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Senior Frontend Developer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Senior Mobile Developer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Software Architect": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Senior Backend Developer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CTO - ORCHESTRATOR": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Senior Frontend Developer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Senior Mobile Developer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set Tech News RSS Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feed-fetch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Feed URLS": {
+      "main": [
+        [
+          {
+            "node": "Feed-fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save feed summary": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Replace Me1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save feed summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Tech News RSS Feeds": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read RSS News Feeds": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set and Normalize Fields": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Set and Normalize Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Git": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Loop Over OPML files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me3": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Todays Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over RSS Feeds": {
+      "main": [
+        [
+          {
+            "node": "Loop Over OPML files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over OPML files": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        [
+          {
+            "node": "Loop Over RSS Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Articles": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Todays Articles": {
+      "main": [
+        [
+          {
+            "node": "isEmpty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isEmpty": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Articles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over RSS Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Extract Feed URLS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Feed URLS": {
+      "main": [
+        [
+          {
+            "node": "Loop Over RSS Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Feed URLS": {
+      "main": [
+        [
+          {
+            "node": "Send Feed URLS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Replace Me5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me5": {
+      "main": [
+        [
+          {
+            "node": "Read RSS News Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {
+    "Council": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "295",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "http://localhost:8082",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://localhost:8082/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9,tr;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": [
+            {
+              "data": {
+                "inviter_email": "erogluozgur@gmail.com",
+                "invited_email": "oe@jarbank.io",
+                "role": "Admin",
+                "inviter_name": "Ozgur Eroglu",
+                "inviter_organization_name": "Acme",
+                "platform_code": "hrp",
+                "invitation_accept_url": "http://localhost:8082/register?inviteId=DFGSTyouZ9tjrCNGrODu&email=oe%40jarbank.io"
+              }
+            }
+          ],
+          "webhookUrl": "https://n8n.jarbank.io/webhook/common/invitation/",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "qyE0ghz1K4NdL2By",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:33.490Z",
+      "updatedAt": "2026-04-25T13:12:33.490Z"
+    }
+  ],
+  "activeVersion": null
+}

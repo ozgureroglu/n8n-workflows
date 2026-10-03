@@ -1,0 +1,355 @@
+{
+  "id": "uvsFJjbnnUTsP034",
+  "name": "Azure Docs Exam Evaluator",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:54.111Z",
+  "updatedAt": "2026-10-03T14:00:46.318Z",
+  "isArchived": false,
+  "versionId": "c4420b60-ab42-417d-a55c-c0b7c02d2741",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "manual-trigger",
+      "name": "Start Processing",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fetch-docs",
+      "name": "Fetch Unprocessed Docs",
+      "notes": "Fetches documents without mark_for_delete field, oldest first. Adjust limit as needed.",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        240
+      ],
+      "parameters": {
+        "collection": "pages",
+        "options": {
+          "sort": "{\"scraped_at\": 1}"
+        },
+        "query": "{ \"markForDelete\": { \"$exists\": false } }"
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "62NbVY2lrpSw7Joo",
+          "name": "MongoDB nano-azure-documentation"
+        }
+      }
+    },
+    {
+      "id": "split-batches",
+      "name": "Process One by One",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        640,
+        240
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "prepare-prompt",
+      "name": "Prepare Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        256
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "doc-id",
+              "name": "docId",
+              "value": "={{ $json._id }}",
+              "type": "string"
+            },
+            {
+              "id": "prompt",
+              "name": "prompt",
+              "value": "=Evaluate if this documentation content is suitable for creating certification exam questions. The content should have substantial technical information, clear explanations of concepts, and be educational.\n\nTitle: {{ $json.title || 'No title' }}\nURL: {{ $json.url }}\n\nContent (first 3000 chars):\n{{ $json.content ? $json.content.substring(0, 3000) : 'No content' }}\n\nRespond with ONLY a JSON object: {\"suitable\": true} or {\"suitable\": false}\nNo other text, just the JSON.",
+              "type": "string"
+            },
+            {
+              "id": "d8cbe7f3-bff9-4741-bc3f-0977f9969a83",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "llm-chain",
+      "name": "Evaluate Content",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1072,
+        256
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "batching": {}
+      }
+    },
+    {
+      "id": "openai-model",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1072,
+        432
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "llama3.2:3b"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "UthznBCON5MjlpWs",
+          "name": "Ollama-webui-OpenAi_format"
+        }
+      }
+    },
+    {
+      "id": "parse-response",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        256
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "doc-id-keep",
+              "name": "docId",
+              "value": "={{ $('Prepare Prompt').item.json.docId }}",
+              "type": "string"
+            },
+            {
+              "id": "mark-delete",
+              "name": "markForDelete",
+              "value": "={{ $json.text.includes('\"suitable\": false') || $json.text.includes('\"suitable\":false') || $json.text.toLowerCase().includes('not suitable') }}",
+              "type": "boolean"
+            },
+            {
+              "id": "d3eb970b-14e8-4a80-926a-0678ea1ff5d7",
+              "name": "url",
+              "value": "={{ $('Prepare Prompt').item.json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "update-doc",
+      "name": "Update Document",
+      "notes": "Updates the document with mark_for_delete field",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1552,
+        400
+      ],
+      "parameters": {
+        "operation": "findOneAndUpdate",
+        "collection": "pages",
+        "updateKey": "=url",
+        "fields": "=markForDelete",
+        "options": {}
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "62NbVY2lrpSw7Joo",
+          "name": "MongoDB nano-azure-documentation"
+        }
+      }
+    },
+    {
+      "id": "done",
+      "name": "Batch Complete",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        48
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "cc87e32e-7762-4a34-9a3b-11b503e827e3",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        48
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start Processing": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unprocessed Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Unprocessed Docs": {
+      "main": [
+        [
+          {
+            "node": "Process One by One",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process One by One": {
+      "main": [
+        [
+          {
+            "node": "Batch Complete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Content": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Evaluate Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Update Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Document": {
+      "main": [
+        [
+          {
+            "node": "Process One by One",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unprocessed Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "uvsFJjbnnUTsP034",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:54.114Z",
+      "updatedAt": "2026-04-25T13:12:54.114Z"
+    }
+  ],
+  "activeVersion": null
+}

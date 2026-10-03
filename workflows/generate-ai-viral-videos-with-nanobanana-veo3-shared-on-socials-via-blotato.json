@@ -1,0 +1,1662 @@
+{
+  "id": "xCA9LiTPuFS84duL",
+  "name": "Generate AI viral videos with NanoBanana & VEO3, shared on socials via Blotato",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:57.766Z",
+  "updatedAt": "2026-10-03T14:00:47.228Z",
+  "isArchived": false,
+  "versionId": "baad2e78-0b30-4c96-95a1-16c81391e679",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "101bdee1-4de4-4b5e-9170-4d490d4e8128",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2208,
+        1824
+      ],
+      "parameters": {
+        "content": "# 📑 STEP 5 — Auto-Post to All Platforms\n\n",
+        "height": 832,
+        "width": 1344,
+        "color": 4
+      }
+    },
+    {
+      "id": "cb9939c6-1c5c-448b-ab3a-a66d90767cf2",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1840,
+        1216
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "nCE1bbjZ5ktcJwJw",
+          "name": "OpenAi LM Studio"
+        }
+      }
+    },
+    {
+      "id": "2c244851-7835-4f4a-8fe9-10a26acf6365",
+      "name": "Think",
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        1216
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0695e935-93ac-48da-a893-1615ce22a6e7",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2128,
+        1216
+      ],
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"title\": \"string\",\n  \"final_prompt\": \"string\"\n}\n"
+      }
+    },
+    {
+      "id": "ff995af1-503e-4356-8e67-6392b4629496",
+      "name": "Send Video URL via Telegram",
+      "webhookId": "ea6e5974-1930-4b67-a51b-16249a9ed8bd",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2368,
+        1008
+      ],
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger: Receive Video Idea').item.json.message.chat.id }}",
+        "text": "=Url VIDEO : {{ $('Download Video from VEO3').item.json.data.response.resultUrls[0] }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "C92Q2iPaHSGZhSmD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "257eedc1-30c1-4e40-913b-24ceb018df28",
+      "name": "Send Final Video Preview",
+      "webhookId": "443fd41d-a051-45bf-ad68-173197dba26b",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2384,
+        1248
+      ],
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "={{ $json.result.chat.id }}",
+        "file": "={{ $('Save Caption Video to Google Sheets').item.json['URL VIDEO FINAL'] }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "C92Q2iPaHSGZhSmD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "11f4ee14-912b-4a77-8696-7d36f7fc8a21",
+      "name": "Telegram Trigger: Receive Video Idea",
+      "webhookId": "26dbe6f5-5197-4b2b-9e32-8060f2119686",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1488,
+        -640
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "C92Q2iPaHSGZhSmD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "45e0b8ee-b830-48bc-8a9a-a426a7afcd43",
+      "name": "Set Master Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        992
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cc2e0500-57b1-4615-82cb-1c950e5f2ec4",
+              "name": "json_master",
+              "type": "string",
+              "value": "={\n  \"description\": \"Brief narrative description of the scene, focusing on key visual storytelling and product transformation.\",\n  \"style\": \"cinematic | photorealistic | stylized | gritty | elegant\",\n  \"camera\": {\n    \"type\": \"fixed | dolly | Steadicam | crane combo\",\n    \"movement\": \"describe any camera moves like slow push-in, pan, orbit\",\n    \"lens\": \"optional lens type or focal length for cinematic effect\"\n  },\n  \"lighting\": {\n    \"type\": \"natural | dramatic | high-contrast\",\n    \"sources\": \"key lighting sources (sunset, halogen, ambient glow...)\",\n    \"FX\": \"optional VFX elements like fog, reflections, flares\"\n  },\n  \"environment\": {\n    \"location\": \"describe location or room (kitchen, desert, basketball court...)\",\n    \"set_pieces\": [\n      \"list of key background or prop elements\",\n      \"e.g. hardwood floors, chain-link fence, velvet surface\"\n    ],\n    \"mood\": \"describe the ambient atmosphere (moody, clean, epic...)\"\n  },\n  \"elements\": [\n    \"main physical items involved (product box, accessories, vehicles...)\",\n    \"include brand visibility (logos, packaging, texture...)\"\n  ],\n  \"subject\": {\n    \"character\": {\n      \"description\": \"optional – physical description, outfit\",\n      \"pose\": \"optional – position or gesture\",\n      \"lip_sync_line\": \"optional – spoken line if there’s a voiceover\"\n    },\n    \"product\": {\n      \"brand\": \"Brand name\",\n      \"model\": \"Product model or name\",\n      \"action\": \"description of product transformation or assembly\"\n    }\n  },\n  \"motion\": {\n    \"type\": \"e.g. transformation, explosion, vortex\",\n    \"details\": \"step-by-step visual flow of how elements move or evolve\"\n  },\n  \"VFX\": {\n    \"transformation\": \"optional – describe style (neon trails, motion blur...)\",\n    \"impact\": \"optional – e.g. shockwave, glow, distortion\",\n    \"particles\": \"optional – embers, sparks, thread strands...\",\n    \"environment\": \"optional – VFX affecting the scene (ripples, wind...)\"\n  },\n  \"audio\": {\n    \"music\": \"optional – cinematic score, trap beat, ambient tone\",\n    \"sfx\": [\n      \"list of sound effects (zip, pop, woosh...)\"\n    ],\n    \"ambience\": \"optional – background soundscape (traffic, wind...)\",\n    \"voiceover\": {\n      \"delivery\": \"tone and style (confident, whisper, deep...)\",\n      \"line\": \"text spoken if applicable\"\n    }\n  },\n  \"ending\": \"Final shot description – what is seen or felt at the end (freeze frame, logo pulse, glow...)\",\n  \"text\": \"none | overlay | tagline | logo pulse at end only\",\n  \"format\": \"16:9 | 4k | vertical\",\n  \"keywords\": [\n    \"brand\",\n    \"scene style\",\n    \"motion type\",\n    \"camera style\",\n    \"sound mood\",\n    \"target theme\"\n  ]\n}\n"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a27e8e28-cb43-4b3f-a96e-e986a25209fb",
+      "name": "AI Agent: Generate Video Script",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        992
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a UGC-style video prompt using both the reference image and the user description.  \n\n**Inputs**  \n- User description (optional):  \n  `{{ $('Telegram Trigger: Receive Video Idea').item.json.message.caption }}`  \n- Reference image analysis (stay strictly faithful to what’s visible):  \n  `{{ $('Google Sheets: Update Image Description').item.json['IMAGE DESCRIPTION'] }}`  \n\n**Rules**  \n- Keep the style casual, authentic, and realistic. Avoid studio-like or cinematic language.  \n- Default model: `veo3_fast` (unless otherwise specified).  \n- Output only **one JSON object** with the key: `video_prompt`.  \n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=system_prompt:\n  ## SYSTEM PROMPT: Structured Video Ad Prompt Generator\n  A - Ask:\n    Generate a structured video ad prompt for cinematic generation, strictly based on the master schema provided in: {{ $json.json_master }}.\n    The final result must be a JSON object with exactly two top-level keys: `title` and `final_prompt`.\n\n  G - Guidance:\n    role: Creative Director\n    output_count: 1\n    character_limit: None\n    constraints:\n      - The output must be valid JSON.\n      - The `title` field should contain a short, descriptive and unique title (max 15 words).\n      - The `final_prompt` field must contain a **single-line JSON string** that follows the exact structure of {{ $json.json_master }} with all fields preserved.\n      - Do not include any explanations, markdown, or extra text — only the JSON object.\n      - Escape all inner quotes in the `final_prompt` string so it is valid as a stringified JSON inside another JSON.\n    tool_usage:\n      - Ensure consistent alignment across all fields (camera, lighting, motion, etc.).\n      - Maintain full structure even for optional fields (use \"none\", \"\", or [] as needed).\n\n  N - Notation:\n    format: JSON\n    expected_output:\n      {\n        \"title\": \"A unique short title for the scene\",\n        \"final_prompt\": \"{...stringified JSON of the full prompt...}\"\n      }\n\n"
+        }
+      }
+    },
+    {
+      "id": "16902ea9-197e-4cac-936e-83c1fc226854",
+      "name": "Generate Video with VEO3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        1504
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"prompt\": {{ $json.prompt }},\n  \"model\": \"{{ $('Google Sheets: Read Video Parameters (CONFIG)').item.json.model }}\",\n  \"aspectRatio\": \"{{ $json.aspectRatio }}\",\n  \"imageUrls\": [\n    \"{{ $('Download Edited Image').item.json.images[0].url }}\"\n  ]\n}",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "H8iBE9BjQM6WkEES",
+          "name": "psa_header_authentication"
+        }
+      }
+    },
+    {
+      "id": "a7fffb23-dba4-4d1e-a42e-191a1414ec60",
+      "name": "Wait for VEO3 Rendering",
+      "webhookId": "f6d814f3-4eb8-4629-a920-134cfa4ea03b",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        1504
+      ],
+      "parameters": {
+        "amount": 20
+      }
+    },
+    {
+      "id": "67889216-2c0f-4ed8-ae54-8e7e7fdbac90",
+      "name": "Download Video from VEO3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1616,
+        1504
+      ],
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/veo/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $('Generate Video with VEO3').item.json.data.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "H8iBE9BjQM6WkEES",
+          "name": "psa_header_authentication"
+        }
+      }
+    },
+    {
+      "id": "f6dda272-6129-4c04-b4c2-1e6bf5d156d8",
+      "name": "Rewrite Caption with GPT-4o",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1776,
+        1504
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are rewriting a TikTok video script, caption, and overlay —\nnot inventing a new one. You must follow this format and obey\nthese rules strictly.\n---\n### CONTEXT:\nHere is the content idea to use:{{ $('Telegram Trigger: Receive Video Idea').item.json.message.caption }}\n\nand the Title is : {{ $('AI Agent: Generate Video Script').item.json.output.title }}\n\n\nWrite the caption text using the topic.\n\n---\n- MUST be under 200 characters (yes \"Characters\" not wordcount)\nthis is an absolute MUST, no more than 200 characters!!! \n\n### FINAL OUTPUT FORMAT (no markdown formatting):\n\nDO NOT return any explanations. Only return the Caption Text\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "nCE1bbjZ5ktcJwJw",
+          "name": "OpenAi LM Studio"
+        }
+      }
+    },
+    {
+      "id": "8b4c6b55-a0d7-4a19-b85c-1927ccb5eaa2",
+      "name": "Save Caption Video to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2080,
+        1504
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "columns": {
+          "value": {
+            "STATUS": "CREATE",
+            "IMAGE NAME": "={{ $('Telegram Trigger: Receive Video Idea').item.json.message.photo[2].file_unique_id }}",
+            "TITRE VIDEO": "={{ $('AI Agent: Generate Video Script').item.json.output.title }}",
+            "CAPTION VIDEO": "={{ $json.message.content }}",
+            "URL VIDEO FINAL": "={{ $('Download Video from VEO3').item.json.data.response.resultUrls[0] }}"
+          },
+          "schema": [
+            {
+              "id": "IMAGE NAME",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "IMAGE NAME",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IMAGE URL",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "IMAGE URL",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IMAGE DESCRIPTION",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "IMAGE DESCRIPTION",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CAPTION",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "CAPTION",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "URL VIDEO FINAL",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "URL VIDEO FINAL",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TITRE VIDEO",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "TITRE VIDEO",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CAPTION VIDEO",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "CAPTION VIDEO",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STATUS",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "STATUS",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "IMAGE NAME"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "30c415e0-58e0-48b9-b7e9-11dc5d979ac8",
+      "name": "Format Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        1200
+      ],
+      "parameters": {
+        "jsCode": "const structuredPrompt = $input.first().json.output.final_prompt;\nreturn {\n  json: {\n    prompt: JSON.stringify(structuredPrompt), // this escapes it correctly!\n    model: \"veo3_fast\",\n    aspectRatio: \"16:9\"\n  }\n};\n"
+      }
+    },
+    {
+      "id": "61ce4a03-4104-4beb-bb16-0b2d2dde142d",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        880
+      ],
+      "parameters": {
+        "content": "# 📑 STEP 3 — Generate Video Ad Script",
+        "height": 460,
+        "width": 1180
+      }
+    },
+    {
+      "id": "9f91c353-3ad6-498c-ba14-907bb91e208c",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        1392
+      ],
+      "parameters": {
+        "content": "# 📑 STEP 4 — Generate Video with VEO3",
+        "height": 320,
+        "width": 1180
+      }
+    },
+    {
+      "id": "3051b833-571a-4f0c-993a-ca8ffd03e476",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -160
+      ],
+      "parameters": {
+        "content": "# 📑 STEP 1 — Collect Idea & Image",
+        "height": 992,
+        "width": 1328
+      }
+    },
+    {
+      "id": "785aa7c8-8921-4b6b-8db3-8d55e2a42564",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        192
+      ],
+      "parameters": {
+        "content": "# 📑 STEP 2 — Create Image with NanoBanana\n",
+        "height": 592,
+        "width": 1328
+      }
+    },
+    {
+      "id": "fa25f6bf-d05b-4b8d-8a8a-b8684c601510",
+      "name": "Telegram: Get Image File",
+      "webhookId": "06ceb31d-dcd9-4a9a-bbbe-a7bf7ae0ad4a",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1888,
+        -720
+      ],
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[2].file_id }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "C92Q2iPaHSGZhSmD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "a9614733-44e3-4580-95f8-a955d9136be4",
+      "name": "Google Sheets: Log Image & Caption",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1616,
+        -32
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1zbPbSjnjsXwhnss38PutQhcE7aVrYh4eFUVXnHTa9FM",
+          "mode": "list",
+          "cachedResultName": "posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zbPbSjnjsXwhnss38PutQhcE7aVrYh4eFUVXnHTa9FM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "medium_url": "={{ $json.body.url }}",
+            "claps": "={{ $json.body.claps }}",
+            "respond": "={{ $json.body.responses }}",
+            "author": "={{ $json.body.author }}",
+            "title": "={{ $json.body.title }}",
+            "content": "={{ $json.body.content }}"
+          },
+          "matchingColumns": [
+            "medium_url"
+          ],
+          "schema": [
+            {
+              "id": "medium_url",
+              "displayName": "medium_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "claps",
+              "displayName": "claps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "respond",
+              "displayName": "respond",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "author",
+              "displayName": "author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "abstract",
+              "displayName": "abstract",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "big_idea",
+              "displayName": "big_idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "key_insights",
+              "displayName": "key_insights",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "generated_article",
+              "displayName": "generated_article",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "image_description",
+              "displayName": "image_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "80274aa5-bdf0-49bf-9980-0624d99d68ef",
+      "name": "NanoBanana: Create Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        336
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/nano-banana/edit",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\t\"prompt\": \"{{ $json.output.image_prompt.replace(/\\\"/g, '\\\\\\\"').replace(/\\n/g, '\\\\n') }}\",\n\"image_urls\": [\"{{ $('Google Drive: Upload Image').item.json.webContentLink }}\"]\n\n}\n\n",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "H8iBE9BjQM6WkEES",
+          "name": "psa_header_authentication"
+        }
+      }
+    },
+    {
+      "id": "e132487d-da8c-4850-9d3f-9e057e9bde64",
+      "name": "Wait for Image Edit",
+      "webhookId": "df52d997-45c4-431f-bdf6-89dd25027b5b",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3456,
+        336
+      ],
+      "parameters": {
+        "amount": 20
+      }
+    },
+    {
+      "id": "2c7ffce1-8ace-418d-9738-c659f4554980",
+      "name": "Download Edited Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3456,
+        560
+      ],
+      "parameters": {
+        "url": "={{ $json.response_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "H8iBE9BjQM6WkEES",
+          "name": "psa_header_authentication"
+        }
+      }
+    },
+    {
+      "id": "ec725aa0-fd30-4d98-b984-0228873db428",
+      "name": "Google Sheets: Read Video Parameters (CONFIG)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1392,
+        992
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "77030cb3-3246-41d5-bcbc-74f82bdd501b",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        176
+      ],
+      "parameters": {
+        "content": "# 🎬 Generate AI viral videos with NanoBanana & VEO3, shared on socials via Blotato (By Dr. Firas)\n\n\n# 🎥 Full Tutorial :\n[![AI Voice Agent Preview](https://www.dr-firas.com/nanobanana.png)](https://youtu.be/nlwpbXQqNQ4)\n\n---\n\n# 📘 Documentation  \nAccess detailed setup instructions, API config, platform connection guides, and workflow customization tips:\n\n📎 [Open the full documentation on Notion](https://automatisation.notion.site/NonoBanan-2643d6550fd98041aef5dcbe8ab0f7a1?source=copy_link)\n\n---\n\n# ⚙️ Requirements\n\n1. ✅ **Create a [Blotato](https://blotato.com/?ref=firas) account** (Pro plan required for API access)  \n2. 🔑 **Generate your Blotato API Key** via: `Settings > API > Generate API Key`  \n3. 📦 **Enable “Verified Community Nodes”** in the n8n admin settings  \n4. 🧩 **Install the Blotato** verified community node in n8n  \n5. 🛠 **Create a Blotato API credential** inside your n8n credentials tab  \n6. 📄 **Duplicate this [Google Sheet template](https://docs.google.com/spreadsheets/d/1FutmZHblwnk36fp59fnePjONzuJBdndqZOCuRoGWSmY/edit?usp=sharing)**  \n7. ☁️ **Make sure your Google Drive folder is PUBLIC** (anyone with the link can access)  \n8. 📌 **Complete the 3 brown sticky note steps** inside the workflow editor\n\n",
+        "height": 1476,
+        "width": 700,
+        "color": 6
+      }
+    },
+    {
+      "id": "c6d4fcc2-0487-453e-8b00-540afe94df59",
+      "name": "LLM: Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        560
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {      \n\t\t\"abstract\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"big_idea\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"key_insights\": {\n\t\t\t\"type\": \"array\",\n\t\t\t\"items\": {\n\t\t\t\t\"type\": \"string\"\n\t\t\t}\n\t\t},\n\t\t\"category\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"tone\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}"
+      }
+    },
+    {
+      "id": "2292deed-51dd-43b4-b3a0-87fe453edabb",
+      "name": "LLM: OpenAI Chat1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        560
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "meta-llama-3.1-8b-instruct",
+          "mode": "list",
+          "cachedResultName": "meta-llama-3.1-8b-instruct"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "nCE1bbjZ5ktcJwJw",
+          "name": "OpenAi LM Studio"
+        }
+      }
+    },
+    {
+      "id": "6202a5aa-6663-4f67-adbf-f29b13c98bd5",
+      "name": "Webhook",
+      "webhookId": "c4beeed4-e59f-4e64-b836-c34b2ca9b1fc",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        1008,
+        -32
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c4beeed4-e59f-4e64-b836-c34b2ca9b1fc",
+        "options": {}
+      }
+    },
+    {
+      "id": "16630067-e9cf-496f-8f90-c2c188a71a27",
+      "name": "preview",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -32
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ef346b3d-41b9-4af4-823d-5299c64b29b3",
+      "name": "Generate Summary",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        336
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert content synthesizer and abstractor. I am going to provide you with the text of an article. Your goal is to rewrite the core lessons of this article into a concise summary, but you must adhere to a strict set of negative constraints.\n\n### 🚫 CRITICAL CONSTRAINT: TOTAL ANONYMIZATION\nYou must perform total concept abstraction. The summary must be completely anonymous and generalized.\n- **NO Proper Nouns:** Do not use names of people, companies, software, cities, countries, or specific products.\n- **NO Specific Stories:** Do not describe the author's personal anecdotes, historical events, or specific case studies mentioned in the text.\n- **HOW TO FIX:** Convert specific examples into general archetypes or principles.\n    - *Bad:* \"Steve Jobs returned to Apple and cut the product line.\"\n    - *Good:* \"When a leader returns to a struggling organization, simplifying the product portfolio is often the first step.\"\n    - *Bad:* \"I used Trello to manage my project.\"\n    - *Good:* \"Using visual project management boards can improve organization.\"\nYou are an expert content synthesizer and abstractor API. Your function is to accept an article text and return a strictly formatted JSON object containing a generalized summary.\n\n### OUTPUT SCHEMA\nYou must use the output parser defined schema to return the response.\n\n---\nHere is the article text to summarize:\n\n{{ $json.content }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an expert editorial assistant and content synthesizer. Your goal is to analyze Medium articles and similar long-form blog content to create concise, high-value summaries.\n\n**CRITICAL CONSTRAINT:**\nYou must perform **total concept abstraction**. Your summary must be completely anonymous and generalized.\n- **DO NOT** use any proper nouns (people, companies, cities, countries, specific apps).\n- **DO NOT** describe specific personal anecdotes or historical events mentioned in the text.\n- **INSTEAD:** Convert specific examples into general archetypes or principles (e.g., instead of \"When Steve Jobs returned to Apple...\", write \"When a leader returns to a struggling organization...\").\n\nWhen provided with the text of an article, generate a summary following this exact structure:\n\n## 1. Abstract (50-75 words)\nProvide a high-level overview of the article's core premise. Identify the main argument, the problem being addressed, and the proposed solution or unique insight. Keep this section narrative but strictly generalized.\n\n## 2. The \"Big Idea\"\nIn one single sentence, state the universal truth or paradigm shift this article offers, stripped of any specific context.\n\n## 3. Key Insights & Actionable Takeaways\nExtract the specific points, steps, or arguments used.\n- Use bullet points.\n- Focus purely on the **methodology** or **philosophy**, removing the \"story.\"\n- If the text lists a specific tool (e.g., \"Notion\"), replace it with the category (e.g., \"digital workspace tools\").\n- Bold the core concept of each bullet for scannability.\n\n## 4. Context & Tone\nBriefly describe the *type* of advice given (e.g., \"Productivity Framework,\" \"Philosophical Argument,\" \"Technical Tutorial\") without referencing the author or their background.\n\n### Examples of Transformation:\n- *Input:* \"I used Trello to manage my project at Google.\" -> *Output:* \"Using Kanban-style boards to manage projects in large tech environments.\"\n- *Input:* \"In 2008, Elon Musk nearly went broke.\" -> *Output:* \"Entrepreneurs often face near-bankruptcy before success.\"\n- *Input:* \"My trip to Paris taught me to slow down.\" -> *Output:* \"Travel can teach the importance of a slower pace of life.\"\n"
+        }
+      }
+    },
+    {
+      "id": "05c94ded-917f-431a-80db-5fb001f07ea9",
+      "name": "Google Sheets: Log Image & Caption1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1408,
+        336
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1zbPbSjnjsXwhnss38PutQhcE7aVrYh4eFUVXnHTa9FM",
+          "mode": "list",
+          "cachedResultName": "posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zbPbSjnjsXwhnss38PutQhcE7aVrYh4eFUVXnHTa9FM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "medium_url": "={{ $('Google Sheets: Log Image & Caption').item.json.medium_url }}",
+            "abstract": "={{ $json.output.abstract }}",
+            "big_idea": "={{ $json.output.big_idea }}",
+            "key_insights": "={{ $json.output.key_insights }}",
+            "category": "={{ $json.output.category }}",
+            "tone": "={{ $json.output.tone }}"
+          },
+          "matchingColumns": [
+            "medium_url"
+          ],
+          "schema": [
+            {
+              "id": "medium_url",
+              "displayName": "medium_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "claps",
+              "displayName": "claps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "respond",
+              "displayName": "respond",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "author",
+              "displayName": "author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "abstract",
+              "displayName": "abstract",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "big_idea",
+              "displayName": "big_idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "key_insights",
+              "displayName": "key_insights",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "902877b5-d4d3-4d32-8fa4-a0293720be46",
+      "name": "LLM: Structured Output Parser2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2576,
+        608
+      ],
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"summary\": \"string\"\n}"
+      }
+    },
+    {
+      "id": "86d3d023-ce06-44b1-86ef-f0bb7c7af189",
+      "name": "LLM: OpenAI Chat2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2432,
+        576
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "meta-llama-3.1-8b-instruct",
+          "mode": "list",
+          "cachedResultName": "meta-llama-3.1-8b-instruct"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "nCE1bbjZ5ktcJwJw",
+          "name": "OpenAi LM Studio"
+        }
+      }
+    },
+    {
+      "id": "ad6b1445-9738-4a1a-a87e-64c282cdada8",
+      "name": "Generate Image Description",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2432,
+        336
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the structured summary of a concept I need visualized.\nCreate a generative AI image prompt based on the \"Big Idea\" and \"Key Insights.\"\n\n**DATA SOURCE:**\n*   **Big Idea:** \"{{ $json.big_idea }}\"\n*   **Key Insights:** \"{{ $json.key_insights }}\"\n*   **Tone:** \"{{ $json.tone }}\"\n\n**TASK:**\nWrite a specialized image generation prompt that captures the essence of this Big Idea using a realistic scene.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an expert **Editorial Photographer** and visual director. Your goal is to select a **grounded, realistic scene** that represents an abstract concept through mood and atmosphere, NOT through surrealism.\n\n### 🚫 CRITICAL REALISM CONSTRAINT\n**The scene must be 100% physically plausible.**\n- **NO** floating objects.\n- **NO** office equipment in nature (e.g., no desks on mountain tops, no laptops in forests).\n- **NO** surreal juxtapositions.\n- **TEST:** \"Could a photographer have taken this photo without a set designer?\" If the answer is no, discard the idea.\n\n### 📸 YOUR AESTHETIC SIGNATURE\n*   **Medium:** Analog 35mm film photography.\n*   **Style:** Vintage 80s Americana, Cinematic, \"Slice of Life.\"\n*   **Lighting:** Golden hour, Neon motel signs, streetlights in rain, warm sunset glow.\n*   **Texture:** Film grain, light leaks, slightly soft focus.\n\n### 🧠 SCENE TRANSLATION LOGIC\nYou must translate abstract concepts into **everyday human moments**.\n\n*   *Concept:* \"Deep Focus / Productivity\"\n    *   *BAD (Surreal):* A brain glowing in a cyber-forest.\n    *   *BAD (Impossible):* A man typing on a typewriter on a cloud.\n    *   *GOOD (Realism):* A close-up of a messy desk late at night, illuminated by a single warm desk lamp, stack of papers, cup of black coffee, cigarette smoke swirling.\n\n*   *Concept:* \"Growth / New Beginnings\"\n    *   *BAD:* A sprout growing out of a lightbulb.\n    *   *GOOD:* A view through a windshield driving down an empty highway at sunrise, warm horizon, dashboard dials visible.\n\n### 📝 OUTPUT FORMAT\nGenerate a single image description prompt:\n\"[Subject/Action in a plausible setting], [Lighting/Atmosphere], [80s Film Tags]\""
+        }
+      }
+    },
+    {
+      "id": "7a1f8881-13d3-492a-aee2-a4d2355dd073",
+      "name": "Google Sheets: Log Image & Caption2",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2848,
+        336
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1zbPbSjnjsXwhnss38PutQhcE7aVrYh4eFUVXnHTa9FM",
+          "mode": "list",
+          "cachedResultName": "posts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1zbPbSjnjsXwhnss38PutQhcE7aVrYh4eFUVXnHTa9FM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "=Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "medium_url": "={{ $('Google Sheets: Log Image & Caption').item.json.medium_url }}",
+            "image_description": "={{ $json.output.summary }}"
+          },
+          "matchingColumns": [
+            "medium_url"
+          ],
+          "schema": [
+            {
+              "id": "medium_url",
+              "displayName": "medium_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "claps",
+              "displayName": "claps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "respond",
+              "displayName": "respond",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "author",
+              "displayName": "author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "abstract",
+              "displayName": "abstract",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "big_idea",
+              "displayName": "big_idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "key_insights",
+              "displayName": "key_insights",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "tone",
+              "displayName": "tone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "image_description",
+              "displayName": "image_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "5920b411-d196-41f8-bda2-9ccf4450a8a7",
+      "name": "Generate an image",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        336
+      ],
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googlePalmApi": {
+          "id": "SUKpQVKJr6Nw02ds",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent: Generate Video Script",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Prompt": {
+      "main": [
+        [
+          {
+            "node": "Generate Video with VEO3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent: Generate Video Script",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Master Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent: Generate Video Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Image Edit": {
+      "main": [
+        [
+          {
+            "node": "Download Edited Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Edited Image": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Read Video Parameters (CONFIG)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for VEO3 Rendering": {
+      "main": [
+        [
+          {
+            "node": "Download Video from VEO3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Video from VEO3": {
+      "main": [
+        [
+          {
+            "node": "Rewrite Caption with GPT-4o",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video with VEO3": {
+      "main": [
+        [
+          {
+            "node": "Wait for VEO3 Rendering",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NanoBanana: Create Image": {
+      "main": [
+        [
+          {
+            "node": "Wait for Image Edit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Final Video Preview": {
+      "main": [
+        []
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent: Generate Video Script",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Get Image File": {
+      "main": [
+        []
+      ]
+    },
+    "Rewrite Caption with GPT-4o": {
+      "main": [
+        [
+          {
+            "node": "Save Caption Video to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Video URL via Telegram": {
+      "main": [
+        [
+          {
+            "node": "Send Final Video Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent: Generate Video Script": {
+      "main": [
+        [
+          {
+            "node": "Format Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Log Image & Caption": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Caption Video to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send Video URL via Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger: Receive Video Idea": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Get Image File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Read Video Parameters (CONFIG)": {
+      "main": [
+        [
+          {
+            "node": "Set Master Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Summary",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: OpenAI Chat1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "preview": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Image & Caption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Summary": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Image & Caption1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Image Description",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: OpenAI Chat2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Image Description",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Log Image & Caption1": {
+      "main": [
+        [
+          {
+            "node": "Generate Image Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image Description": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Log Image & Caption2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Log Image & Caption2": {
+      "main": [
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "6328",
+            "user-agent": "python-requests/2.32.5",
+            "accept-encoding": "gzip, deflate, zstd",
+            "accept": "*/*",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "url": "https://medium.com/medium-handbook/how-this-data-analyst-uses-medium-to-build-his-writing-portfolio-9cbbc710d314?source=home---list_module-----------------------------------------",
+            "title": "How this data analyst uses Medium to build his writing portfolio",
+            "author": "Zulie @ Medium",
+            "claps": 2266,
+            "responses": 37,
+            "content": "An interview with\n\nYou might not think that someone writing about transistors and heat pumps can find an audience of enthusiastic and engaged readers, but Matt Traverso would prove you wrong. He came to Medium to build a portfolio of his writing work for prospective employers, but discovered that writing on Medium became a fun and rewarding hobby in its own right.\n\nI was curious what brought him to Medium, and how he’d found his experience here. “Beyond LinkedIn, I had zero social media presence. With no built-in audience to leverage, I couldn’t launch an independent site,” he told me. “My subject matter was too eclectic and my output too erratic, anyway. More importantly, I didn’t want to waste time building and maintaining a site when I could be writing.”\n\nHe shared more about what he loves about writing here, how he’s used community feedback to improve his writing, and his appreciation of using publications to get his story out to the right audience. Here’s what he said.\n\nThis interview has been lightly edited and formatted. It is part of a series of interviews I conducted with Medium writers. Check out the topic page\n\nMediumInterviews\n\nI’m an analytical person. For years, I’ve run my own calculations on anything that interested me (for fun). I keep detailed spreadsheets to track all the strange mathematics in my life, whether that be home heating efficiency, the electrical grid in Hawaii, or bicycle physics.\n\nOne night, after charting some economic data, I liked the graph so I posted it to LinkedIn with a few bulleted observations. Among a lot of positive feedback I got from my professional network, my sister directed me to Medium, which seemed a better fit.\n\nAt the time, I was between jobs. Technical writers work in highly specialized fields and my work was entirely protected by intellectual property laws. I had no public-facing portfolio to demonstrate my skills so I turned to Medium to build one. After publishing articles on a few different topics, I was able to link my Medium profile on my resume and direct prospective employers to my stories.\n\nWhile I originally published on LinkedIn, it’s a professional networking site that didn’t feel like a good home for long-form non-expert analysis. I also couldn’t shake the feeling that I was pestering my friends and business contacts with ramblings about windows and sprinkler systems.\n\nBeyond LinkedIn, I had zero social media presence. With no built-in audience to leverage, I couldn’t launch an independent site. My subject matter was too eclectic and my output too erratic, anyway. More importantly, I didn’t want to waste time building and maintaining a site when I could be writing.\n\nMedium was the perfect home for me because I could tackle any topic I wanted, then partner with a publication to connect my work to the right audience.\n\nMy most popular article was a humor piece on early retirement. Originally, I was planning a series of earnest personal finance advice. At the time, my feeds were showing me a lot of portfolio guides and crypto tips from hucksters. I had achieved a small degree of solvency and felt like I had a legitimate story to tell.\n\nBut then I dove into the economic statistics and found I didn’t. My success was a mix of luck and personality quirks, not skill. The system had arbitrarily treated me well and punished others.\n\nRather than dump the story, I pivoted and channeled my frustration into a single satirical piece parodying the get-rich-quick scam articles and career guidance.\n\nThe article got boosted and immediately took off. I guess I wasn’t the only one fed up with the clickbait charlatans. I think those that stumbled upon the story appreciated an acknowledgement that fiscal solvency is impossible to plan for and may not be as great as it sounds, anyway. It was and remains a refreshing alternate take to prevailing wisdom on work ethic.\n\nI certainly didn’t expect writing to be fulfilling nor worth my time. Remember, my initial goal was financial: I needed a portfolio to land a new job. Instead, Medium became a rewarding hobby with its own revenue.\n\nOne of the best parts of participating in a collective of like-minded people on Medium is that I can find answers to many of my long-standing questions. When I needed more information on carbon footprints, a commentator shared a link. Other authors have shared their own home experiments and I was more than happy to apply their advice to my situation.\n\nOf course! I recommend Medium to anyone with a story to share. I find it the perfect platform to express yourself without necessarily having an existing audience. Partnering with a publication that can help promote your work can help connect you with like-minded people.\n\nDespite working professionally as a (technical) writer for years, producing hundreds of pages of content every month, I never considered myself an author. I was an analyst who solved problems. Writing was just a means to communicate the solution.\n\nNow on Medium, I’m able to pursue only subjects that interest me. I’ve worked to keep the writing compelling to general audiences by developing a voice apart from the clinical academic setting where I was trained. The feedback I get in the comments helps me develop a more engaging tone. Reader interest points me in new investigative directions and shape how I approach my analyses from the get-go.\n\nMatt is a technical writer and data analyst who earned his Ph.D. in Biochemistry from Northwestern University. He is also a certified Project Manager (PMP). While he has professional expertise in semiconductor manufacturing and protein science, he prefers to study the math behind everyday topics like fitness, clean energy, and personal finance. When he’s not traveling the world, he bikes, bakes, and climbs up mountains with his partner and their dog in Oregon."
+          },
+          "webhookUrl": "https://n8n.jarbank.io/webhook/c4beeed4-e59f-4e64-b836-c34b2ca9b1fc",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "xCA9LiTPuFS84duL",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:57.768Z",
+      "updatedAt": "2026-04-25T13:12:57.768Z"
+    }
+  ],
+  "activeVersion": null
+}

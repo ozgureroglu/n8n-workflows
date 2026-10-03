@@ -1,0 +1,777 @@
+{
+  "id": "2Pmr34WmvdzZQ36q",
+  "name": "GitHub to n8n Sync Master",
+  "active": true,
+  "activeVersionId": "86c52edb-2fa6-4b81-8810-d36cb5cde8bd",
+  "createdAt": "2026-05-28T21:59:23.646Z",
+  "updatedAt": "2026-10-03T14:00:47.085Z",
+  "isArchived": false,
+  "versionId": "86c52edb-2fa6-4b81-8810-d36cb5cde8bd",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "id": "e8b3748e-c836-40c9-a14c-c4c55955dd0a",
+      "name": "GitHub Push Trigger",
+      "webhookId": "6f2b7c8d-9a10-4c9a-8e1f-3b1f2e0a5c44",
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2464,
+        736
+      ],
+      "parameters": {
+        "owner": {
+          "__rl": true,
+          "value": "ozgureroglu",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n-content",
+          "mode": "name"
+        },
+        "events": [
+          "push"
+        ],
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "35b42c92-846f-49b7-996b-3f3522e52d89",
+      "name": "Extract changed files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2240,
+        736
+      ],
+      "parameters": {
+        "jsCode": "const branch = 'main';\nconst raw = $input.first().json;\nconst payload = raw.body ?? raw;\nif (payload.ref !== `refs/heads/${branch}`) {\n  return [{ json: { path: '', sha: '', reason: `push was to ${payload.ref}, not refs/heads/${branch}` } }];\n}\n\nconst paths = new Set();\nfor (const commit of payload.commits || []) {\n  for (const p of [...(commit.added || []), ...(commit.modified || [])]) {\n    if (p.startsWith('workflows/') && p.endsWith('.json')) {\n      paths.add(p);\n    }\n  }\n}\n\nif (paths.size === 0) {\n  return [{ json: { path: '', sha: '', reason: 'no workflows/*.json files were added or modified in this push' } }];\n}\n\nconst sha = payload.after;\nreturn Array.from(paths).map((path) => ({ json: { path, sha } }));"
+      }
+    },
+    {
+      "id": "f6ed6c57-259c-4e41-9ad0-f6e339b4c729",
+      "name": "Has changed files?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2016,
+        736
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c2",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.path }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "89ba46c9-6816-4b84-9153-04407cab0d58",
+      "name": "No relevant changes",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        832
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "61de64c7-cc07-4fa2-8ca9-43f11aa5e9e6",
+      "name": "Get file content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1792,
+        640
+      ],
+      "parameters": {
+        "url": "=https://api.github.com/repos/ozgureroglu/n8n-content/contents/{{ $json.path }}?ref={{ $json.sha }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3.raw"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "c5e57d58-65f7-434c-9f6f-75f5c9416fe3",
+      "name": "Prepare workflow object",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1568,
+        640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const wf = $json;\n\nconst allowedSettingsKeys = [\n  'saveDataErrorExecution',\n  'saveDataSuccessExecution',\n  'saveManualExecutions',\n  'saveExecutionProgress',\n  'executionTimeout',\n  'errorWorkflow',\n  'timezone',\n  'executionOrder',\n];\nconst settings = {};\nfor (const key of allowedSettingsKeys) {\n  if (wf.settings && wf.settings[key] !== undefined) {\n    settings[key] = wf.settings[key];\n  }\n}\n\nreturn {\n  json: {\n    id: wf.id,\n    name: wf.name,\n    nodes: wf.nodes,\n    connections: wf.connections,\n    settings,\n    pinData: wf.pinData ?? {},\n  },\n};"
+      }
+    },
+    {
+      "id": "a2a3bca3-d55b-4a31-9f27-a4c122ca2465",
+      "name": "Check existing workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1344,
+        640
+      ],
+      "parameters": {
+        "url": "=https://n8n.jarbank.io/api/v1/workflows/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "n8nApi": {
+          "id": "UgRDXkk7QDa0GMU5",
+          "name": "n8n self access"
+        }
+      }
+    },
+    {
+      "id": "e20efcb6-87a0-4f75-8a83-1a29e94fa4ae",
+      "name": "Workflow exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1120,
+        640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.id || '' }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9dd4e7c1-fb1f-42c9-ae1f-7a6f4138b708",
+      "name": "Update workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -896,
+        544
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://n8n.jarbank.io/api/v1/workflows/{{ $('Prepare workflow object').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { name: $('Prepare workflow object').item.json.name, nodes: $('Prepare workflow object').item.json.nodes, connections: $('Prepare workflow object').item.json.connections, settings: $('Prepare workflow object').item.json.settings, pinData: $('Prepare workflow object').item.json.pinData } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "n8nApi": {
+          "id": "UgRDXkk7QDa0GMU5",
+          "name": "n8n self access"
+        }
+      }
+    },
+    {
+      "id": "dbd4ecbf-eae9-4f9f-b75e-5b7c2a21e978",
+      "name": "Create workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -896,
+        736
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.jarbank.io/api/v1/workflows",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "n8nApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { name: $('Prepare workflow object').item.json.name, nodes: $('Prepare workflow object').item.json.nodes, connections: $('Prepare workflow object').item.json.connections, settings: $('Prepare workflow object').item.json.settings, pinData: $('Prepare workflow object').item.json.pinData } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "n8nApi": {
+          "id": "UgRDXkk7QDa0GMU5",
+          "name": "n8n self access"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "GitHub Push Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract changed files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract changed files": {
+      "main": [
+        [
+          {
+            "node": "Has changed files?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has changed files?": {
+      "main": [
+        [
+          {
+            "node": "Get file content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No relevant changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get file content": {
+      "main": [
+        [
+          {
+            "node": "Prepare workflow object",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare workflow object": {
+      "main": [
+        [
+          {
+            "node": "Check existing workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check existing workflow": {
+      "main": [
+        [
+          {
+            "node": "Workflow exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow exists?": {
+      "main": [
+        [
+          {
+            "node": "Update workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:GitHub Push Trigger": {
+      "webhookId": 666811871,
+      "webhookEvents": [
+        "push"
+      ],
+      "webhookSecret": "b873db03af7f31c14383c5d0584ff88603bf710aeb8c2b4c8beedf792acd8316"
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "2Pmr34WmvdzZQ36q",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-05-28T21:59:23.650Z",
+      "updatedAt": "2026-05-28T21:59:23.650Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "86c52edb-2fa6-4b81-8810-d36cb5cde8bd",
+    "workflowId": "2Pmr34WmvdzZQ36q",
+    "nodes": [
+      {
+        "parameters": {
+          "owner": {
+            "__rl": true,
+            "value": "ozgureroglu",
+            "mode": "name"
+          },
+          "repository": {
+            "__rl": true,
+            "value": "n8n-content",
+            "mode": "name"
+          },
+          "events": [
+            "push"
+          ],
+          "options": {}
+        },
+        "id": "e8b3748e-c836-40c9-a14c-c4c55955dd0a",
+        "name": "GitHub Push Trigger",
+        "type": "n8n-nodes-base.githubTrigger",
+        "typeVersion": 1,
+        "position": [
+          -2464,
+          736
+        ],
+        "webhookId": "6f2b7c8d-9a10-4c9a-8e1f-3b1f2e0a5c44",
+        "credentials": {
+          "githubApi": {
+            "id": "GiOoZxtrTHjmQVpz",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const branch = 'main';\nconst raw = $input.first().json;\nconst payload = raw.body ?? raw;\nif (payload.ref !== `refs/heads/${branch}`) {\n  return [{ json: { path: '', sha: '', reason: `push was to ${payload.ref}, not refs/heads/${branch}` } }];\n}\n\nconst paths = new Set();\nfor (const commit of payload.commits || []) {\n  for (const p of [...(commit.added || []), ...(commit.modified || [])]) {\n    if (p.startsWith('workflows/') && p.endsWith('.json')) {\n      paths.add(p);\n    }\n  }\n}\n\nif (paths.size === 0) {\n  return [{ json: { path: '', sha: '', reason: 'no workflows/*.json files were added or modified in this push' } }];\n}\n\nconst sha = payload.after;\nreturn Array.from(paths).map((path) => ({ json: { path, sha } }));"
+        },
+        "id": "35b42c92-846f-49b7-996b-3f3522e52d89",
+        "name": "Extract changed files",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2240,
+          736
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "c2",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                },
+                "leftValue": "={{ $json.path }}",
+                "rightValue": ""
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "f6ed6c57-259c-4e41-9ad0-f6e339b4c729",
+        "name": "Has changed files?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -2016,
+          736
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "89ba46c9-6816-4b84-9153-04407cab0d58",
+        "name": "No relevant changes",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          -1792,
+          832
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://api.github.com/repos/ozgureroglu/n8n-content/contents/{{ $json.path }}?ref={{ $json.sha }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "application/vnd.github.v3.raw"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "id": "61de64c7-cc07-4fa2-8ca9-43f11aa5e9e6",
+        "name": "Get file content",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1792,
+          640
+        ],
+        "credentials": {
+          "githubApi": {
+            "id": "GiOoZxtrTHjmQVpz",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "const wf = $json;\n\nconst allowedSettingsKeys = [\n  'saveDataErrorExecution',\n  'saveDataSuccessExecution',\n  'saveManualExecutions',\n  'saveExecutionProgress',\n  'executionTimeout',\n  'errorWorkflow',\n  'timezone',\n  'executionOrder',\n];\nconst settings = {};\nfor (const key of allowedSettingsKeys) {\n  if (wf.settings && wf.settings[key] !== undefined) {\n    settings[key] = wf.settings[key];\n  }\n}\n\nreturn {\n  json: {\n    id: wf.id,\n    name: wf.name,\n    nodes: wf.nodes,\n    connections: wf.connections,\n    settings,\n    pinData: wf.pinData ?? {},\n  },\n};"
+        },
+        "id": "c5e57d58-65f7-434c-9f6f-75f5c9416fe3",
+        "name": "Prepare workflow object",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1568,
+          640
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://n8n.jarbank.io/api/v1/workflows/{{ $json.id }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "n8nApi",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "id": "a2a3bca3-d55b-4a31-9f27-a4c122ca2465",
+        "name": "Check existing workflow",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -1344,
+          640
+        ],
+        "credentials": {
+          "n8nApi": {
+            "id": "UgRDXkk7QDa0GMU5",
+            "name": "n8n self access"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                },
+                "leftValue": "={{ $json.id || '' }}",
+                "rightValue": ""
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "e20efcb6-87a0-4f75-8a83-1a29e94fa4ae",
+        "name": "Workflow exists?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -1120,
+          640
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://n8n.jarbank.io/api/v1/workflows/{{ $('Prepare workflow object').item.json.id }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "n8nApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { name: $('Prepare workflow object').item.json.name, nodes: $('Prepare workflow object').item.json.nodes, connections: $('Prepare workflow object').item.json.connections, settings: $('Prepare workflow object').item.json.settings, pinData: $('Prepare workflow object').item.json.pinData } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "id": "9dd4e7c1-fb1f-42c9-ae1f-7a6f4138b708",
+        "name": "Update workflow",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -896,
+          544
+        ],
+        "credentials": {
+          "n8nApi": {
+            "id": "UgRDXkk7QDa0GMU5",
+            "name": "n8n self access"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://n8n.jarbank.io/api/v1/workflows",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "n8nApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { name: $('Prepare workflow object').item.json.name, nodes: $('Prepare workflow object').item.json.nodes, connections: $('Prepare workflow object').item.json.connections, settings: $('Prepare workflow object').item.json.settings, pinData: $('Prepare workflow object').item.json.pinData } }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "id": "dbd4ecbf-eae9-4f9f-b75e-5b7c2a21e978",
+        "name": "Create workflow",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -896,
+          736
+        ],
+        "credentials": {
+          "n8nApi": {
+            "id": "UgRDXkk7QDa0GMU5",
+            "name": "n8n self access"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "GitHub Push Trigger": {
+        "main": [
+          [
+            {
+              "node": "Extract changed files",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract changed files": {
+        "main": [
+          [
+            {
+              "node": "Has changed files?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has changed files?": {
+        "main": [
+          [
+            {
+              "node": "Get file content",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No relevant changes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get file content": {
+        "main": [
+          [
+            {
+              "node": "Prepare workflow object",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare workflow object": {
+        "main": [
+          [
+            {
+              "node": "Check existing workflow",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check existing workflow": {
+        "main": [
+          [
+            {
+              "node": "Workflow exists?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Workflow exists?": {
+        "main": [
+          [
+            {
+              "node": "Update workflow",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Create workflow",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Ozgur Eroglu",
+    "name": "Version 86c52edb",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-08-06T15:34:08.320Z",
+    "updatedAt": "2026-08-06T15:34:50.000Z"
+  }
+}

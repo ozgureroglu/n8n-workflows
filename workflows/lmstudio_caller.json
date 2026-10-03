@@ -1,0 +1,184 @@
+{
+  "id": "NvVuGIVFekqjOEHd",
+  "name": "LMStudio_Caller",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:30.687Z",
+  "updatedAt": "2026-10-03T14:00:47.456Z",
+  "isArchived": false,
+  "versionId": "6f4e4a32-f122-45a3-a940-0ee6c09868a6",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "5bb47240-84d3-494a-8f25-867187719c85",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        -160
+      ],
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      }
+    },
+    {
+      "id": "f3245495-0954-444e-8abb-cfaf6479ad2c",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1264,
+        -160
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "32d68b26-605f-4557-9f52-325a429736ae",
+      "name": "LM Studio Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1040,
+        -160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.1.60:12345/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  // take whatever the webhook sent…\n  ...$json.body,\n  // …but FORCE non-stream JSON back:\n  stream: false\n} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "39becdf4-6aee-4dca-8d33-c06d552ff8b2",
+      "name": "Parse Parameters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        816,
+        -160
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "61ecd43b-0fb6-45c3-91d2-518309d4b633",
+      "name": "Webhook",
+      "webhookId": "lmstudio-webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        592,
+        -160
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lmstudio",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "56bff6a0-31f7-41ca-8e26-5fdfc7c44dc3",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        576,
+        32
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LM Studio Request": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Parameters": {
+      "main": [
+        [
+          {
+            "node": "LM Studio Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Parse Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "NvVuGIVFekqjOEHd",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:30.689Z",
+      "updatedAt": "2026-04-25T13:12:30.689Z"
+    }
+  ],
+  "activeVersion": null
+}

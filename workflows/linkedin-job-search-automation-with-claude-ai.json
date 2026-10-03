@@ -1,0 +1,725 @@
+{
+  "id": "to0iBEkLu8QMy0Py",
+  "name": "LinkedIn Job Search Automation with Claude AI",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-07-31T20:15:04.245Z",
+  "updatedAt": "2026-10-03T14:00:47.332Z",
+  "isArchived": false,
+  "versionId": "1d46fd45-fcbf-47f1-a90b-e2cfe227422a",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "b17531f9-2590-4154-9f5c-8d7608b9a358",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "content": "## LinkedIn Job Search Automation with Claude AI\n\nThis AI-powered workflow automatically searches LinkedIn for relevant jobs, scores them using Claude AI based on your profile, sends personalized applications or connection requests, and logs everything to a Google Sheet for tracking.\n\n### How it works\n\n1. **Trigger** - Runs on a schedule or via webhook to start a new job search\n2. **Search LinkedIn** - Fetches job listings based on keywords, location, and filters\n3. **Filter & Deduplicate** - Removes already-applied or seen jobs\n4. **Analyze with Claude AI** - Scores each job against your resume/profile\n5. **Decision Gate** - Only proceeds with jobs above your score threshold\n6. **Apply or Connect** - Sends Easy Apply or connection request to recruiter\n7. **Log Results** - Records all actions in Google Sheets for tracking\n\n### Setup Steps\n\n1. Import this workflow into your n8n instance\n2. Configure credentials:\n   - **LinkedIn OAuth2** - LinkedIn Developer Portal\n   - **Anthropic API** - For Claude AI job scoring\n   - **Google Sheets** - To track applications\n3. Update your profile/resume text in the `Build Search Context` node\n4. Set your job keywords and location preferences\n5. Activate the workflow\n\n### Sample Trigger Payload\n```json\n{\n  \"keywords\": \"Product Manager\",\n  \"location\": \"Bangalore, India\",\n  \"experienceLevel\": \"mid-senior\",\n  \"jobType\": \"full-time\",\n  \"scoreThreshold\": 70\n}\n```\n\n### Features\n\n- **AI-powered job scoring** based on your skills and experience\n- **Duplicate prevention** - tracks seen and applied jobs\n- **Auto Easy Apply** for matching jobs\n- **Recruiter outreach** with personalized messages\n- **Full audit log** in Google Sheets",
+        "height": 1100,
+        "width": 760
+      }
+    },
+    {
+      "id": "1268b8e2-6b2c-4292-8acf-fd7dc102f5f6",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        784,
+        416
+      ],
+      "parameters": {
+        "content": "## 1. Trigger & Input Validation",
+        "height": 328,
+        "width": 456,
+        "color": 4
+      }
+    },
+    {
+      "id": "e8d6eafc-6257-4e14-8662-454b23c8fcc1",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        64
+      ],
+      "parameters": {
+        "content": "## 2. Fetch & Filter Jobs",
+        "height": 684,
+        "width": 808,
+        "color": 4
+      }
+    },
+    {
+      "id": "d788dfd1-f547-4696-82aa-43beabbea12c",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        432
+      ],
+      "parameters": {
+        "content": "## 3. AI Scoring & Decision",
+        "height": 284,
+        "width": 712,
+        "color": 4
+      }
+    },
+    {
+      "id": "5806c90a-034f-4edd-8103-1eadd4324c38",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        320
+      ],
+      "parameters": {
+        "content": "## 4. Apply, Outreach & Log",
+        "height": 492,
+        "width": 1200,
+        "color": 4
+      }
+    },
+    {
+      "id": "b25016cb-9568-4d9e-95e9-8a97621db247",
+      "name": "Receive Job Search Request",
+      "webhookId": "linkedin-job-search-webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        848,
+        576
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "linkedin-job-search",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "4360b9fc-4fa9-4b6d-9857-e793f4dd6e84",
+      "name": "Validate Input and Build Search Params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        576
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extract search parameters from request\nconst body = $input.item.json.body || $input.item.json;\n\n// Required fields\nconst required = ['keywords', 'location'];\nconst missing = required.filter(f => !body[f]);\nif (missing.length > 0) {\n  throw new Error(`Missing required fields: ${missing.join(', ')}`);\n}\n\n// Default values and normalization\nconst searchParams = {\n  keywords: body.keywords.trim(),\n  location: body.location.trim(),\n  experienceLevel: body.experienceLevel || 'mid-senior',\n  jobType: body.jobType || 'full-time',\n  datePosted: body.datePosted || 'past-week',\n  remote: body.remote || false,\n  scoreThreshold: parseInt(body.scoreThreshold) || 70,\n  maxApplications: parseInt(body.maxApplications) || 10,\n  sendConnectionRequest: Boolean(body.sendConnectionRequest),\n  easyApplyOnly: Boolean(body.easyApplyOnly !== false)\n};\n\n// Candidate profile (customize with your own details)\nconst candidateProfile = {\n  name: body.candidateName || 'YOUR_NAME',\n  currentTitle: body.currentTitle || 'YOUR_CURRENT_TITLE',\n  yearsExperience: body.yearsExperience || 5,\n  skills: body.skills || ['JavaScript', 'Python', 'Product Management', 'Data Analysis', 'Agile'],\n  education: body.education || 'B.Tech Computer Science',\n  summary: body.profileSummary || 'Experienced professional seeking new opportunities in the tech industry.'\n};\n\n// Experience level mapping to LinkedIn API codes\nconst expLevelMap = {\n  'internship': '1',\n  'entry': '2',\n  'associate': '3',\n  'mid-senior': '4',\n  'director': '5',\n  'executive': '6'\n};\n\n// Job type mapping\nconst jobTypeMap = {\n  'full-time': 'F',\n  'part-time': 'P',\n  'contract': 'C',\n  'temporary': 'T',\n  'internship': 'I',\n  'volunteer': 'V'\n};\n\nreturn {\n  json: {\n    searchParams,\n    candidateProfile,\n    linkedInFilters: {\n      f_E: expLevelMap[searchParams.experienceLevel] || '4',\n      f_JT: jobTypeMap[searchParams.jobType] || 'F',\n      f_TPR: 'r604800',\n      f_LF: searchParams.remote ? '2' : undefined,\n      f_EA: searchParams.easyApplyOnly ? 'true' : undefined\n    },\n    metadata: {\n      requestId: `LJSR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,\n      startedAt: new Date().toISOString(),\n      applicationsCount: 0\n    }\n  }\n};"
+      }
+    },
+    {
+      "id": "3c3ece22-d9cb-44ec-8682-f408440d326d",
+      "name": "Fetch LinkedIn Job Listings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        1296,
+        384
+      ],
+      "parameters": {
+        "url": "https://api.linkedin.com/v2/jobSearch",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "keywords",
+              "value": "={{ $json.searchParams.keywords }}"
+            },
+            {
+              "name": "location",
+              "value": "={{ $json.searchParams.location }}"
+            },
+            {
+              "name": "f_E",
+              "value": "={{ $json.linkedInFilters.f_E }}"
+            },
+            {
+              "name": "f_JT",
+              "value": "={{ $json.linkedInFilters.f_JT }}"
+            },
+            {
+              "name": "f_TPR",
+              "value": "={{ $json.linkedInFilters.f_TPR }}"
+            },
+            {
+              "name": "count",
+              "value": "25"
+            },
+            {
+              "name": "start",
+              "value": "0"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "9d59f9a5-d35e-4302-9e8d-5a458d2446ab",
+      "name": "Fetch Individual Job Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        1296,
+        576
+      ],
+      "parameters": {
+        "url": "=https://api.linkedin.com/v2/jobs/{{ $json.jobId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "0ad3bd42-8214-468c-9e39-12d5501cf96a",
+      "name": "Parse and Normalize Job Listings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        560
+      ],
+      "parameters": {
+        "jsCode": "// Get raw LinkedIn job response\nconst jobsResponse = $('Fetch LinkedIn Job Listings').first().json;\nconst searchContext = $('Validate Input and Build Search Params').first().json;\n\nconst jobs = [];\n\n// Handle LinkedIn API response structure\nconst rawJobs = jobsResponse.elements || jobsResponse.jobs || jobsResponse.data || [];\n\nfor (const job of rawJobs) {\n  try {\n    const parsed = {\n      jobId: job.entityUrn?.replace('urn:li:jobPosting:', '') || job.id || '',\n      title: job.title || job.jobPostingTitle || 'Unknown Title',\n      companyName: job.companyDetails?.company?.name || job.formattedEmployerName || 'Unknown Company',\n      companyId: job.companyDetails?.company?.entityUrn?.replace('urn:li:company:', '') || '',\n      location: job.formattedLocation || job.workplaceTypes?.[0] || searchContext.searchParams.location,\n      description: job.description?.text || job.jobDescription || '',\n      descriptionSnippet: (job.description?.text || '').substring(0, 500),\n      isEasyApply: Boolean(job.easyApplyEnabled || job.applyMethod?.easyApplyJobApplicationFormCommon),\n      jobUrl: `https://www.linkedin.com/jobs/view/${job.entityUrn?.replace('urn:li:jobPosting:', '') || job.id}/`,\n      postedAt: job.listedAt ? new Date(job.listedAt).toISOString() : new Date().toISOString(),\n      applicantsCount: job.applies || 0,\n      salary: job.salaryInsights?.salaryRange?.min\n        ? `${job.salaryInsights.salaryRange.min}-${job.salaryInsights.salaryRange.max} ${job.salaryInsights.salaryRange.currencyCode}`\n        : 'Not disclosed',\n      skills: job.skills?.map(s => s.name) || [],\n      seniorityLevel: job.expLevelId || searchContext.searchParams.experienceLevel,\n      employmentType: job.employmentStatus || searchContext.searchParams.jobType,\n      remote: job.workplaceTypes?.includes('REMOTE') || false\n    };\n\n    if (parsed.jobId && parsed.title) {\n      jobs.push({ json: { job: parsed, searchContext } });\n    }\n  } catch (err) {\n    console.log('Error parsing job:', err.message);\n  }\n}\n\nif (jobs.length === 0) {\n  throw new Error('No valid job listings found. Check LinkedIn API credentials and search parameters.');\n}\n\nconsole.log(`Parsed ${jobs.length} jobs from LinkedIn`);\nreturn jobs;"
+      }
+    },
+    {
+      "id": "5b553452-3ee7-487d-a7f2-08435beb1fff",
+      "name": "Check Already Applied (Google Sheets)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "continueOnFail": true,
+      "position": [
+        1744,
+        560
+      ],
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "158067a5-8b9c-48ef-92ae-25cdea62ae2c",
+      "name": "Skip Already Seen Jobs",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        560
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.length || 0 }}",
+              "rightValue": 0
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "59cc3741-d634-4bc9-a7f9-8fe2ac8da98e",
+      "name": "Score Job with Claude AI",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        2192,
+        560
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert career coach and resume analyst. Score the following job posting against the candidate profile and return a JSON evaluation.\n\n**Candidate Profile:**\n- Name: {{ $json.searchContext.candidateProfile.name }}\n- Current Title: {{ $json.searchContext.candidateProfile.currentTitle }}\n- Years of Experience: {{ $json.searchContext.candidateProfile.yearsExperience }}\n- Skills: {{ $json.searchContext.candidateProfile.skills.join(', ') }}\n- Education: {{ $json.searchContext.candidateProfile.education }}\n- Summary: {{ $json.searchContext.candidateProfile.summary }}\n\n**Job Posting:**\n- Title: {{ $json.job.title }}\n- Company: {{ $json.job.companyName }}\n- Location: {{ $json.job.location }}\n- Description: {{ $json.job.descriptionSnippet }}\n- Required Skills: {{ $json.job.skills.join(', ') }}\n- Seniority: {{ $json.job.seniorityLevel }}\n- Remote: {{ $json.job.remote }}\n- Salary: {{ $json.job.salary }}\n\n**Scoring Criteria:**\n1. Skills match (0-30 points) - How well candidate skills align with job requirements\n2. Experience level fit (0-25 points) - Years of experience vs role expectations\n3. Title relevance (0-20 points) - How closely current/target title matches\n4. Location/remote compatibility (0-15 points)\n5. Company fit (0-10 points) - Company size, industry, reputation\n\n**Response Format (JSON only, no markdown):**\n{\n  \"totalScore\": 82,\n  \"breakdown\": {\n    \"skillsMatch\": 25,\n    \"experienceFit\": 20,\n    \"titleRelevance\": 18,\n    \"locationFit\": 12,\n    \"companyFit\": 7\n  },\n  \"matchedSkills\": [\"list of matching skills\"],\n  \"missingSkills\": [\"list of skills candidate lacks\"],\n  \"pros\": [\"top reasons this is a good fit\"],\n  \"cons\": [\"main concerns or gaps\"],\n  \"shouldApply\": true,\n  \"coverLetterHook\": \"One compelling opening sentence for a cover letter\",\n  \"connectionMessage\": \"A short personalized LinkedIn connection message (under 300 chars)\"\n}",
+        "options": {
+          "systemMessage": "You are a career coach that evaluates job-candidate fit and responds in JSON format only. Never include markdown code blocks or additional text outside the JSON."
+        }
+      }
+    },
+    {
+      "id": "3d6978aa-4ea7-40cb-ad45-13feb6756edd",
+      "name": "Claude AI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [
+        2272,
+        784
+      ],
+      "parameters": {
+        "model": "=claude-sonnet-4-20250514",
+        "options": {
+          "temperature": 0.3
+        }
+      }
+    },
+    {
+      "id": "b90fd653-3f91-4970-b9a0-4ddefd235df4",
+      "name": "Parse AI Score and Decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        560
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const aiResponse = $input.item.json;\nlet aiText = aiResponse.response || aiResponse.output || aiResponse.text || '';\n\n// Handle content array format from Anthropic\nif (aiResponse.content && Array.isArray(aiResponse.content)) {\n  aiText = aiResponse.content[0]?.text || '';\n}\n\n// Clean JSON from any markdown code blocks\nconst cleanText = aiText\n  .replace(/```json\\s*/g, '')\n  .replace(/```\\s*/g, '')\n  .trim();\n\nlet aiScore;\ntry {\n  aiScore = JSON.parse(cleanText);\n} catch (error) {\n  throw new Error(`Failed to parse AI response: ${error.message}. Response was: ${cleanText}`);\n}\n\n// Pull job and search context from upstream\nconst jobData = $('Skip Already Seen Jobs').item.json;\nconst scoreThreshold = jobData.searchContext?.searchParams?.scoreThreshold || 70;\n\nreturn {\n  json: {\n    job: jobData.job,\n    searchContext: jobData.searchContext,\n    aiScore,\n    scoreThreshold,\n    meetsThreshold: (aiScore.totalScore || 0) >= scoreThreshold,\n    processedAt: new Date().toISOString()\n  }\n};"
+      }
+    },
+    {
+      "id": "2426c3ac-58ec-4541-b912-1e26334c0a4a",
+      "name": "Check Score Threshold",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        560
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.meetsThreshold }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "48811a61-4e80-41a8-ab3f-d0458ef0c510",
+      "name": "Submit Easy Apply Application",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        2992,
+        464
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/v2/jobs/{{ $json.job.jobId }}/apply",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"jobPostingUrn\": \"urn:li:jobPosting:{{ $json.job.jobId }}\",\n  \"applicationData\": {\n    \"resumeText\": \"{{ $json.searchContext.candidateProfile.summary }}\",\n    \"coverLetter\": \"{{ $json.aiScore.coverLetterHook }} I am excited to apply for the {{ $json.job.title }} position at {{ $json.job.companyName }}.\",\n    \"contactInfo\": {\n      \"name\": \"{{ $json.searchContext.candidateProfile.name }}\"\n    }\n  }\n}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "dac0f205-d033-463c-a7d9-6f15fd473c91",
+      "name": "Send Recruiter Connection Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [
+        3216,
+        464
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.linkedin.com/v2/invitations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "linkedInOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Restli-Protocol-Version",
+              "value": "2.0.0"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"invitee\": {\n    \"com.linkedin.voyager.growth.invitation.InviteeProfile\": {\n      \"profileId\": \"{{ $json.job.companyId }}\"\n    }\n  },\n  \"message\": \"{{ $json.aiScore.connectionMessage }}\",\n  \"trackingId\": \"{{ $json.searchContext.metadata.requestId }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      }
+    },
+    {
+      "id": "fe18ee94-06ef-45b9-a77c-621ba0a8acc5",
+      "name": "Format Applied Job Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        464
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const jobData = $('Parse AI Score and Decide').item.json;\nconst applyResponse = $('Submit Easy Apply Application').item.json;\nconst connectionResponse = $('Send Recruiter Connection Request').item.json;\n\nconst applicationSuccess = !applyResponse.error && (applyResponse.status === 200 || applyResponse.id);\nconst connectionSuccess = !connectionResponse.error && (connectionResponse.id || connectionResponse.createdAt);\n\nreturn {\n  json: {\n    status: 'APPLIED',\n    jobId: jobData.job.jobId,\n    jobTitle: jobData.job.title,\n    company: jobData.job.companyName,\n    location: jobData.job.location,\n    jobUrl: jobData.job.jobUrl,\n    salary: jobData.job.salary,\n    aiScore: jobData.aiScore.totalScore,\n    matchedSkills: jobData.aiScore.matchedSkills,\n    missingSkills: jobData.aiScore.missingSkills,\n    pros: jobData.aiScore.pros,\n    cons: jobData.aiScore.cons,\n    applicationSubmitted: applicationSuccess,\n    connectionRequestSent: connectionSuccess,\n    appliedAt: new Date().toISOString(),\n    requestId: jobData.searchContext.metadata.requestId\n  }\n};"
+      }
+    },
+    {
+      "id": "65de0157-9d43-4643-9711-7c04f8764512",
+      "name": "Format Skipped Job Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        656
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const jobData = $input.item.json;\n\nreturn {\n  json: {\n    status: 'SKIPPED_LOW_SCORE',\n    jobId: jobData.job.jobId,\n    jobTitle: jobData.job.title,\n    company: jobData.job.companyName,\n    location: jobData.job.location,\n    jobUrl: jobData.job.jobUrl,\n    salary: jobData.job.salary,\n    aiScore: jobData.aiScore.totalScore,\n    scoreThreshold: jobData.scoreThreshold,\n    matchedSkills: jobData.aiScore.matchedSkills,\n    missingSkills: jobData.aiScore.missingSkills,\n    reason: `Score ${jobData.aiScore.totalScore} below threshold of ${jobData.scoreThreshold}`,\n    processedAt: new Date().toISOString(),\n    requestId: jobData.searchContext.metadata.requestId\n  }\n};"
+      }
+    },
+    {
+      "id": "59c7bc12-8182-448e-9538-618dd5d36205",
+      "name": "Log All Results to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "continueOnFail": true,
+      "position": [
+        3664,
+        560
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "="
+        },
+        "columns": {
+          "value": {},
+          "schema": [],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b0851a5e-ee66-4e76-91d4-700dff59af31",
+      "name": "Send Summary Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3888,
+        560
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json, null, 2) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Claude AI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Score Job with Claude AI",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Score Threshold": {
+      "main": [
+        [
+          {
+            "node": "Submit Easy Apply Application",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Skipped Job Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skip Already Seen Jobs": {
+      "main": [
+        [
+          {
+            "node": "Score Job with Claude AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Job with Claude AI": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Score and Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Applied Job Result": {
+      "main": [
+        [
+          {
+            "node": "Log All Results to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Skipped Job Result": {
+      "main": [
+        [
+          {
+            "node": "Log All Results to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Score and Decide": {
+      "main": [
+        [
+          {
+            "node": "Check Score Threshold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Job Search Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Input and Build Search Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch LinkedIn Job Listings": {
+      "main": [
+        [
+          {
+            "node": "Parse and Normalize Job Listings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Easy Apply Application": {
+      "main": [
+        [
+          {
+            "node": "Send Recruiter Connection Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log All Results to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Send Summary Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse and Normalize Job Listings": {
+      "main": [
+        [
+          {
+            "node": "Check Already Applied (Google Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Recruiter Connection Request": {
+      "main": [
+        [
+          {
+            "node": "Format Applied Job Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Already Applied (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Skip Already Seen Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input and Build Search Params": {
+      "main": [
+        [
+          {
+            "node": "Fetch LinkedIn Job Listings",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Individual Job Details",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parse and Normalize Job Listings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "to0iBEkLu8QMy0Py",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-07-31T20:15:04.249Z",
+      "updatedAt": "2026-07-31T20:15:04.249Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,31 @@
+{
+  "id": "sHnBrONgC4Vnfrt7",
+  "name": "VSA",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:38.640Z",
+  "updatedAt": "2026-10-03T14:00:49.512Z",
+  "isArchived": false,
+  "versionId": "8f72caa4-e7f4-43bd-a566-68c9f504a4d3",
+  "triggerCount": 0,
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "sHnBrONgC4Vnfrt7",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:38.642Z",
+      "updatedAt": "2026-04-25T13:12:38.642Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,292 @@
+{
+  "id": "yUQBk9Im5OBAODQ7",
+  "name": "ad-agency-strategy",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:19.204Z",
+  "updatedAt": "2026-10-03T14:00:46.028Z",
+  "isArchived": false,
+  "versionId": "b4c6440d-4ead-4ea9-a7b5-9199a84663f9",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "webhook-1",
+      "name": "Webhook Strategy",
+      "webhookId": "63f7d6bb-7cec-4dca-9d69-fe9a74fee3d0",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        256,
+        304
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ad-agency-strategy",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "sheets-campaign",
+      "name": "Get Campaign",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        464,
+        304
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Campaigns"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "campaign_id",
+              "lookupValue": "={{ $json.campaign_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I2QkkAZolEbEmZwx",
+          "name": "Google Sheets account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "sheets-client",
+      "name": "Get Client",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        656,
+        304
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Clients"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "client_id",
+              "lookupValue": "={{ $json.client_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I2QkkAZolEbEmZwx",
+          "name": "Google Sheets account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "ai-agent",
+      "name": "AI Strategy Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        864,
+        304
+      ],
+      "parameters": {
+        "agent": "conversationalAgent",
+        "promptType": "define",
+        "text": "Create a comprehensive campaign strategy for:\n\nCampaign: {{ $('Get Campaign').item.json.campaign_name }}\nObjective: {{ $('Get Campaign').item.json.objective }}\nClient: {{ $json.company_name }}\nIndustry: {{ $json.industry }}\n\nGenerate JSON:\n{\"strategy\": {\"executive_summary\": \"\", \"target_audience\": {\"primary\": \"\", \"secondary\": \"\"}, \"messaging\": {\"key_message\": \"\", \"proof_points\": []}, \"channels\": [], \"timeline\": \"\", \"kpis\": []}}",
+        "options": {
+          "systemMessage": "You are a senior strategist creating campaign strategies."
+        }
+      }
+    },
+    {
+      "id": "claude-model",
+      "name": "Claude Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        512
+      ],
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "options": {
+          "maxTokensToSample": 8192
+        }
+      },
+      "credentials": {
+        "anthropicApi": {
+          "id": "D131Q4T0LM0vIjFl",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "id": "sheets-update",
+      "name": "Update Campaign",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1232,
+        304
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Campaigns"
+        },
+        "columns": {
+          "value": {
+            "status": "strategy_review",
+            "updated_at": "={{ $now.toISO() }}",
+            "strategy_data": "={{ $json.output }}"
+          },
+          "mappingMode": "defineBelow"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I2QkkAZolEbEmZwx",
+          "name": "Google Sheets account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "respond-1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        304
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"success\",\"campaign_id\":\"{{ $('Get Campaign').item.json.campaign_id }}\",\"next_step\":\"strategy_review\"}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Claude Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Strategy Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Campaign": {
+      "main": [
+        [
+          {
+            "node": "Get Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client": {
+      "main": [
+        [
+          {
+            "node": "AI Strategy Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Strategy": {
+      "main": [
+        [
+          {
+            "node": "Get Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Strategy Agent": {
+      "main": [
+        [
+          {
+            "node": "Update Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Campaign": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "yUQBk9Im5OBAODQ7",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:19.207Z",
+      "updatedAt": "2026-04-25T13:12:19.207Z"
+    }
+  ],
+  "activeVersion": null
+}

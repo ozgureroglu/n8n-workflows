@@ -1,0 +1,613 @@
+{
+  "id": "nkcRcJHJCoRSL8aI",
+  "name": "Generative Video Pipeline (Replicate + OpenAI)",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:29.407Z",
+  "updatedAt": "2026-10-03T14:00:47.107Z",
+  "isArchived": false,
+  "versionId": "a7f165b6-c371-40bc-a3d6-efed6a0b13ea",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "e1947aae-b7de-49d9-a1a3-1d012d6c414d",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        304
+      ],
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Sheet1"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c05ebfca-028a-48cc-858d-eade6be0cae0",
+      "name": "OpenAI Director",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        304
+      ],
+      "parameters": {
+        "model": "chatgpt-4o-latest",
+        "prompt": "You are an expert Short-Form Video Producer designed to create viral, high-retention content for TikTok, Reels, and YouTube Shorts.\n\nYour Goal: Take a raw video idea and transform it into a production-ready data object.\n\n## INSTRUCTIONS\n\n1.  **SCRIPT:** Write a compelling, fast-paced voiceover script. \n    *   No intro fluff (\"Hello guys\"). Start immediately with a hook.\n    *   Keep it under 140 words (approx. 45-60 seconds speaking time).\n    *   Do NOT include visual directions like \"[Camera pans]\" or sound effects in the script text. The script must contain ONLY the spoken words.\n\n2.  **VISUAL KEYWORDS:** Analyze the script and extract 3 distinct search terms for stock footage. \n    *   These must be CONCRETE NOUNS (e.g., search for \"clocks\" or \"running,\" NOT \"procrastination\" or \"efficiency\"). \n    *   Stock video engines do not understand abstract concepts.\n\n3.  **METADATA:** Create a punchy, 3-5 word title for the on-screen text overlay.\n\n## OUTPUT FORMAT\n\nYou must output valid JSON only. No markdown, no conversation.\n\n{\n  \"script\": \"The exact spoken words for the voiceover...\",\n  \"visual_keywords\": [\"keyword1\", \"keyword2\", \"keyword3\"],\n  \"overlay_title\": \"The Hook Text\",\n  \"suggested_bg_music_mood\": \"Upbeat/Dark/Chill\"\n}",
+        "options": {},
+        "requestOptions": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "70adc783-90cc-487a-9e6e-faf72fbcc244",
+      "name": "Get Stock Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -480,
+        208
+      ],
+      "parameters": {
+        "url": "https://api.pexels.com/videos/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.keyword }}"
+            },
+            {
+              "name": "per_page",
+              "value": "1"
+            },
+            {
+              "name": "orientation",
+              "value": "portrait"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "73b0992c-4d9b-43aa-b864-cf565ac02daf",
+      "name": "Generate Voiceover",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -480,
+        432
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/YOUR_VOICE_ID",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "YOUR_ELEVENLABS_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $('OpenAI Director').item.json.script }}"
+            },
+            {
+              "name": "model_id",
+              "value": "eleven_monolingual_v1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b5141429-30cd-409d-b212-a1cdccf3fedc",
+      "name": "Upload to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -256,
+        432
+      ],
+      "parameters": {
+        "name": "voiceover.mp3",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "4767d306-27c1-46fa-86d2-a1f1aee5b15e",
+      "name": "Render Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        0,
+        304
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.creatomate.com/v1/renders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_CREATOMATE_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "template_id",
+              "value": "YOUR_TEMPLATE_ID_HERE"
+            },
+            {
+              "name": "modifications",
+              "value": "={{ {\n  \"Background\": $('Get Stock Video').item.json.videos[0].video_files[0].link,\n  \"Voiceover\": $('Upload to Drive').item.json.webContentLink,\n  \"Captions\": $('OpenAI Director').item.json.script,\n  \"Title-Text\": $('OpenAI Director').item.json.caption\n} }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "03338092-29ee-4d54-ae1e-afb833f69216",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "content": "## Configuration Required\n\n1. **Pexels:** Add a Header Auth Credential named `Authorization` with value `YOUR_API_KEY`.\n2. **ElevenLabs:** Replace `YOUR_VOICE_ID` in the URL and add your API key.\n3. **Creatomate:** Create a template in Creatomate first. Ensure your template elements are named `Background`, `Voiceover`, and `Title-Text` (or update the JSON in the body of this node to match your template names).",
+        "height": 277,
+        "width": 339
+      }
+    },
+    {
+      "id": "cb75e819-6fd8-4f20-a4bb-9aeeeef9f682",
+      "name": "Director (GPT-4o)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -2320,
+        512
+      ],
+      "parameters": {
+        "model": "chatgpt-4o-latest",
+        "options": {},
+        "requestOptions": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "eb59f53c-47b6-4d9f-a542-9914ec7b2fd1",
+      "name": "Start Video Gen (Minimax)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -2080,
+        416
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/predictions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_REPLICATE_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "version",
+              "value": "14f24c30c88f117f73587e9c99127b4e72782b7c4d57c2a52f954d241d7f6e6f"
+            },
+            {
+              "name": "input",
+              "value": "={{ {\n  \"prompt\": $json.video_prompt,\n  \"prompt_optimizer\": true\n} }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fe41afec-d357-4b47-ba09-76429c58928f",
+      "name": "Generate Voice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -2080,
+        656
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/YOUR_VOICE_ID",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "YOUR_ELEVENLABS_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $('Director (GPT-4o)').item.json.script }}"
+            },
+            {
+              "name": "model_id",
+              "value": "eleven_monolingual_v1"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6cf4de23-748e-4b5d-9b76-83146cdcf234",
+      "name": "Wait 3 Mins",
+      "webhookId": "5a4b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        -1872,
+        416
+      ],
+      "parameters": {
+        "amount": 180,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "70076e7e-758b-4379-bfeb-eb4d4ba9816a",
+      "name": "Get Generated Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1664,
+        416
+      ],
+      "parameters": {
+        "url": "={{ $('Start Video Gen (Minimax)').item.json.urls.get }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_REPLICATE_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3706ace7-979f-424d-989b-4ef9a65c8e5b",
+      "name": "Upload Audio to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1872,
+        656
+      ],
+      "parameters": {
+        "name": "voice.mp3",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a22aa498-e113-4b48-b813-16d4bc41341c",
+      "name": "Final Assembly",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1424,
+        560
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.creatomate.com/v1/renders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_CREATOMATE_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "template_id",
+              "value": "YOUR_TEMPLATE_ID"
+            },
+            {
+              "name": "modifications",
+              "value": "={{ {\n  \"Background\": $('Get Generated Video').item.json.output,\n  \"Voiceover\": $('Upload Audio to Drive').item.json.webContentLink,\n  \"Text-Overlay\": $('Director (GPT-4o)').item.json.overlay_text\n} }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "164cf12a-af7e-4e23-8cb2-fc2c5b57b01d",
+      "name": "Google Sheets Trigger1",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2544,
+        512
+      ],
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Sheet1"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a89e91b0-8619-44b9-b648-958b06003336",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2544,
+        96
+      ],
+      "parameters": {
+        "content": "## 🚀 Generative Setup Guide\n\n1. **Replicate Key:** You need a Replicate API Key. Add it to Header Auth as `Authorization`.\n2. **Minimax Model:** This node uses `haiper-ai/minimax-video-01`. It costs per run.\n3. **Wait Node:** Generative video takes time. The wait node is set to 3 mins. If the video fails, increase this time.\n4. **Drive:** Uploads audio so Creatomate can access it publicly.\n5. **Creatomate:** Ensure your template has a video layer named `Background` set to **\"Loop\"** (since AI video is 5s and audio is 30s).",
+        "height": 305,
+        "width": 353
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Director": {
+      "main": [
+        [
+          {
+            "node": "Get Stock Video",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Voiceover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Stock Video": {
+      "main": [
+        [
+          {
+            "node": "Render Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Voiceover": {
+      "main": [
+        [
+          {
+            "node": "Upload to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Drive": {
+      "main": [
+        [
+          {
+            "node": "Render Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Director (GPT-4o)": {
+      "main": [
+        [
+          {
+            "node": "Start Video Gen (Minimax)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Video Gen (Minimax)": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Mins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 Mins": {
+      "main": [
+        [
+          {
+            "node": "Get Generated Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Voice": {
+      "main": [
+        [
+          {
+            "node": "Upload Audio to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Audio to Drive": {
+      "main": [
+        [
+          {
+            "node": "Final Assembly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Generated Video": {
+      "main": [
+        [
+          {
+            "node": "Final Assembly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Director (GPT-4o)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "nkcRcJHJCoRSL8aI",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:29.410Z",
+      "updatedAt": "2026-04-25T13:12:29.410Z"
+    }
+  ],
+  "activeVersion": null
+}

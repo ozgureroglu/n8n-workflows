@@ -1,0 +1,436 @@
+{
+  "id": "xgvNQTMazT3lDimK",
+  "name": "Consume_medium_business_ideas",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:55.199Z",
+  "updatedAt": "2026-10-03T14:00:46.596Z",
+  "isArchived": false,
+  "versionId": "63127863-2e7a-4a88-80c6-56be1b0d0a35",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "77945f9c-726c-4f55-8be4-de20cac6e0bb",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -160
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 20
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3b33f7e4-6ea0-4a6c-8518-439050316752",
+      "name": "Find documents",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        -160
+      ],
+      "parameters": {
+        "collection": "articles",
+        "options": {
+          "limit": 1,
+          "sort": "{\"createdAt\": 1}",
+          "projection": "{}"
+        },
+        "query": "{ \n  \"processed\": { \"$exists\": false } \n}"
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "iM8fXJ8rNRhdlPCV",
+          "name": "MongoDB medium_business_ideas_jetson"
+        }
+      }
+    },
+    {
+      "id": "7ae3b6b1-84d5-4bea-b9e7-da1d04c65ed1",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        272
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "774ec9f2-1919-4aba-ad71-8be6e982f9d5",
+      "name": "Execute Command",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        224,
+        224
+      ],
+      "parameters": {
+        "command": "echo \"test\""
+      }
+    },
+    {
+      "id": "59b92f85-fe4b-4bf8-99f2-74435d5ce36d",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "position": [
+        768,
+        272
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n        \"id\": { \"type\": \"string\" },\n        \"url\": { \"type\": \"string\" },\n        \"pain_point_found\":{ \"type\": \"boolean\" },\n        \"idea_found\":{ \"type\": \"boolean\" },      \n\t\t\"summary\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"pain_point_summary\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"target_audiences\": {\n\t\t\t\"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n\t\t},\n\t\t\"ideas_summary\": {\n\t\t\t\"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n\t\t},\n\t\t\"extras\": {\n\t\t\t\"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n\t\t},\n      \t\"business_verticals\": {\n\t\t\t\"type\": \"array\",\n            \"items\": {\n                \"type\": \"string\"\n            }\n\t\t}\n\t},\n    \"required\": [\"id\",\"url\", \"pain_point_found\", \"idea_found\", \"summary\", \"pain_point_summary\", \"target_audiences\", \"ideas_summary\", \"extras\", \"business_verticals\"]\n}"
+      }
+    },
+    {
+      "id": "d90a2662-d9f4-480c-8db8-189360d6a561",
+      "name": "Insert documents1",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "onError": "continueRegularOutput",
+      "position": [
+        1200,
+        64
+      ],
+      "parameters": {
+        "operation": "insert",
+        "collection": "=process_l1",
+        "fields": "=_id,pain_point_found,idea_found,summary,pain_point_summary,target_audiences,ideas_summary,extras,business_verticals\n",
+        "options": {
+          "useDotNotation": false
+        }
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "iM8fXJ8rNRhdlPCV",
+          "name": "MongoDB medium_business_ideas_jetson"
+        }
+      }
+    },
+    {
+      "id": "41dc99ea-0e98-4817-8775-141890d0eca4",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        64
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c25bc359-10a6-4a9b-9af0-becac0ce2ae0",
+              "name": "_id",
+              "value": "={{ $json.output.id }}",
+              "type": "string"
+            },
+            {
+              "id": "30f0ddcf-d9f1-4b46-8289-b845da810c52",
+              "name": "url",
+              "value": "={{ $json.output.url }}",
+              "type": "string"
+            },
+            {
+              "id": "90f9cfde-13bb-4331-aad4-d676f4b5a068",
+              "name": "pain_point_found",
+              "value": "={{ $json.output.pain_point_found }}",
+              "type": "boolean"
+            },
+            {
+              "id": "e483807a-ccb8-4faa-b9b0-e950d02adc71",
+              "name": "idea_found",
+              "value": "={{ $json.output.idea_found }}",
+              "type": "boolean"
+            },
+            {
+              "id": "c3315691-170c-48a7-9d3b-acb6b66fcb41",
+              "name": "summary",
+              "value": "={{ $json.output.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "16d6b7ed-e40a-4b5f-b17e-c15ce1c6dfdb",
+              "name": "pain_point_summary",
+              "value": "={{ $json.output.pain_point_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "d26e8854-63f8-4b4b-b536-b0068ba18a64",
+              "name": "target_audiences",
+              "value": "={{ $json.output.target_audiences }}",
+              "type": "array"
+            },
+            {
+              "id": "7d1b4ce5-6402-4c47-9112-02e7d5598e98",
+              "name": "ideas_summary",
+              "value": "={{ $json.output.ideas_summary }}",
+              "type": "array"
+            },
+            {
+              "id": "6aee9f15-4dbe-4d67-b977-235d60f31899",
+              "name": "extras",
+              "value": "={{ $json.output.extras }}",
+              "type": "array"
+            },
+            {
+              "id": "da3b49a4-8055-4821-b38b-f8397a8ac5a9",
+              "name": "business_verticals",
+              "value": "={{ $json.output.business_verticals }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "213b05a8-58a6-4a16-aa41-1b3188051829",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        -144
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5cf01eb-f86a-4697-be99-2c6c17cd8205",
+              "name": "processed",
+              "value": "1",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "9a2c6faf-8d10-42f0-b600-da78c3ec9d14",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1472,
+        -144
+      ],
+      "parameters": {
+        "mode": "chooseBranch"
+      }
+    },
+    {
+      "id": "a03ba7ed-0c2d-471b-abf5-5efa8558a616",
+      "name": "Find and update documents",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        -144
+      ],
+      "parameters": {
+        "operation": "findOneAndUpdate",
+        "collection": "articles",
+        "updateKey": "url",
+        "fields": "processed",
+        "options": {}
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "iM8fXJ8rNRhdlPCV",
+          "name": "MongoDB medium_business_ideas_jetson"
+        }
+      }
+    },
+    {
+      "id": "48a3711f-09c0-422e-aa63-6f2253248d03",
+      "name": "Initial Evaluation",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        608,
+        64
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json._id }}\n{{ $json.url }}\n{{ $json.content }} \n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "System Prompt\nYou are an AI model designed to analyze textual documents, identify whether they describe a business idea, and create more about the subject in the document. Follow the steps and output format precisely.\n\nObjective\nRead the provided document carefully. Your main goal is to determine whether the text mentions a pain point, a business idea, or a business proposal—something that refers to an existing problem that people face, a new product, service, or business venture.\n\nIf it does, you must extract and summarize that pain point and idea clearly and concisely.\n\nStep-by-Step Instructions:\n* Carefully read and comprehend the entire given document.\n* Identify the main topic, intent, and context.\n* Check for a pain point mentioned.\n* Check for Business Idea Indicators\n\nLook for text mentioning any of the following:\n\n* Proposal for a new company, project, product, or service\n* A pain point that needs a solution\n* Descriptions of how a business could make money\n* Plans that involve customers, target markets, pricing, production, or sales strategies\n* Statements like “the idea is to…,” “we plan to start…,” “a new service/product that…”\n\nIdentify and summarize the Business Idea and the pain point\n\n* If a clear definition of a pain point exists, summarize it in one to three sentences.\n* If a clear business idea exists, summarize it in one to four sentences.\n* The summary should capture the essence of what the business will do and how it provides value.\n\nDecide and Respond:\n\n* If you find a pain point in the document, set pain_point_found to \"true\" and add a short, clear description of the concept to the pain_point_summary field.\n* Which audience was mentioned as the owners of these pain points, and the target audience of the proposed solutions? Add them to the target_audiences field.\n* If you find any business ideas mentioned in the document, set idea_found  to \"true\" and add a short, clear description of those business ideas to the ideas_summary field.\n* Create 3 creative business ideas about the pain point or the idea, and add them to the extras field.\n* How would you classify this solution's business verticals? Add them to the business_verticals field.\n\nOutput Format:\nRespond with ONLY a valid JSON object in this exact format:\n\n{\n  \"id\": \"string\",\n  \"url\": \"string\",\n  \"pain_point_found\": boolean,\n  \"idea_found\": boolean,\n  \"summary\": \"string\",\n  \"pain_point_summary\": \"string\",\n  \"target_audiences\": [\"string\", \"string\"],\n  \"ideas_summary\": [\"string\", \"string\"],\n  \"extras\": [\"string\", \"string\"],\n  \"business_verticals\": [\"string\", \"string\"]\n}\n\nOutput fields:\nid: [id of the document]\nurl: [url of the document]\npain_point_found: [true/false]\nidea_found: [true/false]\nsummary2: [Give the overall summary of the document here]\npain_point_summary: [Summarize the pain point in your own words clearly and concisely]\nideas_summary: [Summarize the business idea in your own words clearly and concisely]\nextras: [Give three extra business ideas that you can think of besides the ones discussed in the document, be creative]\n"
+        }
+      }
+    },
+    {
+      "id": "ed844adc-8168-44ae-95ea-f538ad556879",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1872,
+        272
+      ],
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Find documents",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find documents": {
+      "main": [
+        [
+          {
+            "node": "Initial Evaluation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Initial Evaluation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Initial Evaluation",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert documents1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert documents1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Find and update documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initial Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "xgvNQTMazT3lDimK",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:55.203Z",
+      "updatedAt": "2026-04-25T13:12:55.203Z"
+    }
+  ],
+  "activeVersion": null
+}

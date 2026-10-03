@@ -1,0 +1,278 @@
+{
+  "id": "SNZ4UcOh1GQKDJBZ",
+  "name": "Create, update, and get a document in Google Cloud Firestore",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:27.333Z",
+  "updatedAt": "2026-10-03T14:00:46.794Z",
+  "isArchived": false,
+  "versionId": "ee6d7358-9989-4494-afaa-9a2d0d79f046",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "322723a2-f83d-4dad-8ffc-2a1263c8af94",
+      "name": "On clicking 'execute'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        144,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "98805901-7f65-4efd-a9ea-2979bc27a1aa",
+      "name": "Google Cloud Firestore",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1,
+      "position": [
+        768,
+        240
+      ],
+      "parameters": {
+        "operation": "create",
+        "projectId": "firebase-gcp-project-401507",
+        "database": "job-harvester",
+        "collection": "jobListingsSites",
+        "columns": "name,url,region,score"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "bc19095c-3a26-4873-a75a-ff3d69feffd4",
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        576,
+        240
+      ],
+      "parameters": {
+        "values": {
+          "number": [
+            {
+              "name": "NAME",
+              "value": "={{ $json.NAME }}"
+            },
+            {
+              "name": "SCORE",
+              "value": "={{ $json.SCORE }}"
+            }
+          ],
+          "string": [
+            {
+              "name": "URL",
+              "value": "={{ $json.URL }}"
+            },
+            {
+              "name": "REGION",
+              "value": "={{ $json.REGION }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a43b8b40-1121-4bce-a774-de3ec3cad579",
+      "name": "Set1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        960,
+        96
+      ],
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "name",
+              "value": "nodemation"
+            },
+            {
+              "name": "document_id",
+              "value": "={{$node[\"Google Cloud Firestore\"].json[\"_id\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c8c11359-769b-44d3-acdc-2af660658261",
+      "name": "Google Cloud Firestore1",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        96
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "={{$node[\"Google Cloud Firestore\"].parameter[\"projectId\"]}}",
+        "collection": "={{$node[\"Google Cloud Firestore\"].parameter[\"collection\"]}}",
+        "updateKey": "document_id",
+        "columns": "name"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "d31d3554-8194-4fcd-805d-c210c90552dd",
+      "name": "Google Cloud Firestore2",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        96
+      ],
+      "parameters": {
+        "projectId": "={{$node[\"Google Cloud Firestore\"].parameter[\"projectId\"]}}",
+        "collection": "={{$node[\"Google Cloud Firestore\"].parameter[\"collection\"]}}",
+        "documentId": "={{$node[\"Set1\"].json[\"document_id\"]}}"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "a0b322fc-492c-4c5e-8304-9a9629db726d",
+      "name": "Get row(s) in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        240
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1KHIgxfK4nHDL9rtXfkkmKUO5hPRbUVJKqGsES-5kyG4",
+          "mode": "list",
+          "cachedResultName": "Remote_Job_Sites",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KHIgxfK4nHDL9rtXfkkmKUO5hPRbUVJKqGsES-5kyG4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 202574861,
+          "mode": "list",
+          "cachedResultName": "Sites",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KHIgxfK4nHDL9rtXfkkmKUO5hPRbUVJKqGsES-5kyG4/edit#gid=202574861"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "e1ff21cf-7e28-4f9c-9e10-4980e8716020",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        304,
+        128
+      ],
+      "parameters": {
+        "content": "## I'm a note \nBurada sadece ilk yukleme yapiliyor, degisikliklerin de yuklenebilmesi icin upsert fonksiyonu kullanilmali, ancak dokuman id'si ile calisiyorsa burada ise yaramaz.",
+        "height": 288,
+        "width": 624
+      }
+    }
+  ],
+  "connections": {
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Google Cloud Firestore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set1": {
+      "main": [
+        [
+          {
+            "node": "Google Cloud Firestore1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On clicking 'execute'": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Cloud Firestore": {
+      "main": [
+        []
+      ]
+    },
+    "Google Cloud Firestore1": {
+      "main": [
+        [
+          {
+            "node": "Google Cloud Firestore2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {},
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "SNZ4UcOh1GQKDJBZ",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:27.335Z",
+      "updatedAt": "2026-04-25T13:12:27.335Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,627 @@
+{
+  "id": "vVASDgtTzRGSlI7s",
+  "name": "Job_Hunting_App",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:30.391Z",
+  "updatedAt": "2026-10-03T14:00:47.525Z",
+  "isArchived": false,
+  "versionId": "11e2f512-fbe5-48fc-97a1-b17070f9da95",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "183d18dc-f275-4a9b-bf99-8cac24ea7650",
+      "name": "Hourly trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        -80
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10,12,19,21 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5baa8120-07b0-47cf-b7a7-ee22bbb16270",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -224
+      ],
+      "parameters": {
+        "content": "SET UP TRIGGER",
+        "height": 368,
+        "width": 192
+      }
+    },
+    {
+      "id": "da78bb9f-94dd-4da0-869f-80a8bf75c383",
+      "name": "Select Articles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "retryOnFail": true,
+      "position": [
+        656,
+        -704
+      ],
+      "parameters": {
+        "jsCode": "// n8n Code node — Run Once for All Items\n// Goal: From multiple news API payloads, return up to 10 *distinct-topic* articles,\n//       each with a valid URL and image, excluding Biztoc and known aggregators.\n//\n// Input shape (per item):\n//   { json: { status, totalResults, articles: [ { title, url, urlToImage, source, publishedAt, description } ] } }\n// Output shape (array of n8n items):\n//   [ { json: { topicKey, title, url, image, source, publishedAt, description } }, ... ]\n\n\n// ──────────────────────────────────────────────────────────────────────────────\n// 1) Helpers & constants\n// ──────────────────────────────────────────────────────────────────────────────\n\n/**\n * Domains considered aggregators / press-release wires to SKIP entirely.\n * Note: MarketWatch press releases are matched via path check.\n * Extend this set as needed (e.g., add your own blacklist domains).\n */\nconst aggregatorDomains = new Set([\n  'biztoc.com','techmeme.com','news.ycombinator.com','flipboard.com',\n  'finance.yahoo.com','consent.yahoo.com','news.yahoo.com',\n  'globenewswire.com','prnewswire.com','businesswire.com',\n  'marketwatch.com/press-release','medium.com','substack.com','thefly.com'\n]);\n\n/**\n * Extract normalized hostname from a URL (without \"www.\")\n * @param {string} url\n * @returns {string} hostname or '' on failure\n */\nfunction getHostname(url) {\n  try {\n    const u = new URL(url);\n    return u.hostname.replace(/^www\\./,'').toLowerCase();\n  } catch { return ''; }\n}\n\n/**\n * Extract pathname from a URL in lowercase.\n * @param {string} url\n * @returns {string} pathname or ''\n */\nfunction getPath(url) {\n  try { return new URL(url).pathname.toLowerCase(); } catch { return ''; }\n}\n\n/**\n * True if the URL belongs to an aggregator or a press-release page.\n * Items matching this are SKIPPED during collection.\n * @param {string} url\n * @returns {boolean}\n */\nfunction isAggregator(url) {\n  const host = getHostname(url);\n  const path = getPath(url);\n  if (!host) return true;\n  if (aggregatorDomains.has(host)) return true;\n  if (host === 'marketwatch.com' && path.includes('/press-release')) return true;\n  return false;\n}\n\n/**\n * True if the article is from Biztoc (by source name or hostname).\n * These are SKIPPED during collection.\n * @param {object} article\n * @returns {boolean}\n */\nfunction isBiztoc(article) {\n  const src = (article?.source?.name || '').toLowerCase().trim();\n  const host = getHostname(article?.url || '');\n  return src === 'biztoc.com' || host === 'biztoc.com';\n}\n\n/**\n * Sanitize title to a comparable, topic-level string.\n * Strips brackets/parentheses, common suffixes, and punctuation; collapses spaces.\n * @param {string} [title='']\n * @returns {string}\n */\nfunction cleanTitle(title = '') {\n  let t = String(title).toLowerCase();\n  t = t.replace(/\\([^)]*\\)/g, ' ').replace(/\\[[^\\]]*\\]/g, ' ');\n  t = t.split('|')[0];\n  t = t.split(' — ')[0];\n  t = t.split(' - ')[0];\n  t = t.replace(/\\b(opinion|analysis|update|breaking)\\b/g, ' ');\n  t = t.replace(/[^a-z0-9\\s]/g, ' ').replace(/\\s+/g, ' ').trim();\n  return t;\n}\n\n/**\n * Build a canonical topic key from cleaned title + registrable domain.\n * @param {object} article\n * @returns {string}\n */\nfunction canonicalKey(article) {\n  const titleKey = cleanTitle(article.title || '');\n  const host = getHostname(article.url || '');\n  return `${titleKey}__${host ? host.split('.').slice(-2).join('.') : ''}`;\n}\n\n/**\n * Parse date string to epoch ms (0 if invalid).\n * @param {string} s\n * @returns {number}\n */\nfunction parseDate(s) {\n  const d = new Date(s);\n  return isNaN(d.getTime()) ? 0 : d.getTime();\n}\n\n/**\n * Heuristic quality score (aggregators already excluded earlier):\n *  - Reward presence of image\n *  - Reward longer description (capped)\n *  - Light recency bias\n * @param {object} a\n * @returns {number}\n */\nfunction qualityScore(a) {\n  const hasImage = a.urlToImage ? 1 : 0;\n  const descLen = (a.description || '').length;\n\n  return (\n    hasImage * 5 +\n    Math.min(descLen, 800) / 160 + // up to +5\n    parseDate(a.publishedAt) / 1e12 // modest recency factor\n  );\n}\n\n\n// ──────────────────────────────────────────────────────────────────────────────\n/* 2) Collect & pre-filter all articles across inputs\n      Keep only items that:\n        - have URL AND image\n        - are NOT Biztoc\n        - are NOT from aggregators (isAggregator)\n        - are NOT Yahoo consent redirect pages\n*/\n// ──────────────────────────────────────────────────────────────────────────────\nconst allArticles = [];\nfor (const item of items) {\n  const arts = item.json?.articles ?? [];\n  for (const a of arts) {\n    if (!a?.url || !a?.urlToImage) continue;           // must have URL + image\n    if (a.url.includes('consent.yahoo.com')) continue;  // skip consent redirects\n    if (isAggregator(a.url)) continue;                  // skip aggregators entirely\n    if (isBiztoc(a)) continue;                          // skip Biztoc entirely\n    allArticles.push(a);\n  }\n}\n\n\n// ──────────────────────────────────────────────────────────────────────────────\n// 3) Group by canonical \"topic\" key to avoid duplicates across sources\n// ──────────────────────────────────────────────────────────────────────────────\nconst groups = new Map();\nfor (const a of allArticles) {\n  const key = canonicalKey(a);\n  if (!key) continue;\n  if (!groups.has(key)) groups.set(key, []);\n  groups.get(key).push(a);\n}\n\n\n// ──────────────────────────────────────────────────────────────────────────────\n// 4) For each topic, pick the best representative article (highest qualityScore)\n// ──────────────────────────────────────────────────────────────────────────────\nconst picks = [];\nfor (const [key, arr] of groups.entries()) {\n  const sorted = arr.slice().sort((a, b) => qualityScore(b) - qualityScore(a));\n  const best = sorted.find(a => a?.url && a?.urlToImage);\n  if (!best) continue;\n\n  picks.push({\n    topicKey: key,\n    title: best.title || '',\n    url: best.url,\n    image: best.urlToImage,\n    source: best.source?.name || getHostname(best.url),\n    publishedAt: best.publishedAt || null,\n    description: best.description || null,\n  });\n}\n\n\n// ──────────────────────────────────────────────────────────────────────────────\n// 5) Sort by recency and take the 10 most recent topics\n// ──────────────────────────────────────────────────────────────────────────────\npicks.sort((a, b) => parseDate(b.publishedAt) - parseDate(a.publishedAt));\nconst top10 = picks.slice(0, 10);\n\n\n// ──────────────────────────────────────────────────────────────────────────────\n// 6) Return as n8n items — all guaranteed to have URL + image and not aggregators\n// ──────────────────────────────────────────────────────────────────────────────\nreturn top10.map(x => ({ json: x }));"
+      }
+    },
+    {
+      "id": "959e2696-beac-4fb7-9170-3bb77de4b6cc",
+      "name": "URL checker",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        -64
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e052b718-bf95-45e8-94ef-6c3eacbcfaed",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.siteSelection }}",
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ff215920-32bc-426f-a772-5e2f6c7dba64",
+      "name": "Get Users",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        160,
+        -80
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "projectId": "firebase-gcp-project-401507",
+        "database": "job-harvester",
+        "collection": "users",
+        "returnAll": true
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "e5a339d3-dec4-45c9-8e43-b1fb497d0ef3",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2400,
+        144
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k",
+          "mode": "list",
+          "cachedResultName": "testsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "siteSelection",
+              "displayName": "siteSelection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "7b10700d-f388-4c59-a860-baf4c917fc75",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        848,
+        -80
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "51f97713-ae76-46a2-93ab-a7333854db63",
+      "name": "Split Out1",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        -64
+      ],
+      "parameters": {
+        "fieldToSplitOut": "=userSiteSelections",
+        "include": "allOtherFields",
+        "options": {
+          "destinationFieldName": "siteSelection"
+        }
+      }
+    },
+    {
+      "id": "3550e8a2-880d-4faa-a3d7-e7f827b197cc",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -224
+      ],
+      "parameters": {
+        "content": "Read users and their scrape preferences",
+        "height": 368,
+        "width": 192,
+        "color": 3
+      }
+    },
+    {
+      "id": "2696858d-84bc-4f11-9ed3-5243600368c2",
+      "name": "Filter scrape jobs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        -80
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "03f3ee2b-56ea-4ab4-a8d8-e55a9a1ffa42",
+              "name": "userSiteSelections",
+              "type": "array",
+              "value": "={{ $('Get Users').item.json.sites }}"
+            },
+            {
+              "id": "0762d508-1c7b-4128-8455-e0058d28724e",
+              "name": "userId",
+              "value": "={{ $json._id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5fdb2522-609f-41f7-bb28-c4216f634322",
+      "name": "Results",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        -288
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4d40f887-45cd-4fa1-b9ff-013584e67811",
+      "name": "Check loop item",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -64
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "4957601a-2f36-43b0-b719-8874a276e69d",
+      "name": "Extract",
+      "type": "n8n-nodes-base.jinaAi",
+      "typeVersion": 1,
+      "onError": "continueErrorOutput",
+      "position": [
+        2048,
+        -288
+      ],
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {},
+        "requestOptions": {}
+      },
+      "credentials": {
+        "jinaAiApi": {
+          "id": "XGGktlsCzNm0c6Ml",
+          "name": "Jina AI account"
+        }
+      }
+    },
+    {
+      "id": "2b93b1ea-b48e-4a1f-8c22-8f3c05d64df4",
+      "name": "Loop Over Items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1408,
+        -288
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "c5a51408-c4b2-4b29-b99f-9ba594b4ddb6",
+      "name": "Replace Me1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        -560
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "74f28d82-f97d-413e-a7c6-af127dc6641a",
+      "name": "Replace Me2",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2432,
+        -192
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "02d34237-d0bc-4d53-9c2c-e380c88b947f",
+      "name": "Single Site URL",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        -288
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7b1acc66-0be0-4d86-aa11-dace117d2d42",
+      "name": "Get Users1",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "position": [
+        1824,
+        -288
+      ],
+      "parameters": {
+        "projectId": "firebase-gcp-project-401507",
+        "database": "job-harvester",
+        "collection": "jobListingsSites",
+        "documentId": "={{ $json.siteSelection }}"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "60c76384-10ab-43ad-bcc5-0926e80562e6",
+      "name": "Replace Me",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        -384
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "237bd379-7711-4620-a82e-28e236b7e225",
+      "name": "Append row in sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2768,
+        -384
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k",
+          "mode": "list",
+          "cachedResultName": "testsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "siteSelection"
+          ],
+          "schema": [
+            {
+              "id": "siteSelection",
+              "displayName": "siteSelection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Hourly trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Articles": {
+      "main": [
+        []
+      ]
+    },
+    "URL checker": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Get Users": {
+      "main": [
+        [
+          {
+            "node": "Filter scrape jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check loop item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "URL checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter scrape jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check loop item": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Replace Me1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Single Site URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Results": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Single Site URL": {
+      "main": [
+        [
+          {
+            "node": "Get Users1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Users1": {
+      "main": [
+        [
+          {
+            "node": "Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "vVASDgtTzRGSlI7s",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:30.394Z",
+      "updatedAt": "2026-04-25T13:12:30.394Z"
+    }
+  ],
+  "activeVersion": null
+}

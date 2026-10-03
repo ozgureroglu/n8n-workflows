@@ -1,0 +1,554 @@
+{
+  "id": "znByks2J8MfWrA46",
+  "name": "ad-agency-intake",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:18.900Z",
+  "updatedAt": "2026-10-03T14:00:45.975Z",
+  "isArchived": false,
+  "versionId": "0ac61040-f36d-40e2-8a51-3fac9e151e11",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "webhook-1",
+      "name": "Webhook - Intake",
+      "webhookId": "c877fa1f-8004-4394-b963-41fa600cb0ca",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        256,
+        304
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ad-agency-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "if-1",
+      "name": "Has Audio",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        464,
+        304
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.audio_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "set-1",
+      "name": "Set Transcript Text",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        400
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "transcript",
+              "value": "={{ $json.text_input }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "client_id",
+              "value": "={{ $json.client_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "http-1",
+      "name": "Whisper STT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        656,
+        208
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{ $json.audio_url }}"
+            },
+            {
+              "name": "model",
+              "value": "whisper-1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "set-audio",
+      "name": "Set Transcript Audio",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        850,
+        200
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "transcript",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "id": "2",
+              "name": "client_id",
+              "type": "string",
+              "value": "={{ $('Webhook - Intake').item.json.client_id }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "merge-1",
+      "name": "Merge Inputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1050,
+        300
+      ],
+      "parameters": {
+        "mode": "chooseBranch",
+        "options": {}
+      }
+    },
+    {
+      "id": "sheets-client",
+      "name": "Get Client Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1250,
+        300
+      ],
+      "parameters": {
+        "options": {},
+        "filtersUI": {
+          "values": [
+            {
+              "lookupValue": "={{ $json.client_id }}",
+              "lookupColumn": "client_id"
+            }
+          ]
+        },
+        "operation": "read",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Clients"
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        }
+      }
+    },
+    {
+      "id": "ai-agent",
+      "name": "AI Intake Analyst",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1450,
+        300
+      ],
+      "parameters": {
+        "text": "Extract campaign data from:\n\n{{ $('Merge Inputs').item.json.transcript }}\n\nClient: {{ $json.company_name }}\n\nReturn JSON: {\"extracted_data\": {\"campaign_name\": \"\", \"objective\": \"\", \"target_audience\": \"\", \"budget_range\": \"\"}, \"confidence_score\": 0-100, \"clarifying_questions\": []}",
+        "agent": "conversationalAgent",
+        "options": {
+          "systemMessage": "Extract campaign requirements."
+        },
+        "promptType": "define"
+      }
+    },
+    {
+      "id": "claude-model",
+      "name": "Claude Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.2,
+      "position": [
+        1450,
+        500
+      ],
+      "parameters": {
+        "model": "claude-sonnet-4-20250514",
+        "options": {
+          "maxTokensToSample": 4096
+        }
+      }
+    },
+    {
+      "id": "code-parse",
+      "name": "Parse Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1650,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output;\nlet parsed;\ntry {\n  const m = output.match(/\\{[\\s\\S]*\\}/);\n  parsed = m ? JSON.parse(m[0]) : {extracted_data:{},confidence_score:0,clarifying_questions:['Parse error']};\n} catch(e) {\n  parsed = {extracted_data:{},confidence_score:0,clarifying_questions:['Parse error']};\n}\nreturn [{json:{...parsed,client_id:$('Merge Inputs').item.json.client_id,transcript:$('Merge Inputs').item.json.transcript}}];"
+      }
+    },
+    {
+      "id": "if-confident",
+      "name": "Confident",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1850,
+        300
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "leftValue": "={{ $json.confidence_score }}",
+              "rightValue": 70
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "drive-folder",
+      "name": "Create Campaign Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2050,
+        200
+      ],
+      "parameters": {
+        "name": "={{ $json.extracted_data.campaign_name || 'Campaign' }}-{{ $now.format('yyyyMMdd') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "myDrive"
+        },
+        "options": {},
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1mZa6fcZUHoaMpgMvLKa4ZPNmI3rjPvSk"
+        },
+        "operation": "createFolder"
+      }
+    },
+    {
+      "id": "sheets-campaign",
+      "name": "Create Campaign Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2250,
+        200
+      ],
+      "parameters": {
+        "columns": {
+          "value": {
+            "status": "brief_review",
+            "client_id": "={{ $('Parse Response').item.json.client_id }}",
+            "objective": "={{ $('Parse Response').item.json.extracted_data.objective }}",
+            "created_at": "={{ $now.toISO() }}",
+            "campaign_id": "={{ $now.format('yyyyMMddHHmmss') }}",
+            "campaign_name": "={{ $('Parse Response').item.json.extracted_data.campaign_name }}",
+            "campaign_folder_url": "={{ $('Create Campaign Folder').item.json.webViewLink }}"
+          },
+          "mappingMode": "defineBelow"
+        },
+        "options": {},
+        "operation": "append",
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Campaigns"
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1AmKkCPirkuKTvOitRjmyC2PueqKyciy36SieZv-G4BU"
+        }
+      }
+    },
+    {
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2450,
+        200
+      ],
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"success\",\"campaign_id\":\"{{ $json.campaign_id }}\",\"folder_url\":\"{{ $('Create Campaign Folder').item.json.webViewLink }}\"}"
+      }
+    },
+    {
+      "id": "respond-clarify",
+      "name": "Respond Clarification",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2050,
+        400
+      ],
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={\"status\":\"needs_clarification\",\"questions\":{{ JSON.stringify($json.clarifying_questions) }}}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Intake": {
+      "main": [
+        [
+          {
+            "node": "Has Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Audio": {
+      "main": [
+        [
+          {
+            "node": "Whisper STT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Transcript Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whisper STT": {
+      "main": [
+        [
+          {
+            "node": "Set Transcript Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Transcript Audio": {
+      "main": [
+        [
+          {
+            "node": "Merge Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Transcript Text": {
+      "main": [
+        [
+          {
+            "node": "Merge Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Inputs": {
+      "main": [
+        [
+          {
+            "node": "Get Client Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Client Data": {
+      "main": [
+        [
+          {
+            "node": "AI Intake Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Model": {
+      "main": [
+        [
+          {
+            "node": "AI Intake Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Intake Analyst": {
+      "main": [
+        [
+          {
+            "node": "Parse Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response": {
+      "main": [
+        [
+          {
+            "node": "Confident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confident": {
+      "main": [
+        [
+          {
+            "node": "Create Campaign Folder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond Clarification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Campaign Folder": {
+      "main": [
+        [
+          {
+            "node": "Create Campaign Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Campaign Row": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "znByks2J8MfWrA46",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:18.904Z",
+      "updatedAt": "2026-04-25T13:12:18.904Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,505 @@
+{
+  "id": "FDx4MYMa0MKqn9YJ",
+  "name": "Gmail Invoice Saver - Fixed Version",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:29.714Z",
+  "updatedAt": "2026-10-03T14:00:47.444Z",
+  "isArchived": false,
+  "versionId": "38fae8f0-a60b-4462-96ae-5d5d166b28ad",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "schedule-001",
+      "name": "Schedule Every 30 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        176
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gmail-001",
+      "name": "Get Gmail Messages",
+      "webhookId": "c3864ac7-b76e-4730-a1f4-f9937aaab940",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        176
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "simple": false,
+        "filters": {
+          "includeSpamTrash": false,
+          "labelIds": [],
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4SypyfIgEvTrNaZq",
+          "name": "Gmail account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "code-check-001",
+      "name": "Check Email Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -32
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extract email data for AI to check\n// This runs for ALL emails, with or without attachments\nconst emailData = $input.item.json;\n\n// Get attachment filenames\nconst attachmentNames = emailData.attachments && emailData.attachments.length > 0 ? \n  emailData.attachments.map(a => a.filename || 'unknown').join(', ') : \n  'No attachments';\n\n// Prepare content for AI check\nreturn {\n  json: {\n    ...emailData,\n    has_attachments: emailData.attachments && emailData.attachments.length > 0,\n    check_content: `\nEmail Subject: ${emailData.subject || 'No subject'}\nEmail From: ${emailData.from || 'Unknown sender'}\nAttachments: ${attachmentNames}\nEmail Preview: ${emailData.snippet || emailData.textPlain || 'No preview'}\n    `.trim()\n  }\n};"
+      }
+    },
+    {
+      "id": "ai-agent-001",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1424,
+        -336
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Check if the email {{ $json }} includes an invoice attachment by reviewing the subject, content, and attachment. ",
+        "options": {
+          "systemMessage": "You are a helpful assistant who identifies invoice emails accurately. "
+        }
+      }
+    },
+    {
+      "id": "openai-model-001",
+      "name": "OpenAI Chat Model",
+      "notes": "Check if the email includes an invoice attachment by reviewing the subject, content, and attachment. ",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        -64
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "if-001",
+      "name": "Is Invoice Email?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        -336
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "invoice"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "filter-attachments-001",
+      "name": "Has Attachments to Save?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        688,
+        176
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Gmail Trigger').item.binary }}",
+              "rightValue": "={{ true }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "code-prep-001",
+      "name": "Prepare File Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        192
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Get current date info for folder organization\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = String(now.getMonth() + 1).padStart(2, '0');\nconst monthName = now.toLocaleString('default', { month: 'long' });\n\nconst emailData = $input.item.json;\n\n// Clean sender name for filename\nconst senderName = (emailData.from || 'Unknown').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);\nconst date = new Date(emailData.date || Date.now()).toISOString().split('T')[0];\n\n// Generate filename\nconst fileName = `Invoice_${date}_${senderName}`;\n\nreturn {\n  json: {\n    email_id: emailData.id,\n    email_from: emailData.from || '',\n    email_subject: emailData.subject || '',\n    email_date: emailData.date || new Date().toISOString(),\n    attachment_names: emailData.attachments?.map(a => a.filename).join(', ') || '',\n    year: year,\n    month: month,\n    month_name: monthName,\n    folder_path: `Invoices/${year}/${month}-${monthName}`,\n    file_name: fileName,\n    processed_date: new Date().toISOString()\n  }\n};"
+      }
+    },
+    {
+      "id": "drive-folder-001",
+      "name": "Create Monthly Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "continueOnFail": true,
+      "position": [
+        2432,
+        192
+      ],
+      "parameters": {
+        "resource": "folder",
+        "operation": "folder:create"
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "s7mMTpeHJoz4FgHb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "id": "gmail-download-001",
+      "name": "Save to Google Drive",
+      "webhookId": "21361113-d3f0-40c3-bd47-2da478579978",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2624,
+        192
+      ],
+      "parameters": {
+        "resource": "messageAttachment"
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4SypyfIgEvTrNaZq",
+          "name": "Gmail account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "sheets-001",
+      "name": "Record in Spreadsheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        2832,
+        192
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REPLACE_WITH_YOUR_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "Month": "={{ $json.year }}-{{ $json.month }}",
+            "Email Date": "={{ $json.email_date }}",
+            "Email From": "={{ $json.email_from }}",
+            "Email Subject": "={{ $json.email_subject }}",
+            "Processed Date": "={{ $json.processed_date }}",
+            "Saved To Folder": "={{ $json.folder_path }}",
+            "Attachment Names": "={{ $json.attachment_names }}"
+          },
+          "mappingMode": "defineBelow"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "gmail-mark-001",
+      "name": "Mark Email as Processed",
+      "webhookId": "51d2ff61-f4ef-44c8-82a8-db8ec3628cc1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        3024,
+        192
+      ],
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.email_id }}",
+        "labelIds": [
+          "INBOX"
+        ]
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4SypyfIgEvTrNaZq",
+          "name": "Gmail account erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "note-001",
+      "name": "Workflow Logic",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -240
+      ],
+      "parameters": {
+        "content": "## Fixed Workflow Flow\n\n1. **ALL emails go to Check Email Content** - no filtering before AI\n2. **AI Agent checks every email** for invoice-related content\n3. **Only emails identified as invoices** proceed\n4. **Filter checks if invoice email has attachments** to save\n5. **Emails with attachments** get saved to Drive\n6. **ALL invoice emails** get recorded in spreadsheet (even without attachments)",
+        "height": 250,
+        "width": 400
+      }
+    },
+    {
+      "id": "debac24a-1bce-4f9e-84a8-797b8550aabf",
+      "name": "Email has attachments",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        128
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5b1738d7-d7e2-461a-a4ed-26d62befbcbd",
+              "leftValue": "={{ $json.attachments }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Is Invoice Email?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Invoice Email?": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "main": [],
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare File Data": {
+      "main": [
+        [
+          {
+            "node": "Create Monthly Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Gmail Messages": {
+      "main": [
+        [
+          {
+            "node": "Has Attachments to Save?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Email Content": {
+      "main": [
+        [
+          {
+            "node": "Email has attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Record in Spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Attachments to Save?": {
+      "main": [
+        []
+      ]
+    },
+    "Create Monthly Folder": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record in Spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Mark Email as Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Email as Processed": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Every 30 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Get Gmail Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email has attachments": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "FDx4MYMa0MKqn9YJ",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:29.717Z",
+      "updatedAt": "2026-04-25T13:12:29.717Z"
+    }
+  ],
+  "activeVersion": null
+}

@@ -1,0 +1,2300 @@
+{
+  "id": "qMcYQeYMlEDzLf1v",
+  "name": "Automated Post Creator",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:53.231Z",
+  "updatedAt": "2026-10-03T14:00:46.432Z",
+  "isArchived": false,
+  "versionId": "9356fff6-ec4a-4e35-a8d1-bd8f6f3ac55a",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "95c6b736-e2fa-4ffc-9b21-8050108b2a43",
+      "name": "OpenAI Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3200,
+        320
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "9a0d523e-8c25-4b16-a415-233e77f424a3",
+      "name": "Simple Memory2",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        3392,
+        320
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "52",
+        "contextWindowLength": 20
+      }
+    },
+    {
+      "id": "54b8f16a-a699-4972-8002-f0b095b85c6a",
+      "name": "Structured Output Parser2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3568,
+        320
+      ],
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"text\":\"\"\n}"
+      }
+    },
+    {
+      "id": "1e5da3c4-718d-42dd-8a32-d7426a97a209",
+      "name": "OpenAI Chat Model4",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3216,
+        896
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "371c5ec1-cc8d-446f-82be-ace95dcef63f",
+      "name": "Simple Memory4",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        3376,
+        896
+      ],
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "52",
+        "contextWindowLength": 20
+      }
+    },
+    {
+      "id": "f3187b11-f307-4385-aa77-6c0fad3fc978",
+      "name": "Structured Output Parser4",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3568,
+        896
+      ],
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"text\":\"\"\n}"
+      }
+    },
+    {
+      "id": "41d9bb6e-4953-4b73-9f2b-36a35385310e",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        48,
+        240
+      ],
+      "parameters": {
+        "content": "SET UP TRIGGER",
+        "height": 368,
+        "width": 192
+      }
+    },
+    {
+      "id": "e7ffd6e8-115c-4a97-aae0-a8b0b3d328fb",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        592,
+        272
+      ],
+      "parameters": {
+        "content": "Append the idea in the document\n\n",
+        "height": 336,
+        "color": 7
+      }
+    },
+    {
+      "id": "3e16381c-e4ba-48c5-b824-5fdee33da988",
+      "name": "LinkedIn post redaction",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        3328,
+        96
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=You’re not a copywriter. You’re a real human who loves AI and startups. \nYou scroll LinkedIn, see a new startup, and decide to explain it to people — in your own words. \n\nForget structure, forget polish. Write like someone who’s thinking out loud, but still clear.\nIt should feel like a post written by a person who’s genuinely curious and trying to make sense of what they just read.\n\nSTYLE\n• Natural, spontaneous, sometimes imperfect. Small hesitations, simple words.\n• Mix short and long sentences. Some can start with “And”, “But”, “So”.\n• Don’t over-polish. It should sound like someone typing fast, not editing.\n• Use normal connectors: “Basically”, “I mean”, “What’s cool is”, “You know how sometimes…”\n• No fluff, no hype, no marketing tone. Just someone smart trying to explain simply.\n• Sound slightly messy, but intelligent. Honest curiosity over perfection.\n\nCONTENT\n• Start with a hook, but not a “copywriter hook”. Something casual.\n• Then explain what the startup does in plain words. No jargon. Imagine explaining to a friend who doesn’t work in tech.\n• Add a small reaction — what surprised you, what you find smart, or what it makes you think about.\n• Close with a small, grounded reflection or observation. No “what do you think?” or corporate endings.\n• 4–7 short paragraphs (line breaks for readability). 700–1200 characters total.\n\nRULES\n• English only.\n• No emojis, no links, no markdown.\n• 2–3 simple hashtags at the end (#AI #Startups #Innovation).\n• Company's name start with a #\n• Avoid perfect structure or transitions — let it feel natural.\n• Output only the post text, nothing else.\n\nGOAL\nMake readers feel like they’re reading a real human post — a bit raw, slightly disorganized, but genuinely insightful and understandable.\n\nContext:\nTitle: {{ $json.title }}\nDescription: {{ $json.description }}\nURL: {{ $json.url }}",
+        "hasOutputParser": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "07ea1d46-6ee3-4abd-b4b1-5641c9715a4d",
+      "name": "LinkedIn post redaction 2",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        3328,
+        672
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=You’re not a copywriter. You’re a real human who loves AI and startups. \nYou scroll LinkedIn, see a new startup, and decide to explain it to people — in your own words. \n\nForget structure, forget polish. Write like someone who’s thinking out loud, but still clear.\nIt should feel like a post written by a person who’s genuinely curious and trying to make sense of what they just read.\n\nSTYLE\n• Natural, spontaneous, sometimes imperfect. Small hesitations, simple words.\n• Mix short and long sentences. Some can start with “And”, “But”, “So”.\n• Don’t over-polish. It should sound like someone typing fast, not editing.\n• Use normal connectors: “Basically”, “I mean”, “What’s cool is”, “You know how sometimes…”\n• No fluff, no hype, no marketing tone. Just someone smart trying to explain simply.\n• Sound slightly messy, but intelligent. Honest curiosity over perfection.\n\nCONTENT\n• Start with a hook, but not a “copywriter hook”. Something casual.\n• Then explain what the startup does in plain words. No jargon. Imagine explaining to a friend who doesn’t work in tech.\n• Add a small reaction — what surprised you, what you find smart, or what it makes you think about.\n• Close with a small, grounded reflection or observation. No “what do you think?” or corporate endings.\n• 4–7 short paragraphs (line breaks for readability). 700–1200 characters total.\n\nRULES\n• English only.\n• No emojis, no links, no markdown.\n• 2–3 simple hashtags at the end (#AI #Startups #Innovation).\n• Company's name start with a #\n• Avoid perfect structure or transitions — let it feel natural.\n• Output only the post text, nothing else.\n\nGOAL\nMake readers feel like they’re reading a real human post — a bit raw, slightly disorganized, but genuinely insightful and understandable.\n\nContext:\nTitle: {{ $json.title }}\nURL: {{ $json.url }}",
+        "hasOutputParser": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "d5d647f0-68c1-49bf-b76c-cb90c21d31a9",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2736,
+        -48
+      ],
+      "parameters": {
+        "content": "**LinkedIn post redaction**\n\n*The AI Agent is writing the article for LinkedIn, you can adjust the prompt if needed*\n ",
+        "height": 544,
+        "width": 544,
+        "color": 5
+      }
+    },
+    {
+      "id": "e8048d0a-e781-40bc-99b7-99c75db9ecf6",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2736,
+        528
+      ],
+      "parameters": {
+        "content": "**LinkedIn post redaction**\n\n*The AI Agent is writing the article for LinkedIn, you can adjust the prompt if needed*\n ",
+        "height": 544,
+        "width": 544,
+        "color": 3
+      }
+    },
+    {
+      "id": "e4da9c24-9fcd-48ce-ac62-ad618bcd6390",
+      "name": "Post setup",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3808,
+        96
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "09e72bc3-709a-4f35-a195-afb59ee567c1",
+              "name": "input image url",
+              "type": "string",
+              "value": "={{ $('URL checker').item.json.urlToImage }}"
+            },
+            {
+              "id": "7624a24e-06b5-4c6d-aa3d-cad469b5273c",
+              "name": "=post",
+              "type": "string",
+              "value": "={{ $json.output.text.replaceAll(\"—\",\",\") }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9b3ac6f8-2eef-44f5-8df6-d747c56fae6a",
+      "name": "Post setup 2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3824,
+        672
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "09e72bc3-709a-4f35-a195-afb59ee567c1",
+              "name": "input image url",
+              "type": "string",
+              "value": "={{ $('URL checker').item.json.urlToImage }}"
+            },
+            {
+              "id": "7624a24e-06b5-4c6d-aa3d-cad469b5273c",
+              "name": "=post",
+              "type": "string",
+              "value": "={{ $json.output.text.replaceAll(\"—\",\",\") }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f09aeb04-4b96-47be-affb-2810b41cd56b",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        -48
+      ],
+      "parameters": {
+        "content": "**Post setup**\n\n*We set up image url and clean post content*\n ",
+        "height": 544,
+        "width": 320,
+        "color": 5
+      }
+    },
+    {
+      "id": "86e0f2aa-bc5c-449a-8ffb-4181f0bf9f15",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3296,
+        528
+      ],
+      "parameters": {
+        "content": "**Post setup**\n\n*We set up image url and clean post content*\n ",
+        "height": 544,
+        "width": 320,
+        "color": 3
+      }
+    },
+    {
+      "id": "e130c24a-6df1-4cb2-87d9-8b29e7507f63",
+      "name": "Image Dowloader",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput",
+      "position": [
+        4160,
+        96
+      ],
+      "parameters": {
+        "url": "={{ $json[\"input image url\"] }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          },
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "2e58592a-fcb9-4432-accb-eee321587d6d",
+      "name": "Image Dowloader 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueErrorOutput",
+      "position": [
+        4144,
+        672
+      ],
+      "parameters": {
+        "url": "={{ $json[\"input image url\"] }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          },
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "fc2944b5-2c7c-420b-8f9e-c7fb4feebb92",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3632,
+        -48
+      ],
+      "parameters": {
+        "content": "**Image Downloader**\n\n*We download the image to check if the link is usable*\n ",
+        "height": 544,
+        "width": 320,
+        "color": 5
+      }
+    },
+    {
+      "id": "f6302688-c748-4649-ad49-96960fdaa722",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3632,
+        528
+      ],
+      "parameters": {
+        "content": "**Image Downloader**\n\n*We download the image to check if the link is usable*\n ",
+        "height": 544,
+        "width": 320,
+        "color": 3
+      }
+    },
+    {
+      "id": "6e4b9d4c-498a-4d7f-bd31-6752e54604a0",
+      "name": "LinkedIn Publisher",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        4784,
+        16
+      ],
+      "parameters": {
+        "person": "R8awq_HrM-",
+        "text": "={{ $('Post setup').item.json.post }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "nBkA9EtToig0g3QS",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "id": "19e054cc-8018-4996-8518-4f9009b94051",
+      "name": "LinkedIn Publisher 2",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        4784,
+        304
+      ],
+      "parameters": {
+        "person": "R8awq_HrM-",
+        "text": "={{ $('Post setup').item.json.post }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "nBkA9EtToig0g3QS",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "id": "64fcfd7f-effe-443d-8a46-ea991dc2de85",
+      "name": "Sticky Note14",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4672,
+        192
+      ],
+      "parameters": {
+        "content": "**Case 2**\n\n*We post on LinkedIn without a media*\n ",
+        "height": 288,
+        "width": 320,
+        "color": 5
+      }
+    },
+    {
+      "id": "918119e6-204f-4f2f-ac9a-f602888b2182",
+      "name": "Sticky Note15",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4672,
+        -112
+      ],
+      "parameters": {
+        "content": "**Case 1**\n\n*We post on LinkedIn with a media*\n ",
+        "height": 288,
+        "width": 320,
+        "color": 5
+      }
+    },
+    {
+      "id": "957b4176-10a1-4de6-aed1-8e6834b8f5a0",
+      "name": "LinkedIn Publisher 3",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        4752,
+        640
+      ],
+      "parameters": {
+        "person": "R8awq_HrM-",
+        "text": "={{ $('Post setup 2').item.json.post }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "nBkA9EtToig0g3QS",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "id": "01b9bf79-f40b-4739-828d-6017009c3e1c",
+      "name": "LinkedIn Publisher 4",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        4768,
+        944
+      ],
+      "parameters": {
+        "person": "R8awq_HrM-",
+        "text": "={{ $('Post setup 2').item.json.post }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "nBkA9EtToig0g3QS",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "id": "e7c2b368-93ce-4324-90a4-5ce433e20ea3",
+      "name": "Sticky Note16",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5008,
+        -368
+      ],
+      "parameters": {
+        "content": "**SAVING IN FIRESTOR**\n\n*We save posted news in Firestore to make sure we won't post it again*\n ",
+        "height": 848,
+        "width": 2064,
+        "color": 5
+      }
+    },
+    {
+      "id": "5e5003eb-bf1d-4b0e-b650-ef99ec7b2b4a",
+      "name": "Sticky Note17",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4656,
+        816
+      ],
+      "parameters": {
+        "content": "**Case 2**\n\n*We post on LinkedIn without a media*\n ",
+        "height": 288,
+        "width": 320,
+        "color": 3
+      }
+    },
+    {
+      "id": "91616296-9d28-4085-a2cc-79953d8246f3",
+      "name": "Sticky Note18",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4656,
+        512
+      ],
+      "parameters": {
+        "content": "**Case 1**\n\n*We post on LinkedIn with a media*\n ",
+        "height": 288,
+        "width": 320,
+        "color": 3
+      }
+    },
+    {
+      "id": "ca92ec46-1afd-4666-9661-74922d568a05",
+      "name": "time checker",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5648,
+        16
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "10"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "65851111-171d-42c2-ba5d-108fac6935cf",
+      "name": "time checker 2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5872,
+        112
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "12"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e98ca926-ef82-4f92-85df-fc33df625c5f",
+      "name": "time checker 3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6096,
+        208
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "21"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2f19ffdc-530e-4ae2-8640-90b4b8aedf40",
+      "name": "time checker 4",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6320,
+        304
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "19"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d89ed3eb-be68-4552-ad1d-c2a824636fc7",
+      "name": "time checker 5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5696,
+        816
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "10"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8b42a4ce-17fa-49cb-909c-222f03eb0baf",
+      "name": "time checker 6",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5920,
+        912
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "12"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b40fedcb-f3c1-4970-8dcf-240c37b7b574",
+      "name": "time checker 7",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6144,
+        1008
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "21"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a031631b-47aa-4b46-93a9-697a05a5e667",
+      "name": "set up",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5872,
+        -272
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title10",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1afbc337-0178-4192-8ff2-529ac7e698ab",
+      "name": "set up 2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6096,
+        -80
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title12",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0fe74821-31d1-4602-97fc-2fbf7936278f",
+      "name": "set up 3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6320,
+        112
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title21",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "50265f9e-5eee-4c10-9806-823cb9d38fef",
+      "name": "set up 4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6544,
+        304
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title19",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b64db78a-93a5-4190-9329-9398252c2436",
+      "name": "set up 5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5920,
+        624
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title10",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "95f3d20f-572f-4ea8-921f-9e0c9a56d868",
+      "name": "set up 6",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6144,
+        816
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title12",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3d994f61-0119-447f-84e8-61c9f5e1e000",
+      "name": "set up 7",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6368,
+        1008
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title21",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "588addfb-7b56-441f-a4a3-fade0cbbb697",
+      "name": "time checker 8",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6352,
+        1168
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "309eefc6-38b4-4273-bb4f-27b2e0a52d7d",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('Hourly trigger').item.json.Hour }}",
+              "rightValue": "15"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "691c565c-3dcb-4538-a72c-51bb3dbcaeb8",
+      "name": "set up 8",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6576,
+        1168
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5b9c1f7-d5a4-4034-81a2-ac7c7d3c5a1f",
+              "name": "title19",
+              "type": "string",
+              "value": "={{ $('Select Articles').item.json.title }}"
+            },
+            {
+              "id": "37b34019-1ca8-4572-9014-ddefe87b2cd7",
+              "name": "id",
+              "type": "string",
+              "value": "x20"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "76298e7c-3b50-492c-a807-23f2919d9703",
+      "name": "Firebase Article Saver",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6096,
+        -272
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "<FIREBASE_PROJECT_ID>",
+        "collection": "asma",
+        "updateKey": "id",
+        "columns": "title10"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "9fda3e35-0be3-42ca-97d3-077158ff0673",
+      "name": "Firebase Article Saver 2",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6320,
+        -80
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "<FIREBASE_PROJECT_ID>",
+        "collection": "asma",
+        "updateKey": "id",
+        "columns": "title12"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "1f8c25ae-feb2-44ec-90d5-fb28f5f86276",
+      "name": "Firebase Article Saver 3",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6544,
+        112
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "<FIREBASE_PROJECT_ID>",
+        "collection": "asma",
+        "updateKey": "id",
+        "columns": "title21"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "04e9135d-705f-4aee-8c17-06389253368e",
+      "name": "Firebase Article Saver 4",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6768,
+        304
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "<FIREBASE_PROJECT_ID>",
+        "collection": "asma",
+        "updateKey": "id",
+        "columns": "title19"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "cb0a3fac-9f45-49d0-8dbf-febaec6a0e7d",
+      "name": "Firebase Article Saver 5",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6144,
+        624
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "<FIREBASE_PROJECT_ID>",
+        "collection": "asma",
+        "updateKey": "id",
+        "columns": "title10"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "05c8e6ab-ca68-4873-84be-231f3084e2ea",
+      "name": "Firebase Article Saver 6",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6368,
+        816
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "<FIREBASE_PROJECT_ID>",
+        "collection": "asma",
+        "updateKey": "id",
+        "columns": "title12"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "5e389b49-4e39-455e-847f-cb293ec275f3",
+      "name": "Firebase Article Saver 7",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6592,
+        1008
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "<FIREBASE_PROJECT_ID>",
+        "collection": "asma",
+        "updateKey": "id",
+        "columns": "title21"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "3decd47b-be46-498d-8a33-b792222acb64",
+      "name": "Firebase Article Saver 8",
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        6800,
+        1168
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "projectId": "firebase-gcp-project-401507",
+        "database": "generic-data",
+        "collection": "news-sites",
+        "updateKey": "id",
+        "columns": "title19"
+      },
+      "credentials": {
+        "googleFirebaseCloudFirestoreOAuth2Api": {
+          "id": "iPOBPU18naYeHvaY",
+          "name": "Google Firebase Cloud Firestore account firebase-projects-incubation"
+        }
+      }
+    },
+    {
+      "id": "45fb8dcf-867c-4b97-a3ac-19a6e6032cd5",
+      "name": "Sticky Note19",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4992,
+        512
+      ],
+      "parameters": {
+        "content": "**SAVING IN FIRESTOR**\n\n*We save posted news in Firestore to make sure we won't post it again*\n ",
+        "height": 848,
+        "width": 2064,
+        "color": 3
+      }
+    },
+    {
+      "id": "75e2617a-c636-47d3-b430-197119b9fac8",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        256
+      ],
+      "parameters": {
+        "content": "## What this workflow does\n\nAutomatically:\n1. fetches fresh news,\n2. filters out aggregators/PR wires and duplicates,\n3. writes a human-sounding LinkedIn post with GPT,\n4. downloads the article image to verify it’s usable,\n5. publishes to LinkedIn (with or without media),\n6. and logs the posted titles in Firestore to avoid re-posting.\n\nRuns on a daily schedule (cron) and supports two post variants:\n• Case 1: article has a description → richer post\n• Case 2: no description → short, still human and casual",
+        "height": 336,
+        "width": 480
+      }
+    },
+    {
+      "id": "b8b57be0-3a99-40e5-a2ed-63373e9744b4",
+      "name": "Trigger: Receive Idea via Telegram",
+      "webhookId": "fc44769c-3fa7-4a73-907f-07daa5cc8d6e",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        384
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "C92Q2iPaHSGZhSmD",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "id": "1a3e7251-63fb-4172-8f11-e102def27b4d",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4672,
+        288
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e711febb-09b2-420c-a53b-8e2525069cd5",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        384
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k",
+          "mode": "list",
+          "cachedResultName": "testsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 681778142,
+          "mode": "list",
+          "cachedResultName": "TLGMessages",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit#gid=681778142"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Expected Outcomes": "={{ $json.output[1].content[0].text[\"Expected Outcomes\"] }}",
+            "One-line Elevator Pitch b2c": "={{ $json.output[1].content[0].text[\"One-line Elevator Pitch b2c\"] }}",
+            "One-line Elevator Pitch b2b": "={{ $json.output[1].content[0].text[\"One-line Elevator Pitch b2b\"] }}",
+            "Original Message": "={{ $json.output[1].content[0].text[\"Original Message\"] }}",
+            "Pain Points": "={{ $json.output[1].content[0].text[\"Pain Points\"] }}",
+            "Opportunities": "={{ $json.output[1].content[0].text.Opportunities }}",
+            "Business Ideas": "={{ $json.output[1].content[0].text[\"Business Ideas\"] }}",
+            "Proposed Solutions and Implementations": "={{ $json.output[1].content[0].text[\"Proposed Solutions and Implementations\"] }}",
+            "Social Media Post Title": "={{ $json.output[1].content[0].text[\"Social Media Post Title\"] }}",
+            "Idea Score": "={{ $json.output[1].content[0].text[\"Idea Score\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Original Message",
+              "displayName": "Original Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Pain Points",
+              "displayName": "Pain Points",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Opportunities",
+              "displayName": "Opportunities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Business Ideas",
+              "displayName": "Business Ideas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Proposed Solutions and Implementations",
+              "displayName": "Proposed Solutions and Implementations",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Expected Outcomes",
+              "displayName": "Expected Outcomes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Social Media Post Title",
+              "displayName": "Social Media Post Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "One-line Elevator Pitch b2c",
+              "displayName": "One-line Elevator Pitch b2c",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "One-line Elevator Pitch b2b",
+              "displayName": "One-line Elevator Pitch b2b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Idea Score",
+              "displayName": "Idea Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "a057b6bf-2be4-4281-ae42-4394563f4156",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1216,
+        384
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "4a5aa646-a1d9-425a-a94b-d950cb9b155e",
+      "name": "Replace Me",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        400
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c2a19fb9-8610-47bc-8182-aff2619280c4",
+      "name": "Code in JavaScript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        384
+      ],
+      "parameters": {
+        "jsCode": "// Grab the inner object from the first input item\nconst obj = items[0].json;\n\n// Convert each key-value pair into a new n8n item\nconst output = Object.entries(obj).map(([key, value]) => {\n  return {\n    json: {\n      key,\n      value\n    }\n  };\n});\n\nreturn output;"
+      }
+    },
+    {
+      "id": "12f14cb4-c195-43ae-9399-3042314ee503",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1632,
+        400
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.key }}",
+                    "rightValue": "Post Title",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c59ff9ea-2b51-4474-b8bb-06e7b790249d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "post_title"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dd1e3366-9aec-4ed7-b7be-6ce937b4e8a8",
+                    "leftValue": "={{ $json.key }}",
+                    "rightValue": "Post Title",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "08ea4dd9-cf26-4366-afdb-1d730446d4e6",
+      "name": "Append row in sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2160,
+        384
+      ],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k",
+          "mode": "list",
+          "cachedResultName": "testsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1995288047,
+          "mode": "list",
+          "cachedResultName": "Linkedin_post_templates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1URzWlGU0zjXVy-VufUR6YAJZXj7nc5NXVa7AkIltn0k/edit#gid=1995288047"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_title": "={{ $('Append row in sheet').item.json[\"Post Title\"] }}",
+            "post_content_draft": "={{ $json.output[0].content[0].text.post }}",
+            "hashtags": "={{ $json.output[0].content[0].text.hashtags }}",
+            "research_notes": "={{ $json.output[0].content[0].text.research_notes }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "post_title",
+              "displayName": "post_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "post_content_draft",
+              "displayName": "post_content_draft",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hashtags",
+              "displayName": "hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "research_notes",
+              "displayName": "research_notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DSkaOo8qY4KVRAKC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "id": "c390ef12-6530-4ade-a15a-308aae652cdc",
+      "name": "No Operation, do nothing1",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        176
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b452b58d-e55d-4f72-977b-b9d9243d37dd",
+      "name": "Draft the post",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        384
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an expert Linkedin post creator and an influencer with thousands of followers. \n\n- You write mostly about technical subjects in a non-technical way. But, you use a very simple, casual and not polished language. \n- Your posts aim individuals mainly engineers, tech-workers, and people in the tech industry. So, the post content should be relateble to individuals, and small businesses. The relation should be considerable harms, benefits, opporunities, adventages/disadventanges and similar.\n- You mostly mention the main idea in the post about the title, and make people think, then give the positive sides of the subject.\n- You never use slang, or a language that can be found offensive for some people. \n- The posts are at most one-two paragraph.\n- You always make research.\n\nYour output should be in json format.\nAlways output the following items:\n- post_content_draft\n- hashtags\n- research_notes\nThe topic is : {{ $json.value }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "1a8913a5-fe24-40ce-acc4-6d88e859e160",
+      "name": "Project Note Generator",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        304,
+        384
+      ],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "GPT-5-NANO"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an experienced and pragmatic entrepreneur and influencer. You are good at catching pain points and opportunity points in given situations. When you are given a text or a document like and article about a situation, you always look from the perspective of an entrepreneur and check for pain point and opportunities in the case.\n\nWhile you are examinig the case, you must do the following:\n- understand the case\n- define pain points in the given case\n- define commercilizable opportunities in the case\n- draft 3 business ideas converting these pain points into opportunities\n- give brief implementation steps that can be expanded later \n- define the expected outcomes when the proposed solutions are implemented\n- create a one-line elevator-pitch for the business idea for a b2c business\n- create a one-line elevator-pitch for the business idea for a b2b business\n- create a good social media post title that can be written and shared in platforms like linkedin. Consider that the written content should be related to general public's interests, and the effects of the case to on individuals. \n- give an overall score to the business idea, from the perspective of commercial value that can be generated.\n\nWhile outputting these points, outputs should:\n- not include sub-titles, bullets etc., they should be a sententces or paragraphs.\n- be clear enough for to be shared with others to discuss on them.\n- should include these fields : Original Message, Pain Points, Opportunities, Business Ideas, Proposed Solutions and Implementations, Expected Outcomes,Social Media Post Title, One-line Elevator Pitch b2c, One-line Elevator Pitch b2b, Idea Score\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\n\n\n\nThe situations will be provided as text messages to you as following.\n\n\nHere is the message: {{ $json.message.text }}\n\nRespond with a json object."
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "ZRCgsxMgu73YGPSd",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "set up": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set up 2": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set up 3": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set up 4": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set up 5": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set up 6": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set up 7": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver 7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set up 8": {
+      "main": [
+        [
+          {
+            "node": "Firebase Article Saver 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post setup": {
+      "main": [
+        [
+          {
+            "node": "Image Dowloader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post setup 2": {
+      "main": [
+        [
+          {
+            "node": "Image Dowloader 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker": {
+      "main": [
+        [
+          {
+            "node": "set up",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "time checker 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "LinkedIn post redaction",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "LinkedIn post redaction 2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker 2": {
+      "main": [
+        [
+          {
+            "node": "set up 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "time checker 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker 3": {
+      "main": [
+        [
+          {
+            "node": "set up 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "time checker 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker 4": {
+      "main": [
+        [
+          {
+            "node": "set up 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker 5": {
+      "main": [
+        [
+          {
+            "node": "set up 5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "time checker 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker 6": {
+      "main": [
+        [
+          {
+            "node": "set up 6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "time checker 7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker 7": {
+      "main": [
+        [
+          {
+            "node": "set up 7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "time checker 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "time checker 8": {
+      "main": [
+        [
+          {
+            "node": "set up 8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Dowloader": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Dowloader 2": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Publisher": {
+      "main": [
+        [
+          {
+            "node": "time checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LinkedIn post redaction",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LinkedIn post redaction 2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Publisher 2": {
+      "main": [
+        [
+          {
+            "node": "time checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Publisher 3": {
+      "main": [
+        [
+          {
+            "node": "time checker 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Publisher 4": {
+      "main": [
+        [
+          {
+            "node": "time checker 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn post redaction": {
+      "main": [
+        [
+          {
+            "node": "Post setup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn post redaction 2": {
+      "main": [
+        [
+          {
+            "node": "Post setup 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "LinkedIn post redaction",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser4": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "LinkedIn post redaction 2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger: Receive Idea via Telegram": {
+      "main": [
+        [
+          {
+            "node": "Project Note Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Draft the post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft the post": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project Note Generator": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {},
+  "staticData": {},
+  "pinData": {
+    "Trigger: Receive Idea via Telegram": [
+      {
+        "json": {
+          "update_id": 477387690,
+          "message": {
+            "message_id": 22,
+            "from": {
+              "id": 7005329666,
+              "is_bot": false,
+              "first_name": "Ozgur",
+              "last_name": "Eroglu",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 7005329666,
+              "first_name": "Ozgur",
+              "last_name": "Eroglu",
+              "type": "private"
+            },
+            "date": 1764331503,
+            "text": "Challenges of using AI in education\nOverreliance and dependency\nIf your learners start to depend on AI for answers, it could really hinder their ability to think critically and solve problems. \n\nYou may notice that students begin to use AI to complete assignments without genuinely understanding the material. As a result, they may only gain a superficial understanding of the subject. If this problem continues unchecked, they won’t be able to build on that understanding as their learning advances, which will start to really affect their academic performance.\n\nThe answer isn’t to ban AI from classrooms. Instead, it’s important to frame AI as a tool to support their learning, rather than a crutch. For example, tell them to use AI to brainstorm ideas for a project, but then have them expand on these independently.\n\nEthical considerations\nGenerative AI is a recent invention and not all of our policies and legislation have caught up. That means both learners and educators may be able to use the software in ways that they shouldn’t. Here are the main issues to be aware of:\n\nBias — consuming AI content that doesn’t fairly or equitably represent all groups\nPlagiarism — students passing off AI-generated content as their own\nCopyright infringement — using content that AI has copied from another source\nTraining — requiring moderators or students to use AI without showing them how to use it\nUnequal access —- making AI a core part of the curriculum when not all learners can benefit from it\nThe best way to ensure the ethical use of AI in your school is to create comprehensive school policies. Give staff and students a list of approved AI tools and provide guidelines for appropriate use. If necessary, arrange training sessions to ensure educators understand how to use these tools, and why the rules are in place. Revise these policies constantly as AI is still in a state of flux and you never know when a new ethical challenge will arise.\n\nBritish Council moderator Sirin Soyoz recommends the European Commission guidelines on AI as a great inspiration for policies. There are also free resources like an infographic and video for schools to download.\n\nData privacy and protection\nWhen you’re sharing information with AI, it’s easy to forget that it stores everything. We can’t be sure where this data will end up. Software companies might use it as the basis for studies or sell it to third parties for marketing purposes.\n\nIf there’s a leak, sensitive details could get released to the public. Experts have already discovered over 100,000 hacked ChatGPT accounts on the dark web.\n\nSchools should practise standard safeguarding measures like using complex passwords and storing data securely. Personal information about students should not and must not be used in prompts. Anonymity ensures that any sensitive details about their academic performance or personal lives remain confidential. For further information on what safeguarding resources British Council Partner Schools provides, take a look here."
+          }
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "qMcYQeYMlEDzLf1v",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:53.234Z",
+      "updatedAt": "2026-04-25T13:12:53.234Z"
+    }
+  ],
+  "activeVersion": null
+}

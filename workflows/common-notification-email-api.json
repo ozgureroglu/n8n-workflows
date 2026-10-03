@@ -1,0 +1,955 @@
+{
+  "id": "unLHaSvmTa8E9fBr",
+  "name": "COMMON - Notification Email API",
+  "active": true,
+  "activeVersionId": "e2b840f3-50ff-4c13-8b86-3d492701ed8b",
+  "createdAt": "2026-04-25T13:12:26.065Z",
+  "updatedAt": "2026-10-03T14:00:46.522Z",
+  "isArchived": false,
+  "versionId": "e2b840f3-50ff-4c13-8b86-3d492701ed8b",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "id": "9e719d8d-bb48-496b-a53b-2d73e4d7dc9a",
+      "name": "Doc - Webhook Contract",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -1296
+      ],
+      "parameters": {
+        "content": "## Webhook Input Contract\n\n`POST /common/notify`\n\n```json\n{\n  \"platform_code\": \"hrp\",\n  \"email_type\": \"welcome\",\n  \"to_email\": \"user@example.com\",\n  \"data\": {\n    \"user_name\": \"Jane Doe\",\n    \"invitation_accept_url\": \"...\"\n  }\n}\n```\n\n- **platform_code** (required, string) — identifies the calling app. Must match a row in the **Platforms** sheet.\n- **email_type** (required, string) — which notification to send (e.g. `welcome`, `invitation`, `password_reset`). Must match a row in the **Templates** sheet.\n- **to_email** (required, string) — recipient address.\n- **data** (optional, object) — per-call placeholders, e.g. a URL, a user's name, a role. Merged on top of the platform's static context (`platform_name`, `platform_description`) to build the Mailjet template variables. Keys must match the placeholders used inside that Mailjet template.\n\n### Responses\n- `400` — missing platform_code / email_type / to_email\n- `422` — platform_code or email_type not found in the sheets\n- `502` — Mailjet send failed\n- `200` — sent",
+        "height": 1148,
+        "width": 620,
+        "color": 4
+      }
+    },
+    {
+      "id": "c31eb273-43d2-4b3b-ad84-58f1b843bf27",
+      "name": "Doc - Google Sheet Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -1296
+      ],
+      "parameters": {
+        "content": "## Google Sheet Setup (required)\n\nBoth Sheets nodes below need the **same spreadsheet's Document ID** and a Google Sheets credential attached — pick them from the dropdowns in each node.\n\n### Tab: `Platforms`\n| column | required | notes |\n|---|---|---|\n| platform_code | yes | key — matches webhook's `platform_code` |\n| platform_name | yes | sent as `{{platform_name}}` in templates |\n| platform_description | yes | sent as `{{platform_description}}` |\n| from_email | yes | Mailjet sender address for this app |\n| from_name | no | falls back to platform_name |\n\n### Tab: `Templates`\n| column | required | notes |\n|---|---|---|\n| email_type | yes | key — matches webhook's `email_type` |\n| mailjet_template_id | yes | numeric Mailjet template ID |\n| description | no | human note only, not used by the flow |\n\nOnboarding a new app or a new email type = add a row to the sheet. No workflow edit needed.",
+        "height": 1148,
+        "width": 620,
+        "color": 5
+      }
+    },
+    {
+      "id": "7e21ecab-4a9a-43f8-bb77-95a8e6030715",
+      "name": "Webhook - Notification Trigger",
+      "webhookId": "f6e7edc0-b76f-495b-8cb4-70ca054c2a7d",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "common/notify",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "80c92c4c-b403-4622-8122-2a178c6529d9",
+      "name": "Parse & Validate Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const body = $json.body ?? {};\nconst platform_code = body.platform_code;\nconst email_type = body.email_type;\nconst to_email = body.to_email;\nconst data = body.data ?? {};\n\nconst missing = [];\nif (!platform_code) missing.push('platform_code');\nif (!email_type) missing.push('email_type');\nif (!to_email) missing.push('to_email');\n\nif (missing.length) {\n  return [{\n    json: {\n      ok: false,\n      error: `Missing required field(s): ${missing.join(', ')}`\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ok: true,\n    platform_code,\n    email_type,\n    to_email,\n    data\n  }\n}];"
+      }
+    },
+    {
+      "id": "c6b28d93-10f5-4ab9-8c08-b74c6d00c076",
+      "name": "Request Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-valid-1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "faf5668b-23e7-4a89-a301-30bec87017ec",
+      "name": "Respond - Bad Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        320
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"error\": $json.error } }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "79d693f9-d227-4cb6-a615-86d93d14f929",
+      "name": "Get Platforms Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        -96
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Platforms",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "TODO: connect your Google Sheets credential"
+        }
+      }
+    },
+    {
+      "id": "6127cd5f-797e-46bc-9f52-afcad4efc5d0",
+      "name": "Get Templates Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        112
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Templates",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "TODO: connect your Google Sheets credential"
+        }
+      }
+    },
+    {
+      "id": "21808d91-e16f-483e-9d6f-23c15b9ea824",
+      "name": "Resolve Config & Build Variables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -96
+      ],
+      "parameters": {
+        "jsCode": "const request = $('Parse & Validate Request').first().json;\nconst platforms = $('Get Platforms Sheet').all().map(i => i.json);\nconst templates = $('Get Templates Sheet').all().map(i => i.json);\n\nconst platform = platforms.find(p => p.platform_code === request.platform_code);\nconst template = templates.find(t => t.email_type === request.email_type);\n\nif (!platform) {\n  return [{ json: { ok: false, error: `Unknown platform_code: ${request.platform_code}` } }];\n}\nif (!template) {\n  return [{ json: { ok: false, error: `Unknown email_type: ${request.email_type}` } }];\n}\n\nreturn [{\n  json: {\n    ok: true,\n    fromEmail: platform.from_email,\n    fromName: platform.from_name || platform.platform_name,\n    toEmail: request.to_email,\n    templateId: Number(template.mailjet_template_id),\n    variables: {\n      platform_name: platform.platform_name,\n      platform_description: platform.platform_description,\n      ...request.data\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "e5485567-f724-4eb0-aba8-e04d701d889b",
+      "name": "Platform & Template Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1184,
+        -96
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-found-1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f59e220c-5f3c-4ce0-b9cb-d2df14054ace",
+      "name": "Respond - Unknown Platform or Type",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        80
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"error\": $json.error } }}",
+        "options": {
+          "responseCode": 422
+        }
+      }
+    },
+    {
+      "id": "d2c68b32-ad69-4140-ab6e-b3c45a6554f2",
+      "name": "Send Templated Email",
+      "type": "n8n-nodes-base.mailjet",
+      "typeVersion": 1,
+      "onError": "continueErrorOutput",
+      "position": [
+        1424,
+        -160
+      ],
+      "parameters": {
+        "operation": "sendTemplate",
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.toEmail }}",
+        "templateId": "={{ $json.templateId }}",
+        "jsonParameters": true,
+        "additionalFields": {
+          "templateLanguage": true
+        },
+        "variablesJson": "={{ JSON.stringify($json.variables) }}"
+      },
+      "credentials": {
+        "mailjetEmailApi": {
+          "id": "syj5R8GKK7SVBsX9",
+          "name": "Mailjet Email account: erogluozgur"
+        }
+      }
+    },
+    {
+      "id": "90d9de7a-6d3b-48d5-867e-a2bd8e454827",
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        -224
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "7d92834b-4553-41bc-9298-bb0079857aea",
+      "name": "Respond - Mailjet Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        -64
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": false, \"error\": \"mailjet_send_failed\" } }}",
+        "options": {
+          "responseCode": 502
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Notification Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Validate Request": {
+      "main": [
+        [
+          {
+            "node": "Request Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Valid?": {
+      "main": [
+        [
+          {
+            "node": "Get Platforms Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Templates Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Platforms Sheet": {
+      "main": [
+        [
+          {
+            "node": "Resolve Config & Build Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Config & Build Variables": {
+      "main": [
+        [
+          {
+            "node": "Platform & Template Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platform & Template Found?": {
+      "main": [
+        [
+          {
+            "node": "Send Templated Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Unknown Platform or Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Templated Email": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Mailjet Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Schedule Trigger1": {
+      "recurrenceRules": []
+    }
+  },
+  "pinData": {
+    "Webhook-Invitation": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "295",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "http://localhost:8082",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://localhost:8082/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9,tr;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": [
+            {
+              "data": {
+                "inviter_email": "erogluozgur@gmail.com",
+                "invited_email": "oe@jarbank.io",
+                "role": "Admin",
+                "inviter_name": "Ozgur Eroglu",
+                "inviter_organization_name": "Acme",
+                "platform_code": "hrp",
+                "invitation_accept_url": "http://localhost:8082/register?inviteId=DFGSTyouZ9tjrCNGrODu&email=oe%40jarbank.io"
+              }
+            }
+          ],
+          "webhookUrl": "https://n8n.jarbank.io/webhook/common/invitation/",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Webhook-Welcome": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.jarbank.io",
+            "x-real-ip": "213.254.131.253",
+            "x-forwarded-for": "213.254.131.253",
+            "x-forwarded-host": "n8n.jarbank.io",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "295",
+            "pragma": "no-cache",
+            "cache-control": "no-cache",
+            "sec-ch-ua-platform": "\"macOS\"",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "origin": "http://localhost:8082",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://localhost:8082/",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9,tr;q=0.8"
+          },
+          "params": {},
+          "query": {},
+          "body": [
+            {
+              "data": {
+                "inviter_email": "erogluozgur@gmail.com",
+                "invited_email": "oe@jarbank.io",
+                "role": "Admin",
+                "inviter_name": "Ozgur Eroglu",
+                "inviter_organization_name": "Acme",
+                "platform_code": "hrp",
+                "invitation_accept_url": "http://localhost:8082/register?inviteId=DFGSTyouZ9tjrCNGrODu&email=oe%40jarbank.io"
+              }
+            }
+          ],
+          "webhookUrl": "https://n8n.jarbank.io/webhook/common/invitation/",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "unLHaSvmTa8E9fBr",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:26.067Z",
+      "updatedAt": "2026-04-25T13:12:26.067Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "e2b840f3-50ff-4c13-8b86-3d492701ed8b",
+    "workflowId": "unLHaSvmTa8E9fBr",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "## Webhook Input Contract\n\n`POST /common/notify`\n\n```json\n{\n  \"platform_code\": \"hrp\",\n  \"email_type\": \"welcome\",\n  \"to_email\": \"user@example.com\",\n  \"data\": {\n    \"user_name\": \"Jane Doe\",\n    \"invitation_accept_url\": \"...\"\n  }\n}\n```\n\n- **platform_code** (required, string) — identifies the calling app. Must match a row in the **Platforms** sheet.\n- **email_type** (required, string) — which notification to send (e.g. `welcome`, `invitation`, `password_reset`). Must match a row in the **Templates** sheet.\n- **to_email** (required, string) — recipient address.\n- **data** (optional, object) — per-call placeholders, e.g. a URL, a user's name, a role. Merged on top of the platform's static context (`platform_name`, `platform_description`) to build the Mailjet template variables. Keys must match the placeholders used inside that Mailjet template.\n\n### Responses\n- `400` — missing platform_code / email_type / to_email\n- `422` — platform_code or email_type not found in the sheets\n- `502` — Mailjet send failed\n- `200` — sent",
+          "height": 1148,
+          "width": 620,
+          "color": 4
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -32,
+          -1296
+        ],
+        "id": "9e719d8d-bb48-496b-a53b-2d73e4d7dc9a",
+        "name": "Doc - Webhook Contract"
+      },
+      {
+        "parameters": {
+          "content": "## Google Sheet Setup (required)\n\nBoth Sheets nodes below need the **same spreadsheet's Document ID** and a Google Sheets credential attached — pick them from the dropdowns in each node.\n\n### Tab: `Platforms`\n| column | required | notes |\n|---|---|---|\n| platform_code | yes | key — matches webhook's `platform_code` |\n| platform_name | yes | sent as `{{platform_name}}` in templates |\n| platform_description | yes | sent as `{{platform_description}}` |\n| from_email | yes | Mailjet sender address for this app |\n| from_name | no | falls back to platform_name |\n\n### Tab: `Templates`\n| column | required | notes |\n|---|---|---|\n| email_type | yes | key — matches webhook's `email_type` |\n| mailjet_template_id | yes | numeric Mailjet template ID |\n| description | no | human note only, not used by the flow |\n\nOnboarding a new app or a new email type = add a row to the sheet. No workflow edit needed.",
+          "height": 1148,
+          "width": 620,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          640,
+          -1296
+        ],
+        "id": "c31eb273-43d2-4b3b-ad84-58f1b843bf27",
+        "name": "Doc - Google Sheet Setup"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "common/notify",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -16,
+          0
+        ],
+        "id": "7e21ecab-4a9a-43f8-bb77-95a8e6030715",
+        "name": "Webhook - Notification Trigger",
+        "webhookId": "f6e7edc0-b76f-495b-8cb4-70ca054c2a7d"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $json.body ?? {};\nconst platform_code = body.platform_code;\nconst email_type = body.email_type;\nconst to_email = body.to_email;\nconst data = body.data ?? {};\n\nconst missing = [];\nif (!platform_code) missing.push('platform_code');\nif (!email_type) missing.push('email_type');\nif (!to_email) missing.push('to_email');\n\nif (missing.length) {\n  return [{\n    json: {\n      ok: false,\n      error: `Missing required field(s): ${missing.join(', ')}`\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ok: true,\n    platform_code,\n    email_type,\n    to_email,\n    data\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          0
+        ],
+        "id": "80c92c4c-b403-4622-8122-2a178c6529d9",
+        "name": "Parse & Validate Request"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cond-valid-1",
+                "leftValue": "={{ $json.ok }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          464,
+          0
+        ],
+        "id": "c6b28d93-10f5-4ab9-8c08-b74c6d00c076",
+        "name": "Request Valid?"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": false, \"error\": $json.error } }}",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          704,
+          320
+        ],
+        "id": "faf5668b-23e7-4a89-a301-30bec87017ec",
+        "name": "Respond - Bad Request"
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+            "mode": "id"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "Platforms",
+            "mode": "name"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          704,
+          -96
+        ],
+        "id": "79d693f9-d227-4cb6-a615-86d93d14f929",
+        "name": "Get Platforms Sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "REPLACE_WITH_CREDENTIAL_ID",
+            "name": "TODO: connect your Google Sheets credential"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+            "mode": "id"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "Templates",
+            "mode": "name"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.5,
+        "position": [
+          704,
+          112
+        ],
+        "id": "6127cd5f-797e-46bc-9f52-afcad4efc5d0",
+        "name": "Get Templates Sheet",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "REPLACE_WITH_CREDENTIAL_ID",
+            "name": "TODO: connect your Google Sheets credential"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const request = $('Parse & Validate Request').first().json;\nconst platforms = $('Get Platforms Sheet').all().map(i => i.json);\nconst templates = $('Get Templates Sheet').all().map(i => i.json);\n\nconst platform = platforms.find(p => p.platform_code === request.platform_code);\nconst template = templates.find(t => t.email_type === request.email_type);\n\nif (!platform) {\n  return [{ json: { ok: false, error: `Unknown platform_code: ${request.platform_code}` } }];\n}\nif (!template) {\n  return [{ json: { ok: false, error: `Unknown email_type: ${request.email_type}` } }];\n}\n\nreturn [{\n  json: {\n    ok: true,\n    fromEmail: platform.from_email,\n    fromName: platform.from_name || platform.platform_name,\n    toEmail: request.to_email,\n    templateId: Number(template.mailjet_template_id),\n    variables: {\n      platform_name: platform.platform_name,\n      platform_description: platform.platform_description,\n      ...request.data\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          944,
+          -96
+        ],
+        "id": "21808d91-e16f-483e-9d6f-23c15b9ea824",
+        "name": "Resolve Config & Build Variables"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cond-found-1",
+                "leftValue": "={{ $json.ok }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1184,
+          -96
+        ],
+        "id": "e5485567-f724-4eb0-aba8-e04d701d889b",
+        "name": "Platform & Template Found?"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": false, \"error\": $json.error } }}",
+          "options": {
+            "responseCode": 422
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1424,
+          80
+        ],
+        "id": "f59e220c-5f3c-4ce0-b9cb-d2df14054ace",
+        "name": "Respond - Unknown Platform or Type"
+      },
+      {
+        "parameters": {
+          "operation": "sendTemplate",
+          "fromEmail": "={{ $json.fromEmail }}",
+          "toEmail": "={{ $json.toEmail }}",
+          "templateId": "={{ $json.templateId }}",
+          "jsonParameters": true,
+          "additionalFields": {
+            "templateLanguage": true
+          },
+          "variablesJson": "={{ JSON.stringify($json.variables) }}"
+        },
+        "type": "n8n-nodes-base.mailjet",
+        "typeVersion": 1,
+        "position": [
+          1424,
+          -160
+        ],
+        "id": "d2c68b32-ad69-4140-ab6e-b3c45a6554f2",
+        "name": "Send Templated Email",
+        "credentials": {
+          "mailjetEmailApi": {
+            "id": "syj5R8GKK7SVBsX9",
+            "name": "Mailjet Email account: erogluozgur"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": true } }}",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1664,
+          -224
+        ],
+        "id": "90d9de7a-6d3b-48d5-867e-a2bd8e454827",
+        "name": "Respond - Success"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": false, \"error\": \"mailjet_send_failed\" } }}",
+          "options": {
+            "responseCode": 502
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1664,
+          -64
+        ],
+        "id": "7d92834b-4553-41bc-9298-bb0079857aea",
+        "name": "Respond - Mailjet Failed"
+      }
+    ],
+    "connections": {
+      "Webhook - Notification Trigger": {
+        "main": [
+          [
+            {
+              "node": "Parse & Validate Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse & Validate Request": {
+        "main": [
+          [
+            {
+              "node": "Request Valid?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Request Valid?": {
+        "main": [
+          [
+            {
+              "node": "Get Platforms Sheet",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get Templates Sheet",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond - Bad Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Platforms Sheet": {
+        "main": [
+          [
+            {
+              "node": "Resolve Config & Build Variables",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Resolve Config & Build Variables": {
+        "main": [
+          [
+            {
+              "node": "Platform & Template Found?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Platform & Template Found?": {
+        "main": [
+          [
+            {
+              "node": "Send Templated Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond - Unknown Platform or Type",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Templated Email": {
+        "main": [
+          [
+            {
+              "node": "Respond - Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond - Mailjet Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Ozgur Eroglu",
+    "name": null,
+    "description": null,
+    "autosaved": true,
+    "createdAt": "2026-08-01T16:01:42.466Z",
+    "updatedAt": "2026-08-01T16:01:42.466Z"
+  }
+}

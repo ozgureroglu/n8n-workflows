@@ -1,0 +1,921 @@
+{
+  "id": "Gt4KFtfJf4pNMmlh",
+  "name": "Automated hourly workflow backup to GitHub",
+  "active": true,
+  "activeVersionId": "069895f6-2de7-4bcb-aef7-3e25e66da0f4",
+  "createdAt": "2026-04-25T13:12:52.378Z",
+  "updatedAt": "2026-10-03T14:00:46.000Z",
+  "isArchived": false,
+  "versionId": "069895f6-2de7-4bcb-aef7-3e25e66da0f4",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "id": "61789507-d70d-42ef-a616-2a04e9fa6c03",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2304,
+        96
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d5710162-98f9-40b3-82e0-0197a7e749f3",
+      "name": "Retrieve workflows",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        -2080,
+        96
+      ],
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "credentials": {
+        "n8nApi": {
+          "id": "UgRDXkk7QDa0GMU5",
+          "name": "n8n self access"
+        }
+      }
+    },
+    {
+      "id": "02c77233-2e81-47e9-a2b9-0f62758b914c",
+      "name": "Json file",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1872,
+        96
+      ],
+      "parameters": {
+        "operation": "toJson",
+        "mode": "each",
+        "options": {
+          "format": true
+        }
+      }
+    },
+    {
+      "id": "7708c009-05bd-4d36-a98f-d5cf9685a0f5",
+      "name": "Extract text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1664,
+        96
+      ],
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      }
+    },
+    {
+      "id": "449d6607-2994-4f32-b46a-682651733105",
+      "name": "Prepare file data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1440,
+        96
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2",
+              "name": "fileName",
+              "type": "string",
+              "value": "=workflows/{{ $('Retrieve workflows').item.json.name.toLowerCase().replace(/[^\\w\\s-]/g, '').replace(/\\s+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '') }}.json"
+            },
+            {
+              "id": "a3",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "404e0b3c-af01-498e-a473-c1e0b9558b33",
+      "name": "Aggregate all files",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        96
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "workflows",
+        "options": {}
+      }
+    },
+    {
+      "id": "ebb002f0-a5c4-4799-8d16-f392ebfec45d",
+      "name": "Get branch ref",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -992,
+        96
+      ],
+      "parameters": {
+        "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/ref/heads/main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "212692c7-9172-4351-9c83-b4bd78cd84f4",
+      "name": "Get base commit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -768,
+        96
+      ],
+      "parameters": {
+        "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/commits/{{ $json.object.sha }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "f37ee73f-c1f4-4cba-b421-3abc8746fa4b",
+      "name": "Build tree entries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        96
+      ],
+      "parameters": {
+        "jsCode": "const workflows = $('Aggregate all files').first().json.workflows;\n\nconst tree = workflows.map((w) => ({\n  path: w.fileName,\n  mode: '100644',\n  type: 'blob',\n  content: w.content,\n}));\n\nreturn [{\n  json: {\n    tree,\n    baseTreeSha: $json.tree.sha,\n    parentCommitSha: $('Get branch ref').first().json.object.sha,\n  },\n}];"
+      }
+    },
+    {
+      "id": "a6d6eadf-0aaa-41e7-9b16-310519c7bf7e",
+      "name": "Create tree",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        96
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/trees",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { base_tree: $json.baseTreeSha, tree: $json.tree } }}",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "d3e3deee-1c49-434a-b94a-53176e35cb11",
+      "name": "Check for changes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        96
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "leftValue": "={{ $json.sha }}",
+              "rightValue": "={{ $('Build tree entries').item.json.baseTreeSha }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "85c759b7-bba6-47e7-b773-aae62cfdd50e",
+      "name": "Create commit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        144,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/commits",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { message: 'backup-' + $now.format('dd-MM-yyyy_HH-mm'), tree: $json.sha, parents: [ $('Build tree entries').item.json.parentCommitSha ] } }}",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "2bac79f4-71ea-46e1-a196-30cf73a8131f",
+      "name": "Update ref",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        368,
+        0
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/refs/heads/main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { sha: $json.sha, force: false } }}",
+        "options": {}
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "GiOoZxtrTHjmQVpz",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "id": "28e2be81-86bc-48d8-a2cd-c30f8d3501af",
+      "name": "No changes",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        144,
+        256
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Retrieve workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve workflows": {
+      "main": [
+        [
+          {
+            "node": "Json file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json file": {
+      "main": [
+        [
+          {
+            "node": "Extract text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract text": {
+      "main": [
+        [
+          {
+            "node": "Prepare file data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare file data": {
+      "main": [
+        [
+          {
+            "node": "Aggregate all files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate all files": {
+      "main": [
+        [
+          {
+            "node": "Get branch ref",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get branch ref": {
+      "main": [
+        [
+          {
+            "node": "Get base commit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get base commit": {
+      "main": [
+        [
+          {
+            "node": "Build tree entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build tree entries": {
+      "main": [
+        [
+          {
+            "node": "Create tree",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create tree": {
+      "main": [
+        [
+          {
+            "node": "Check for changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for changes": {
+      "main": [
+        [
+          {
+            "node": "Create commit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create commit": {
+      "main": [
+        [
+          {
+            "node": "Update ref",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Gt4KFtfJf4pNMmlh",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:52.381Z",
+      "updatedAt": "2026-04-25T13:12:52.381Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "069895f6-2de7-4bcb-aef7-3e25e66da0f4",
+    "workflowId": "Gt4KFtfJf4pNMmlh",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "id": "61789507-d70d-42ef-a616-2a04e9fa6c03",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "position": [
+          -2304,
+          96
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "filters": {},
+          "requestOptions": {}
+        },
+        "id": "d5710162-98f9-40b3-82e0-0197a7e749f3",
+        "name": "Retrieve workflows",
+        "type": "n8n-nodes-base.n8n",
+        "position": [
+          -2080,
+          96
+        ],
+        "typeVersion": 1,
+        "credentials": {
+          "n8nApi": {
+            "id": "UgRDXkk7QDa0GMU5",
+            "name": "n8n self access"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "toJson",
+          "mode": "each",
+          "options": {
+            "format": true
+          }
+        },
+        "id": "02c77233-2e81-47e9-a2b9-0f62758b914c",
+        "name": "Json file",
+        "type": "n8n-nodes-base.convertToFile",
+        "position": [
+          -1872,
+          96
+        ],
+        "typeVersion": 1.1
+      },
+      {
+        "parameters": {
+          "operation": "text",
+          "options": {}
+        },
+        "id": "7708c009-05bd-4d36-a98f-d5cf9685a0f5",
+        "name": "Extract text",
+        "type": "n8n-nodes-base.extractFromFile",
+        "position": [
+          -1664,
+          96
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a2",
+                "name": "fileName",
+                "type": "string",
+                "value": "=workflows/{{ $('Retrieve workflows').item.json.name.toLowerCase().replace(/[^\\w\\s-]/g, '').replace(/\\s+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '') }}.json"
+              },
+              {
+                "id": "a3",
+                "name": "content",
+                "type": "string",
+                "value": "={{ $json.data }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "449d6607-2994-4f32-b46a-682651733105",
+        "name": "Prepare file data",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          -1440,
+          96
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "destinationFieldName": "workflows",
+          "options": {}
+        },
+        "id": "404e0b3c-af01-498e-a473-c1e0b9558b33",
+        "name": "Aggregate all files",
+        "type": "n8n-nodes-base.aggregate",
+        "position": [
+          -1216,
+          96
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/ref/heads/main",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "options": {}
+        },
+        "id": "ebb002f0-a5c4-4799-8d16-f392ebfec45d",
+        "name": "Get branch ref",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          -992,
+          96
+        ],
+        "typeVersion": 4.2,
+        "credentials": {
+          "githubApi": {
+            "id": "GiOoZxtrTHjmQVpz",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/commits/{{ $json.object.sha }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "options": {}
+        },
+        "id": "212692c7-9172-4351-9c83-b4bd78cd84f4",
+        "name": "Get base commit",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          -768,
+          96
+        ],
+        "typeVersion": 4.2,
+        "credentials": {
+          "githubApi": {
+            "id": "GiOoZxtrTHjmQVpz",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const workflows = $('Aggregate all files').first().json.workflows;\n\nconst tree = workflows.map((w) => ({\n  path: w.fileName,\n  mode: '100644',\n  type: 'blob',\n  content: w.content,\n}));\n\nreturn [{\n  json: {\n    tree,\n    baseTreeSha: $json.tree.sha,\n    parentCommitSha: $('Get branch ref').first().json.object.sha,\n  },\n}];"
+        },
+        "id": "f37ee73f-c1f4-4cba-b421-3abc8746fa4b",
+        "name": "Build tree entries",
+        "type": "n8n-nodes-base.code",
+        "position": [
+          -544,
+          96
+        ],
+        "typeVersion": 2
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/trees",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { base_tree: $json.baseTreeSha, tree: $json.tree } }}",
+          "options": {}
+        },
+        "id": "a6d6eadf-0aaa-41e7-9b16-310519c7bf7e",
+        "name": "Create tree",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          -320,
+          96
+        ],
+        "typeVersion": 4.2,
+        "credentials": {
+          "githubApi": {
+            "id": "GiOoZxtrTHjmQVpz",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "c1",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                },
+                "leftValue": "={{ $json.sha }}",
+                "rightValue": "={{ $('Build tree entries').item.json.baseTreeSha }}"
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "d3e3deee-1c49-434a-b94a-53176e35cb11",
+        "name": "Check for changes",
+        "type": "n8n-nodes-base.if",
+        "position": [
+          -96,
+          96
+        ],
+        "typeVersion": 2.2
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/commits",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { message: 'backup-' + $now.format('dd-MM-yyyy_HH-mm'), tree: $json.sha, parents: [ $('Build tree entries').item.json.parentCommitSha ] } }}",
+          "options": {}
+        },
+        "id": "85c759b7-bba6-47e7-b773-aae62cfdd50e",
+        "name": "Create commit",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          144,
+          0
+        ],
+        "typeVersion": 4.2,
+        "credentials": {
+          "githubApi": {
+            "id": "GiOoZxtrTHjmQVpz",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "=https://api.github.com/repos/ozgureroglu/n8n-workflows/git/refs/heads/main",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "githubApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { sha: $json.sha, force: false } }}",
+          "options": {}
+        },
+        "id": "2bac79f4-71ea-46e1-a196-30cf73a8131f",
+        "name": "Update ref",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          368,
+          0
+        ],
+        "typeVersion": 4.2,
+        "credentials": {
+          "githubApi": {
+            "id": "GiOoZxtrTHjmQVpz",
+            "name": "GitHub account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "id": "28e2be81-86bc-48d8-a2cd-c30f8d3501af",
+        "name": "No changes",
+        "type": "n8n-nodes-base.noOp",
+        "position": [
+          144,
+          256
+        ],
+        "typeVersion": 1
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Retrieve workflows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Retrieve workflows": {
+        "main": [
+          [
+            {
+              "node": "Json file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Json file": {
+        "main": [
+          [
+            {
+              "node": "Extract text",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract text": {
+        "main": [
+          [
+            {
+              "node": "Prepare file data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare file data": {
+        "main": [
+          [
+            {
+              "node": "Aggregate all files",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate all files": {
+        "main": [
+          [
+            {
+              "node": "Get branch ref",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get branch ref": {
+        "main": [
+          [
+            {
+              "node": "Get base commit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get base commit": {
+        "main": [
+          [
+            {
+              "node": "Build tree entries",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build tree entries": {
+        "main": [
+          [
+            {
+              "node": "Create tree",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create tree": {
+        "main": [
+          [
+            {
+              "node": "Check for changes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check for changes": {
+        "main": [
+          [
+            {
+              "node": "Create commit",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No changes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create commit": {
+        "main": [
+          [
+            {
+              "node": "Update ref",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Ozgur Eroglu",
+    "name": "Version 069895f6",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-08-07T08:20:18.905Z",
+    "updatedAt": "2026-08-07T08:20:57.000Z"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "WCtHgOTXDC26sDoQ",
+  "name": "NEWSLETTER",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:31.293Z",
+  "updatedAt": "2026-10-03T14:00:47.599Z",
+  "isArchived": false,
+  "versionId": "dc643026-625b-4b24-b504-7c7bea88fc55",
+  "triggerCount": 0,
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {},
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "WCtHgOTXDC26sDoQ",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:31.295Z",
+      "updatedAt": "2026-04-25T13:12:31.295Z"
+    }
+  ],
+  "activeVersion": null
+}

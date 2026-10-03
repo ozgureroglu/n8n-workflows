@@ -1,0 +1,355 @@
+{
+  "id": "N9zFoD4309hcaxQz",
+  "name": "aws_question_tagger",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-04-25T13:12:25.005Z",
+  "updatedAt": "2026-10-03T14:00:46.280Z",
+  "isArchived": false,
+  "versionId": "16874911-732e-4135-be9b-e404c25bc8dc",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "id": "f20545ce-4b22-46db-9690-86d326dc5d8d",
+      "name": "Start Processing",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "9206ec5b-2089-45ad-8c91-c77d0c312cb3",
+      "name": "Fetch Unprocessed Docs",
+      "notes": "Fetches documents without mark_for_delete field, oldest first. Adjust limit as needed.",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        240
+      ],
+      "parameters": {
+        "collection": "questions",
+        "options": {
+          "limit": 1,
+          "sort": "{\"updatedAt\": 1}",
+          "projection": "{}"
+        },
+        "query": "{\n  \"$expr\": {\n    \"$lt\": [\n      \"$updatedAt\",\n      { \"$subtract\": [ \"$$NOW\", 86400000 ] }\n    ]\n  }\n}"
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "YA6XhYd6cjoEZjkE",
+          "name": "MongoDB aws exam_questions"
+        }
+      }
+    },
+    {
+      "id": "4a4b28ec-e453-44b8-93f7-b69fad764d16",
+      "name": "Prepare Prompt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        240
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prompt",
+              "name": "prompt",
+              "value": "=Evaluate the following AWS question (including options and correct answer) and identify in which certification exam practice exams it can be used. The contexts of the certification exams are given the mongodb collection named exams, you have that database as a tool. \n\n**Question**: {{ $json.question || 'No question' }}\n\n**Options**: {{ $json.options || 'No options' }}\n\n**correctAnswer**: {{ $json.correctAnswer || 'No answer' }}\n\n## Task\n\n* Read the question and options.\n* Read the AWS exam definition(s) from the tool. In the domains and technologies_and_services fields of the exam definitions for AWS certifications, you can find the informnation to make the match.\n* Determine with which AWS certification exam codes it should be tagged.\n* Return only the exam_code field of the exams collection record (example: DOP-CO2, SCS-CO2)\n* A question may be fitting into more than one exam, then add all of them \n\n## Response rules (strict)\n\n* Respond with only exam codes\n* if there are more than one output item, use comma between them\n",
+              "type": "string"
+            },
+            {
+              "id": "d8cbe7f3-bff9-4741-bc3f-0977f9969a83",
+              "name": "url",
+              "value": "={{ $json.sourceUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "040c306d-9359-4674-a4bc-817d6e59d5f2",
+              "name": "tags",
+              "value": "={{ $json.tags }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0b172ff8-22c9-4a94-af27-e82d47242155",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        240
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0701ef47-9348-46a1-9ac1-4342ea263155",
+              "name": "tags",
+              "value": "={{ ($('Fetch Unprocessed Docs').item.json.tags ?? []).concat((($json.output ?? '').replaceAll('\"','').split(',')).map(t => t.trim()).filter(Boolean)) }}",
+              "type": "array"
+            },
+            {
+              "id": "33b34727-8f93-44a5-b163-fa88368b10b3",
+              "name": "sourceDocumentId",
+              "value": "={{ $('Fetch Unprocessed Docs').item.json.sourceDocumentId }}",
+              "type": "string"
+            },
+            {
+              "id": "b6aeecc7-56d8-47b7-bd20-8535f387b2fc",
+              "name": "updatedAt",
+              "value": "={{ new Date() }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "22493f93-d74c-423d-93ae-592375f67286",
+      "name": "Update Document",
+      "notes": "Updates the document with mark_for_delete field",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1856,
+        240
+      ],
+      "parameters": {
+        "operation": "findOneAndUpdate",
+        "collection": "questions",
+        "updateKey": "=sourceDocumentId",
+        "fields": "=tags, updatedAt",
+        "upsert": true,
+        "options": {
+          "dateFields": "createdAt,updatedAt"
+        }
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "YA6XhYd6cjoEZjkE",
+          "name": "MongoDB aws exam_questions"
+        }
+      }
+    },
+    {
+      "id": "21444b4f-a944-4a97-bc12-bcf5d727cdfe",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        16
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "66b9e6e8-586e-4509-943d-10bc915d6221",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1056,
+        240
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "cd0ce3a5-914f-4ee7-98a7-2a7f2fba139c",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        480
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "qwen2.5:14b",
+          "mode": "list",
+          "cachedResultName": "qwen2.5:14b"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "UthznBCON5MjlpWs",
+          "name": "Ollama-webui-OpenAi_format"
+        }
+      }
+    },
+    {
+      "id": "4316765b-2810-4475-95dd-cb0a811aef83",
+      "name": "Find documents in MongoDB",
+      "type": "n8n-nodes-base.mongoDbTool",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        480
+      ],
+      "parameters": {
+        "collection": "questions",
+        "options": {
+          "limit": 1,
+          "sort": "{\"updatedAt\": 1}"
+        }
+      },
+      "credentials": {
+        "mongoDb": {
+          "id": "YA6XhYd6cjoEZjkE",
+          "name": "MongoDB aws exam_questions"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start Processing": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unprocessed Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Unprocessed Docs": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Update Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Document": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unprocessed Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find documents in MongoDB": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "N9zFoD4309hcaxQz",
+      "projectId": "DRU5rqDDssojMuQL",
+      "createdAt": "2026-04-25T13:12:25.008Z",
+      "updatedAt": "2026-04-25T13:12:25.008Z"
+    }
+  ],
+  "activeVersion": null
+}
